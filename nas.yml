@@ -5,12 +5,12 @@
 
   pre_tasks:
 
-    - name: Ensure required Python packages are installed
-      ansible.builtin.pip:
-        name:
-          - requests
-          - docker
-        state: present
+    # - name: Ensure required Python packages are installed
+    #   ansible.builtin.pip:
+    #     name:
+    #       - requests
+    #       - docker
+    #     state: present
 
     - name: Stop and remove existing routed containers
       community.docker.docker_container:
