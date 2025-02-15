@@ -1,22 +1,38 @@
 ---
-- name: Install python3-pip
+- name: Install python3-venv and python3-pip
   ansible.builtin.apt:
-    name: python3-pip
+    name:
+      - python3-pip
+      - python3-venv  # Ensure virtual environment package is installed
     state: present
   register: result
   until: result is succeeded
 
-- name: Remove docker-py python module
+- name: Create virtual environment for Ansible
+  ansible.builtin.command:
+    cmd: python3 -m venv /opt/ansible-venv
+  args:
+    creates: /opt/ansible-venv
+
+- name: Upgrade pip inside the virtual environment
+  ansible.builtin.command:
+    cmd: /opt/ansible-venv/bin/python -m pip install --upgrade pip
+  register: result
+  until: result is succeeded
+
+- name: Remove docker-py python module (from venv)
   ansible.builtin.pip:
     name: docker-py
     state: absent
+    virtualenv: /opt/ansible-venv
   register: result
   until: result is succeeded
 
-- name: Install docker python module
+- name: Install docker python module (in venv)
   ansible.builtin.pip:
     name: docker
     state: present
+    virtualenv: /opt/ansible-venv
   register: result
   until: result is succeeded
 
@@ -43,3 +59,4 @@
     name: docker
     state: restarted
   when: docker_config.changed
+  

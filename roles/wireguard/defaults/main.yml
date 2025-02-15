@@ -1,0 +1,28 @@
+---
+# enable or disable the application
+wireguard_enabled: false
+wireguard_available_externally: false
+
+# directories
+wireguard_data_directory: "{{ docker_home }}/wireguard"
+
+# uid / gid
+wireguard_user_id: "1000"
+wireguard_group_id: "1000"
+
+# network
+wireguard_hostname: "wireguard"
+wireguard_subnet: "169.100.0.0/24"  # Define custom WireGuard subnet
+wireguard_peers: "1"  # Number of WireGuard peers (VPN clients)
+wireguard_allowed_ips: "0.0.0.0/0"  # Allow all traffic through VPN
+
+# docker
+wireguard_container_name: "wireguard"
+wireguard_image_name: "linuxserver/wireguard"
+wireguard_image_version: "latest"
+
+# specs
+wireguard_memory: "512m"
+
+# WireGuard port settings
+wireguard_udp_port: "51820"

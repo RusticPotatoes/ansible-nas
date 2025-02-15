@@ -1,6 +1,16 @@
 ---
 - name: Ansible-NAS
-  hosts: all
+  hosts: localhost
+  connection: local
+
+  pre_tasks:
+
+    - include_role: 
+        name: gluetun
+      vars:
+        gluetun_enabled: false
+      tags:
+        - gluetun
 
   roles:
     ###
@@ -53,6 +63,11 @@
     ###
     ### Applications
     ###
+
+    - role: gluetun
+      tags:
+        - gluetun
+
     - role: airsonic
       tags:
         - airsonic
@@ -448,6 +463,10 @@
     - role: wireshark
       tags:
         - wireshark
+    
+    - role: wireguard
+      tags:
+        - wireguard
 
     - role: woodpecker-ci
       tags:

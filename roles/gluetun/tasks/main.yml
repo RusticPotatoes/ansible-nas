@@ -1,0 +1,100 @@
+---
+- name: Start gluetun
+  block:
+    - name: Create gluetun Directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: 1000
+        group: 1000
+      with_items:
+        - "{{ gluetun_config_directory }}/wireguard"
+
+    # - name: Debug gluetun_http_port
+    #   ansible.builtin.debug:
+    #     msg: "gluetun_http_port='{{ gluetun_http_port }}'"
+
+    # - name: Debug gluetun_routed_containers
+    #   ansible.builtin.debug:
+    #     var: gluetun_routed_containers
+
+    - name: Get container ports as list of lists
+      ansible.builtin.set_fact:
+        container_ports_nested: "{{ gluetun_routed_containers | map(attribute='ports') | list }}"
+      # ^ We don't flatten here yet, just to see the structure.
+
+    # - name: Debug container_ports_nested
+    #   ansible.builtin.debug:
+    #     var: container_ports_nested
+
+    - name: Flatten container ports
+      ansible.builtin.set_fact:
+        container_ports_flat: "{{ container_ports_nested | flatten }}"
+
+    # - name: Debug container_ports_flat
+    #   ansible.builtin.debug:
+    #     var: container_ports_flat
+
+    - name: Set final gluetun_combined_ports
+      ansible.builtin.set_fact:
+        gluetun_combined_ports: "{{ [ gluetun_http_port ] + container_ports_flat }}"
+
+    # - name: Debug gluetun_combined_ports
+    #   ansible.builtin.debug:
+    #     var: gluetun_combined_ports
+
+    - name: Stop and remove existing routed containers before attaching
+      community.docker.docker_container:
+        name: "{{ item.name }}"
+        state: absent
+      loop: "{{ gluetun_routed_containers }}"
+      when: gluetun_enabled is true and gluetun_routed_containers is defined
+
+    - name: Create gluetun Docker Container (Using User-Provided VPN Config)
+      community.docker.docker_container:
+        name: "{{ gluetun_container_name }}"
+        image: "{{ gluetun_image_name }}:{{ gluetun_image_version }}"
+        pull: true
+        capabilities:
+          - NET_ADMIN
+        volumes:
+          - "{{ gluetun_config_directory }}/wireguard:/gluetun/wireguard/:rw"
+          - "/etc/resolv.conf:/etc/resolv.conf:rw"  # Ensure DNS works inside the container
+        ports: "{{ gluetun_combined_ports }}"
+        env:
+          VPN_SERVICE_PROVIDER: "custom"
+          VPN_TYPE: "wireguard"
+          DOT: "off"
+          FIREWALL: "off"
+          VPN_INTERFACE: "wg0"
+          VPN_OUTPUT_INTERFACE: "eth0"
+        restart_policy: unless-stopped
+        memory: "{{ gluetun_memory }}"
+        labels:
+          traefik.enable: "{{ gluetun_available_externally | string }}"
+          traefik.http.routers.gluetun.rule: "Host(`{{ gluetun_hostname }}.{{ ansible_nas_domain }}`)"
+          traefik.http.routers.gluetun.tls.certresolver: "letsencrypt"
+          traefik.http.routers.gluetun.tls.domains[0].main: "{{ ansible_nas_domain }}"
+          traefik.http.routers.gluetun.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
+          traefik.http.services.gluetun.loadbalancer.server.port: "8000"
+
+    # - name: Attach Existing Containers to Gluetun VPN
+    #   community.docker.docker_container:
+    #     name: "{{ item.name }}"
+    #     image: "{{ item.image }}"  # Ensure an image is specified
+    #     network_mode: "container:{{ gluetun_container_name }}"
+    #     restart_policy: unless-stopped
+    #     state: started  # ✅ Start if it exists but is stopped
+    #   loop: "{{ gluetun_routed_containers }}"
+    #   when: gluetun_enabled is true and gluetun_routed_containers is defined
+      
+  when: gluetun_enabled is true
+
+
+- name: Stop gluetun
+  block:
+    - name: Stop gluetun
+      community.docker.docker_container:
+        name: "{{ gluetun_container_name }}"
+        state: absent
+  when: gluetun_enabled is false

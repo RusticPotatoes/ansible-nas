@@ -1,0 +1,23 @@
+# Enable or disable gluetun
+gluetun_enabled: false
+gluetun_available_externally: false
+
+# Networking
+gluetun_network_name: "gluetun"
+
+# Container Settings
+gluetun_container_name: "gluetun"
+gluetun_image_name: "qmcgaw/gluetun"
+gluetun_image_version: "latest"
+gluetun_memory: "512m"
+
+# gluetun config directory (persistent storage)
+gluetun_config_directory: "/{{ docker_home }}/gluetun"
+
+# Ports (for debugging or optional access)
+gluetun_http_port: "8000:8000"  # Optional Web UI
+gluetun_dns_port: 53  # Internal DNS
+
+# Traefik settings (Optional)
+gluetun_hostname: "vpn"
+ansible_nas_domain: "example.com"

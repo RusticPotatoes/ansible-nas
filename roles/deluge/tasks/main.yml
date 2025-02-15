@@ -17,8 +17,9 @@
         volumes:
           - "{{ deluge_config_directory }}:/config:rw"
           - "{{ deluge_download_directory }}:/downloads:rw"
-        ports:
-          - "{{ deluge_port }}:8112"
+        # ports:
+        #   - "{{ deluge_port }}:8112"
+        network_mode: "container:{{ gluetun_container_name }}"
         env:
           TZ: "{{ deluge_timezone }}"
           PUID: "{{ deluge_user_id }}"
