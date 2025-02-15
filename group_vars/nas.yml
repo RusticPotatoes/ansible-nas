@@ -1,0 +1,66 @@
+---
+##                       ._____.   .__
+##  _____    ____   _____|__\_ |__ |  |   ____             ____ _____    ______
+##  \__  \  /    \ /  ___/  || __ \|  | _/ __ \   ______  /    \\__  \  /  ___/
+##   / __ \|   |  \\___ \|  || \_\ \  |_\  ___/  /_____/ |   |  \/ __ \_\___ \
+##  (____  /___|  /____  >__||___  /____/\___  >         |___|  (____  /____  >
+##       \/     \/     \/        \/          \/               \/     \/     \/
+##     a n s i b l e - n a s      https://github.com/davestephens/ansible-nas
+
+# Add your all.yml config overrides to this file. See group_vars/all.yml for all possible settings.
+
+# Example options
+ansible_nas_hostname: localhost
+ansible_nas_timezone: "America/New_York"
+
+## Enable some applications
+homepage_enabled: true
+portainer_enabled: true
+homeassistant_enabled: true
+plex_enabled: true
+jackett_enabled: false
+gluetun_enabled: true
+radarr_enabled: true
+sonarr_enabled: true
+stats_enabled: true
+deluge_enabled: true
+nzbget_enabled: true
+logging_enabled: true
+prowlarr_enabled: true
+minio_enabled: true
+loki_enabled: true
+homebridge_enabled: true
+grafana_enabled: true
+promtail_enabled: true
+semaphore_enabled: true
+
+
+# # Containers that should use the VPN
+gluetun_name: "container:{{ gluetun_container_name }}"
+# lan_subnets: "192.168.1.0/24,0.0.0.0/0"
+gluetun_routed_containers:
+
+  - name: "prowlarr"
+    image: "ghcr.io/linuxserver/prowlarr:develop"
+    ports:
+      - "9696:9696"
+
+  - name: "deluge"
+    image: "linuxserver/deluge:latest"
+    ports:
+      - "8112:8112"
+
+  - name: "radarr"
+    image: "linuxserver/radarr:latest"
+    ports:
+      - "7878:7878"
+
+  - name: "sonarr"
+    image: "linuxserver/sonarr:latest"
+    ports:
+      - "8989:8989"
+
+  - name: "nzbget"
+    image: "linuxserver/nzbget:latest"
+    ports:
+      - "6789:6789"
