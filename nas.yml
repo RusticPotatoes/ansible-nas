@@ -44,10 +44,10 @@
         - ansible-nas-users
         - ansible-nas
 
-    # - role: vladgh.samba.server
-    #   tags:
-    #     - samba
-    #     - skip_ansible_lint
+    - role: vladgh.samba.server
+      tags:
+        - samba
+        - skip_ansible_lint
 
     - role: geerlingguy.nfs
       tags:
