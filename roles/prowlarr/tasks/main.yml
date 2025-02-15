@@ -15,8 +15,9 @@
         pull: true
         volumes:
           - "{{ prowlarr_data_directory }}:/config:rw"
-        ports:
-          - "{{ prowlarr_port }}:9696"
+        # ports:
+        #   - "{{ prowlarr_port }}:9696"
+        network_mode: "container:{{ gluetun_container_name }}"
         env:
           TZ: "{{ ansible_nas_timezone }}"
           PUID: "{{ prowlarr_user_id }}"

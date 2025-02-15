@@ -78,15 +78,14 @@
           traefik.http.routers.gluetun.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.gluetun.loadbalancer.server.port: "8000"
 
-    # - name: Attach Existing Containers to Gluetun VPN
-    #   community.docker.docker_container:
-    #     name: "{{ item.name }}"
-    #     image: "{{ item.image }}"  # Ensure an image is specified
-    #     network_mode: "container:{{ gluetun_container_name }}"
-    #     restart_policy: unless-stopped
-    #     state: started  # ✅ Start if it exists but is stopped
-    #   loop: "{{ gluetun_routed_containers }}"
-    #   when: gluetun_enabled is true and gluetun_routed_containers is defined
+    - name: Wait for Gluetun to be fully running
+      community.docker.docker_container_info:
+        name: "{{ gluetun_container_name }}"
+      register: gluetun_status
+      until: gluetun_status.container.State.Status == "running"
+      retries: 30
+      delay: 5
+      changed_when: false
       
   when: gluetun_enabled is true
 
