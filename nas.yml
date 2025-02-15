@@ -1,7 +1,7 @@
 ---
 - name: Ansible-NAS
   hosts: nas
-  connection: local
+  # connection: local
 
   pre_tasks:
 
