@@ -11,8 +11,7 @@
           - requests
           - docker
         state: present
-      # become: true  # Ensures it's installed system-wide
-
+        
     - name: Stop and remove existing routed containers
       community.docker.docker_container:
         name: "{{ item.name }}"
