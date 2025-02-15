@@ -1,0 +1,48 @@
+---
+- name: Start semaphore
+  block:
+    - name: Create semaphore Directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ semaphore_data_directory }}"
+
+    - name: semaphore
+      community.docker.docker_container:
+        name: "{{ semaphore_container_name }}"
+        image: "{{ semaphore_image_name }}:{{ semaphore_image_version }}"
+        pull: true
+        volumes:
+          - "{{ semaphore_tv_directory }}:/tv:rw"
+          - "{{ semaphore_download_directory }}:/downloads:rw"
+          - "{{ semaphore_data_directory }}:/config:rw"
+        ports:
+          - "{{ semaphore_port }}:3000"
+        # network_mode: "container:{{ gluetun_container_name }}"
+        env:
+          TZ: "{{ ansible_nas_timezone }}"
+          PUID: "{{ semaphore_user_id }}"
+          PGID: "{{ semaphore_group_id }}"
+          SEMAPHORE_DB_DIALECT: "bolt"
+          SEMAPHORE_ADMIN: "admin"
+          SEMAPHORE_ADMIN_PASSWORD: "admin"
+          SEMAPHORE_ADMIN_EMAIL: "admin@localhost"
+        restart_policy: unless-stopped
+        memory: "{{ semaphore_memory }}"
+        labels:
+          traefik.enable: "{{ semaphore_available_externally | string }}"
+          traefik.http.routers.semaphore.rule: "Host(`{{ semaphore_hostname }}.{{ ansible_nas_domain }}`)"
+          traefik.http.routers.semaphore.tls.certresolver: "letsencrypt"
+          traefik.http.routers.semaphore.tls.domains[0].main: "{{ ansible_nas_domain }}"
+          traefik.http.routers.semaphore.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
+          traefik.http.services.semaphore.loadbalancer.server.port: "8989"
+  when: semaphore_enabled is true
+
+- name: Stop semaphore
+  block:
+    - name: Stop semaphore
+      community.docker.docker_container:
+        name: "{{ semaphore_container_name }}"
+        state: absent
+  when: semaphore_enabled is false

@@ -1,0 +1,24 @@
+---
+semaphore_enabled: false
+semaphore_available_externally: false
+
+# directories
+semaphore_data_directory: "{{ docker_home }}/semaphore/config"
+semaphore_tv_directory: "{{ tv_root }}"
+semaphore_download_directory: "{{ downloads_root }}"
+
+# uid / gid
+semaphore_user_id: "0"
+semaphore_group_id: "0"
+
+# network
+semaphore_port: "3333"
+semaphore_hostname: "semaphore"
+
+# docker
+semaphore_container_name: "semaphore"
+semaphore_image_name: "semaphoreui/semaphore"
+semaphore_image_version: "latest"
+
+# specs
+semaphore_memory: 1g
