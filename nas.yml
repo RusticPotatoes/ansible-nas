@@ -11,7 +11,7 @@
           - requests
           - docker
         state: present
-        
+
     - name: Stop and remove existing routed containers
       community.docker.docker_container:
         name: "{{ item.name }}"
