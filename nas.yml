@@ -21,11 +21,11 @@
       tags: 
         - gluetun
 
-    - name: Install required collections
-      ansible.builtin.command: ansible-galaxy collection install -r requirements.yml
-      changed_when: false  # Prevents it from always marking as "changed"
-      tags: 
-        - gluetun
+    # - name: Install required collections
+    #   ansible.builtin.command: ansible-galaxy collection install -r requirements.yml
+    #   changed_when: false  # Prevents it from always marking as "changed"
+    #   tags: 
+    #     - gluetun
 
     - include_role: 
         name: gluetun
