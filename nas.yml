@@ -1,6 +1,8 @@
 ---
 - name: Ansible-NAS
   hosts: nas
+  become_method: sudo
+  become_user: root
   # connection: local
 
   pre_tasks:
