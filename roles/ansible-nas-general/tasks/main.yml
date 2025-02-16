@@ -44,3 +44,4 @@
     recurse: false
   become: true 
   loop: "{{ samba_shares }}"
+  ignore_errors: true
