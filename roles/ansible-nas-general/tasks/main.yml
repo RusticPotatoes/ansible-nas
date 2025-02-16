@@ -42,6 +42,5 @@
     group: ansible-nas
     mode: "u=rwX,g=rwX,o=rX"
     recurse: false
-  become: true 
+    become: true 
   loop: "{{ samba_shares }}"
-  ignore_errors: true
