@@ -13,7 +13,7 @@
 ansible_nas_hostname: localhost
 ansible_nas_timezone: "America/New_York"
 
-ansible_os_family: "Debian"
+# ansible_os_family: "Debian"
 
 ## Enable some applications
 homepage_enabled: true

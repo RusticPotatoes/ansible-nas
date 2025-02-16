@@ -38,8 +38,8 @@
   ansible.builtin.file:
     path: "{{ item.path }}"
     state: directory
-    owner: rustic
-    group: rustic
+    owner: ansible-nas
+    group: ansible-nas
     mode: "u=rwX,g=rwX,o=rX"
     recurse: false
   loop: "{{ samba_shares }}"
