@@ -37,7 +37,7 @@ promtail_enabled: true
 semaphore_enabled: true
 dashy_enabled: true
 organizr_enabled: true
-octoprint_enabled: true
+octoprint_enabled: false
 overseerr_enabled: true
 thelounge_enabled: true
 
