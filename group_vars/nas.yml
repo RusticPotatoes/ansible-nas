@@ -35,6 +35,11 @@ homebridge_enabled: true
 grafana_enabled: true
 promtail_enabled: true
 semaphore_enabled: true
+dashy_enabled: true
+organizr_enabled: true
+octoprint_enabled: true
+overseerr_enabled: true
+thelounge_enabled: true
 
 
 # # Containers that should use the VPN

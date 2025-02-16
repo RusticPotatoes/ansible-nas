@@ -3,16 +3,8 @@
   hosts: nas
   become_method: sudo
   become_user: root
-  # connection: local
 
   pre_tasks:
-
-    # - name: Ensure required Python packages are installed
-    #   ansible.builtin.pip:
-    #     name:
-    #       - requests
-    #       - docker
-    #     state: present
 
     - name: Stop and remove existing routed containers
       community.docker.docker_container:
@@ -22,12 +14,6 @@
       when: gluetun_enabled is true and gluetun_routed_containers is defined
       tags: 
         - gluetun
-
-    # - name: Install required collections
-    #   ansible.builtin.command: ansible-galaxy collection install -r requirements.yml
-    #   changed_when: false  # Prevents it from always marking as "changed"
-    #   tags: 
-    #     - gluetun
 
     - include_role: 
         name: gluetun

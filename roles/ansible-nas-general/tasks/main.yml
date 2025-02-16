@@ -35,7 +35,6 @@
     name: "{{ ansible_nas_timezone }}"
 
 - name: "Permission share directories"
-  become: true
   ansible.builtin.file:
     path: "{{ item.path }}"
     state: directory
