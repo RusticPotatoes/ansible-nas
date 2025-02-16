@@ -1,0 +1,10 @@
+---
+- name: Ansible-NAS
+  hosts: nas
+  # gather_facts: yes
+
+  tasks:
+
+    - name: Debug `ansible_os_family`
+      ansible.builtin.debug:
+        msg: "Detected OS Family: {{ ansible_os_family }}"
