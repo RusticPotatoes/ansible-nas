@@ -217,7 +217,7 @@ samba_apple_extensions: yes
 
 # The account used when Samba shares are accessed. Shouldn't need to change this unless you want to
 # mess with Samba user permissions.
-samba_guest_account: ansible-nas
+samba_guest_account: rustic
 
 # How Samba behaves when an unknown user connects, see Samba docs for more info
 samba_map_to_guest: Bad Password

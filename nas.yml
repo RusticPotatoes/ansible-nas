@@ -1,6 +1,7 @@
 ---
 - name: Ansible-NAS
   hosts: nas
+  # gather_facts: true
   # connection: local
 
   pre_tasks:
