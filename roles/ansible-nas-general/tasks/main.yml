@@ -35,6 +35,7 @@
     name: "{{ ansible_nas_timezone }}"
 
 - name: "Permission share directories"
+  become: true
   ansible.builtin.file:
     path: "{{ item.path }}"
     state: directory
@@ -42,5 +43,4 @@
     group: ansible-nas
     mode: "u=rwX,g=rwX,o=rX"
     recurse: false
-    become: true 
   loop: "{{ samba_shares }}"
