@@ -7,10 +7,10 @@
         name: pihole_macvlan
         driver: macvlan
         driver_options:
-          parent: enp6s0  # Change to match your network interface
+          parent: "{{ primary_eth }}"  # Change to match your network interface
         ipam_config:
-          - subnet: "192.168.1.0/24"  # Adjust based on your network
-            gateway: "192.168.1.1"  # Set your router's IP
+          - subnet: "{{ ansible_nas_subnet }}"  # Adjust based on your network
+            gateway: "{{ ansible_nas_gateway }}"  # Set your router's IP
       when: pihole_enabled is true
 
     - name: Create pihole Directories

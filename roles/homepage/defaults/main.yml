@@ -32,7 +32,7 @@ homepage_services_yaml:
   - Networking:
       - Router:
           icon: asus-router
-          href: http://192.168.1.1/
+          href: "http://{{ ansible_nas_gateway }}/"
           description: Asus Router
 
 homepage_widgets_yaml:

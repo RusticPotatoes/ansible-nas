@@ -4,25 +4,6 @@
   become_method: sudo
   become_user: root
 
-  pre_tasks:
-
-    - name: Stop and remove existing routed containers
-      community.docker.docker_container:
-        name: "{{ item.name }}"
-        state: absent
-      loop: "{{ gluetun_routed_containers }}"
-      when: gluetun_enabled is true and gluetun_routed_containers is defined
-      tags: 
-        - gluetun
-
-    - include_role: 
-        name: gluetun
-      vars:
-        gluetun_enabled: false
-      tags:
-        - gluetun
-
-
   roles:
     ###
     ### Requirements

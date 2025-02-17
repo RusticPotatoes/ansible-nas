@@ -1,6 +1,29 @@
 ---
 - name: Start gluetun
   block:
+
+    - name: Get existing routed containers
+      community.docker.docker_container_info:
+        name: "{{ item.name }}"
+      loop: "{{ gluetun_routed_containers }}"
+      register: existing_containers
+      when: gluetun_enabled is true
+
+    - name: Stop existing routed containers
+      community.docker.docker_container:
+        name: "{{ item.name }}"
+        state: stopped
+        image: "{{ item.image }}"
+      loop: "{{ gluetun_routed_containers }}"
+      when: 
+        - gluetun_enabled is true 
+        - gluetun_routed_containers is defined
+
+    - name: Stop gluetun
+      community.docker.docker_container:
+        name: "{{ gluetun_container_name }}"
+        state: stopped
+    
     - name: Create gluetun Directories
       ansible.builtin.file:
         path: "{{ item }}"
@@ -10,45 +33,18 @@
       with_items:
         - "{{ gluetun_config_directory }}/wireguard"
 
-    # - name: Debug gluetun_http_port
-    #   ansible.builtin.debug:
-    #     msg: "gluetun_http_port='{{ gluetun_http_port }}'"
-
-    # - name: Debug gluetun_routed_containers
-    #   ansible.builtin.debug:
-    #     var: gluetun_routed_containers
-
     - name: Get container ports as list of lists
       ansible.builtin.set_fact:
         container_ports_nested: "{{ gluetun_routed_containers | map(attribute='ports') | list }}"
       # ^ We don't flatten here yet, just to see the structure.
 
-    # - name: Debug container_ports_nested
-    #   ansible.builtin.debug:
-    #     var: container_ports_nested
-
     - name: Flatten container ports
       ansible.builtin.set_fact:
         container_ports_flat: "{{ container_ports_nested | flatten }}"
 
-    # - name: Debug container_ports_flat
-    #   ansible.builtin.debug:
-    #     var: container_ports_flat
-
     - name: Set final gluetun_combined_ports
       ansible.builtin.set_fact:
         gluetun_combined_ports: "{{ [ gluetun_http_port ] + container_ports_flat }}"
-
-    # - name: Debug gluetun_combined_ports
-    #   ansible.builtin.debug:
-    #     var: gluetun_combined_ports
-
-    - name: Stop and remove existing routed containers before attaching
-      community.docker.docker_container:
-        name: "{{ item.name }}"
-        state: absent
-      loop: "{{ gluetun_routed_containers }}"
-      when: gluetun_enabled is true and gluetun_routed_containers is defined
 
     - name: Create gluetun Docker Container (Using User-Provided VPN Config)
       community.docker.docker_container:
@@ -86,6 +82,16 @@
       retries: 30
       delay: 5
       changed_when: false
+
+    - name: Start existing routed containers
+      community.docker.docker_container:
+        name: "{{ item.name }}"
+        state: started
+        image: "{{ item.image }}"
+      loop: "{{ gluetun_routed_containers }}"
+      when: 
+        - gluetun_enabled is true 
+        - gluetun_routed_containers is defined
       
   when: gluetun_enabled is true
 

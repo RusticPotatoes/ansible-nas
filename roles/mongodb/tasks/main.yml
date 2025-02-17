@@ -13,7 +13,7 @@
         name: mongodb
         image: mongodb/mongodb-community-server:latest
         pull: true
-        user: "{{ mongodb_user_id:mongodb_group_id }}"
+        user: "{{ mongodb_user_id }}:{{ mongodb_group_id }}"
         volumes:
           - "{{ mongodb_directory }}:/data/db:rw"
         ports:

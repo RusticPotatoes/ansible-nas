@@ -13,6 +13,9 @@
 ansible_nas_hostname: ansible-nas
 ansible_nas_timezone: "America/New_York"
 
+# main eth device
+primary_eth: "enp6s0"
+
 # ansible_os_family: "Debian"
 
 ## Enable some applications
@@ -46,7 +49,8 @@ pihole_enabled: true
 
 # # Containers that should use the VPN
 gluetun_name: "container:{{ gluetun_container_name }}"
-lan_subnets: "192.168.1.0/24" #,0.0.0.0/0"
+
+lan_subnets: "{{ ansible_nas_subnet }}"
 gluetun_routed_containers:
 
   - name: "prowlarr"

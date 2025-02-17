@@ -28,6 +28,11 @@ ansible_nas_domain: example.com
 # What version of python ansible should use on target system (path to spesific binary)
 ansible_python_interpreter: /usr/bin/python3
 
+# network settings
+ansible_nas_gateway: "{{ ansible_default_ipv4.gateway }}" # eg 192.168.1.1
+ansible_nas_ip: "{{ ansible_default_ipv4.address }}" # eg 192.168.1.100
+ansible_nas_subnet: "{{ ansible_default_ipv4.network }}/{{ ansible_default_ipv4.prefix }}" # eg 192.168.1.0/24
+
 ###
 ### Samba
 ###
@@ -201,10 +206,20 @@ samba_shares:
 # https://help.ubuntu.com/community/SettingUpNFSHowTo#Shares
 # WARNING: Weird things might happen if you share the same data over Samba and NFS and allow writes on both!
 
-nfs_shares_root: /mnt/media
+###
+### NFS
+###
 
+# Define NFS share locations
+nfs_media: /mnt/media
+nfs_docker: /mnt/docker
+nfs_archive: /mnt/archive
+
+# NFS exports
 nfs_exports:
-  - "{{ nfs_shares_root }}/public *(rw,sync,no_root_squash)"
+  - "{{ nfs_media }} *(rw,sync,no_root_squash)"
+  - "{{ nfs_docker }} *(rw,sync,no_root_squash)"
+  - "{{ nfs_archive }} *(rw,sync,no_root_squash)"
 
 ###
 ### Samba
