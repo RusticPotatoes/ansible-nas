@@ -1,30 +1,30 @@
 ---
 - name: Start gluetun
   block:
-    - name: Gather info about child containers
-      community.docker.docker_container_info:
-        name: "{{ item.name }}"
-      loop: "{{ gluetun_routed_containers }}"
-      register: child_container_info
+    # - name: Gather info about child containers
+    #   community.docker.docker_container_info:
+    #     name: "{{ item.name }}"
+    #   loop: "{{ gluetun_routed_containers }}"
+    #   register: child_container_info
 
-    - name: Determine which containers are actually running
-      ansible.builtin.set_fact:
-        running_routed_containers: >-
-          {{
-            child_container_info.results
-            | selectattr('container', 'defined')
-            | selectattr('container.State.Status', '==', 'running')
-            | map(attribute='item')
-            | list
-          }}
+    # - name: Determine which containers are actually running
+    #   ansible.builtin.set_fact:
+    #     running_routed_containers: >-
+    #       {{
+    #         child_container_info.results
+    #         | selectattr('container', 'defined')
+    #         | selectattr('container.State.Status', '==', 'running')
+    #         | map(attribute='item')
+    #         | list
+    #       }}
 
-    - name: Stop the currently running child containers
-      community.docker.docker_container:
-        name: "{{ item.name }}"
-        state: stopped
-      loop: "{{ running_routed_containers }}"
-      loop_control:
-        label: "{{ item.name }}"
+    # - name: Stop the currently running child containers
+    #   community.docker.docker_container:
+    #     name: "{{ item.name }}"
+    #     state: stopped
+    #   loop: "{{ running_routed_containers }}"
+    #   loop_control:
+    #     label: "{{ item.name }}"
 
     - name: Stop gluetun
       community.docker.docker_container:
@@ -67,6 +67,7 @@
           VPN_INTERFACE: "wg0"
           VPN_OUTPUT_INTERFACE: "eth0"
         restart_policy: unless-stopped
+        image_name_mismatch: recreate
         memory: "{{ gluetun_memory }}"
         labels:
           traefik.enable: "{{ gluetun_available_externally | string }}"
