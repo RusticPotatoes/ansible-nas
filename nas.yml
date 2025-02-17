@@ -131,6 +131,7 @@
     - role: deluge
       tags:
         - deluge
+        - gluetun
 
     - role: dokuwiki
       tags:
@@ -315,6 +316,7 @@
     - role: nzbget
       tags:
         - nzbget
+        - gluetun
 
     - role: octoprint
       tags:
@@ -355,6 +357,7 @@
     - role: prowlarr
       tags:
         - prowlarr
+        - gluetun
 
     - role: promtail
       tags:
@@ -371,6 +374,7 @@
     - role: radarr
       tags:
         - radarr
+        - gluetun
 
     - role: romm
       tags:
@@ -399,6 +403,7 @@
     - role: sonarr
       tags:
         - sonarr
+        - gluetun
 
     - role: speedtest-tracker
       tags:

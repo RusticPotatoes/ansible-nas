@@ -1,52 +1,54 @@
 ---
 - name: Start gluetun
   block:
-
-    - name: Get existing routed containers
+    - name: Gather info about child containers
       community.docker.docker_container_info:
         name: "{{ item.name }}"
       loop: "{{ gluetun_routed_containers }}"
-      register: existing_containers
-      when: gluetun_enabled is true
+      register: child_container_info
 
-    - name: Stop existing routed containers
+    - name: Determine which containers are actually running
+      ansible.builtin.set_fact:
+        running_routed_containers: >-
+          {{
+            child_container_info.results
+            | selectattr('container', 'defined')
+            | selectattr('container.State.Status', '==', 'running')
+            | map(attribute='item')
+            | list
+          }}
+
+    - name: Stop the currently running child containers
       community.docker.docker_container:
         name: "{{ item.name }}"
         state: stopped
-        image: "{{ item.image }}"
-      loop: "{{ gluetun_routed_containers }}"
-      when: 
-        - gluetun_enabled is true 
-        - gluetun_routed_containers is defined
+      loop: "{{ running_routed_containers }}"
+      loop_control:
+        label: "{{ item.name }}"
 
     - name: Stop gluetun
       community.docker.docker_container:
         name: "{{ gluetun_container_name }}"
         state: stopped
-    
-    - name: Create gluetun Directories
+
+    - name: Create Gluetun config directories
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
         owner: 1000
         group: 1000
-      with_items:
+      loop:
         - "{{ gluetun_config_directory }}/wireguard"
 
-    - name: Get container ports as list of lists
+    - name: Flatten child container ports
       ansible.builtin.set_fact:
-        container_ports_nested: "{{ gluetun_routed_containers | map(attribute='ports') | list }}"
-      # ^ We don't flatten here yet, just to see the structure.
+        gluetun_combined_ports: >-
+          {{
+            [ gluetun_http_port ]
+            + (gluetun_routed_containers | map(attribute='ports') | list | flatten)
+          }}
 
-    - name: Flatten container ports
-      ansible.builtin.set_fact:
-        container_ports_flat: "{{ container_ports_nested | flatten }}"
-
-    - name: Set final gluetun_combined_ports
-      ansible.builtin.set_fact:
-        gluetun_combined_ports: "{{ [ gluetun_http_port ] + container_ports_flat }}"
-
-    - name: Create gluetun Docker Container (Using User-Provided VPN Config)
+    - name: Create/Start Gluetun container
       community.docker.docker_container:
         name: "{{ gluetun_container_name }}"
         image: "{{ gluetun_image_name }}:{{ gluetun_image_version }}"
@@ -55,7 +57,7 @@
           - NET_ADMIN
         volumes:
           - "{{ gluetun_config_directory }}/wireguard:/gluetun/wireguard/:rw"
-          - "/etc/resolv.conf:/etc/resolv.conf:rw"  # Ensure DNS works inside the container
+          - "/etc/resolv.conf:/etc/resolv.conf:rw"
         ports: "{{ gluetun_combined_ports }}"
         env:
           VPN_SERVICE_PROVIDER: "custom"
@@ -83,16 +85,6 @@
       delay: 5
       changed_when: false
 
-    - name: Start existing routed containers
-      community.docker.docker_container:
-        name: "{{ item.name }}"
-        state: started
-        image: "{{ item.image }}"
-      loop: "{{ gluetun_routed_containers }}"
-      when: 
-        - gluetun_enabled is true 
-        - gluetun_routed_containers is defined
-      
   when: gluetun_enabled is true
 
 

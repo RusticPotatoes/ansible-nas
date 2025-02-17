@@ -217,9 +217,9 @@ nfs_archive: /mnt/archive
 
 # NFS exports
 nfs_exports:
-  - "{{ nfs_media }} *(rw,sync,no_root_squash)"
-  - "{{ nfs_docker }} *(rw,sync,no_root_squash)"
-  - "{{ nfs_archive }} *(rw,sync,no_root_squash)"
+  - "{{ nfs_media }} *(rw,sync,no_subtree_check,no_root_squash,insecure)"
+  - "{{ nfs_docker }} *(rw,sync,no_subtree_check,no_root_squash,insecure)"
+  - "{{ nfs_archive }} *(rw,sync,no_subtree_check,no_root_squash,insecure)"
 
 ###
 ### Samba
