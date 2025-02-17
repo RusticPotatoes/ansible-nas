@@ -1,0 +1,26 @@
+---
+unifi_enabled: false
+unifi_available_externally: false
+
+# directories
+unifi_config_directory: "{{ docker_home }}/unifi/config"
+unifi_download_directory: "{{ downloads_root }}"
+unifi_watch_directory: "{{ torrents_root }}"
+
+# uid / gid
+unifi_user_id: "1000"
+unifi_group_id: "1000"
+
+# error logging
+unifi_log_level: "error"
+
+# network
+unifi_port: "8443"
+unifi_hostname: "unifi"
+
+unifi_timezone: "{{ ansible_nas_timezone }}"
+
+# specs
+unifi_memory: 1g
+
+unifi_container_name: unifi

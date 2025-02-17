@@ -1,0 +1,55 @@
+---
+- name: Start pihole
+  block:
+    
+    - name: Create macvlan network for Pi-hole
+      community.docker.docker_network:
+        name: pihole_macvlan
+        driver: macvlan
+        driver_options:
+          parent: enp6s0  # Change to match your network interface
+        ipam_config:
+          - subnet: "192.168.1.0/24"  # Adjust based on your network
+            gateway: "192.168.1.1"  # Set your router's IP
+      when: pihole_enabled is true
+
+    - name: Create pihole Directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ pihole_config_directory }}"
+        - "{{ pihole_dnsmasq_directory }}"
+        
+    - name: Deploy Pi-hole Docker Container
+      community.docker.docker_container:
+        name: "pihole"
+        image: "pihole/pihole:latest"
+        pull: true
+        networks:
+          - name: pihole_macvlan
+            ipv4_address: "192.168.1.2"
+        volumes:
+          - "{{ pihole_config_directory }}:/etc/pihole:rw"
+          - "{{ pihole_dnsmasq_directory }}:/etc/dnsmasq.d:rw"
+        ports:
+          - "53:53/tcp"
+          - "53:53/udp"
+          - "67:67/udp"
+          - "80:80/tcp"
+        env:
+          TZ: "{{ pihole_timezone }}"
+          WEBPASSWORD: "admin"
+        capabilities:
+          - "NET_ADMIN"
+        restart_policy: unless-stopped
+        memory: "{{ pihole_memory }}"
+      when: pihole_enabled is true
+
+- name: Stop pihole
+  block:
+    - name: Stop pihole
+      community.docker.docker_container:
+        name: "{{ pihole_container_name }}"
+        state: absent
+  when: pihole_enabled is false

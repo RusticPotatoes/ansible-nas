@@ -1,0 +1,25 @@
+---
+pihole_enabled: false
+pihole_available_externally: false
+
+# directories
+pihole_config_directory: "{{ docker_home }}/pihole/config"
+pihole_dnsmasq_directory: "{{ docker_home }}/pihole/dnsmasq"
+
+# uid / gid
+pihole_user_id: "1000"
+pihole_group_id: "1000"
+
+# error logging
+pihole_log_level: "error"
+
+# network
+pihole_port: "8443"
+pihole_hostname: "pihole"
+
+pihole_timezone: "{{ ansible_nas_timezone }}"
+
+# specs
+pihole_memory: 1g
+
+pihole_container_name: pihole

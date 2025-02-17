@@ -103,6 +103,18 @@
       tags:
         - booksonic
 
+    - role: unifi
+      tags:
+        - unifi
+    
+    - role: mongodb
+      tags:
+        - mongodb
+
+    - role: pihole
+      tags:
+        - pihole
+
     - role: calibre
       tags:
         - calibre

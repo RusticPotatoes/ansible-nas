@@ -1,0 +1,64 @@
+---
+- name: Start unifi
+  block:
+    - name: Create unifi Directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ unifi_config_directory }}"
+        - "{{ unifi_download_directory }}"
+
+    - name: unifi Docker Container
+      community.docker.docker_container:
+        name: unifi
+        image: lscr.io/linuxserver/unifi-network-application:latest
+        pull: true
+        volumes:
+          - "{{ unifi_config_directory }}:/config:rw"
+          - "{{ unifi_download_directory }}:/downloads:rw"
+        ports:
+          - "{{ unifi_port }}:8443"
+          - "3478:3478/udp"
+          - "10001:10001/udp"
+          - "8080:8080"
+          # - "1900:1900/udp"
+          - "8843:8843"
+          - "8880:8880"
+          # - "6789:6789"
+          - "5514:5514/udp"
+        env:
+          TZ: "{{ unifi_timezone }}"
+          PUID: "{{ unifi_user_id }}"
+          PGID: "{{ unifi_group_id }}"
+          MONGO_USER: "{{ mongodb_user }}"
+          MONGO_PASS: "{{ mongodb_password }}"
+          MONGO_HOST: "{{ ansible_default_ipv4.address }}"
+          MONGO_PORT: "27017"
+          MONGO_DBNAME: "unifi"
+          MONGO_AUTHSOURCE: "admin"
+        restart_policy: unless-stopped
+        memory: "{{ unifi_memory }}"
+        labels:
+          traefik.enable: "{{ unifi_available_externally | string }}"
+          traefik.http.routers.unifi.rule: "Host(`{{ unifi_hostname }}.{{ ansible_nas_domain }}`)"
+          traefik.http.routers.unifi.tls.certresolver: "letsencrypt"
+          traefik.http.routers.unifi.tls.domains[0].main: "{{ ansible_nas_domain }}"
+          traefik.http.routers.unifi.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
+          traefik.http.services.unifi.loadbalancer.server.port: "8112"
+          homepage.group: Download Tools
+          homepage.name: unifi
+          homepage.icon: unifi.png
+          homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ unifi_port }}"
+          homepage.description: BitTorrent client
+          homepage.widget.type: unifi
+          homepage.widget.url: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ unifi_port }}"
+  when: unifi_enabled is true
+
+- name: Stop unifi
+  block:
+    - name: Stop unifi
+      community.docker.docker_container:
+        name: "{{ unifi_container_name }}"
+        state: absent
+  when: unifi_enabled is false

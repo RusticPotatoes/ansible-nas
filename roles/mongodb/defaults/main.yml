@@ -1,0 +1,28 @@
+---
+mongodb_enabled: false
+mongodb_available_externally: false
+
+# directories
+mongodb_directory: "{{ docker_home }}/mongodb"
+
+# uid / gid
+mongodb_user_id: "0"
+mongodb_group_id: "0"
+
+# error logging
+mongodb_log_level: "error"
+
+# creds
+mongodb_user: "admin"
+mongodb_password: "strongpassword123"
+
+# network
+mongodb_port: "27017"
+mongodb_hostname: "mongodb"
+
+mongodb_timezone: "{{ ansible_nas_timezone }}"
+
+# specs
+mongodb_memory: 1g
+
+mongodb_container_name: mongodb

@@ -1,0 +1,26 @@
+---
+- name: Start MongoDB
+  block:
+    - name: Ensure MongoDB directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ mongodb_directory }}/data/db"
+
+    - name: MongoDB Docker Container
+      community.docker.docker_container:
+        name: mongodb
+        image: mongodb/mongodb-community-server:latest
+        pull: true
+        user: "{{ mongodb_user_id:mongodb_group_id }}"
+        volumes:
+          - "{{ mongodb_directory }}:/data/db:rw"
+        ports:
+          - "{{ mongodb_port }}:27017"
+        env:
+          TZ: "{{ mongodb_timezone }}"
+          MONGODB_INITDB_ROOT_USERNAME: "{{ mongodb_user }}"
+          MONGODB_INITDB_ROOT_PASSWORD: "{{ mongodb_password }}"
+        restart_policy: unless-stopped
+  when: mongodb_enabled is true
