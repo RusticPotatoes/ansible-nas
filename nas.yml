@@ -12,7 +12,7 @@
       tags:
         - ansible-nas-users
         - ansible-nas
-
+        
     - role: vladgh.samba.server
       tags:
         - samba

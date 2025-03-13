@@ -12,8 +12,8 @@ wireguard_group_id: "1000"
 
 # network
 wireguard_hostname: "wireguard"
-wireguard_subnet: "169.100.0.0/24"  # Define custom WireGuard subnet
-wireguard_peers: "1"  # Number of WireGuard peers (VPN clients)
+wireguard_subnet: "10.0.0.0/8"  # Define custom WireGuard subnet
+wireguard_peers: "3"  # Number of WireGuard peers (VPN clients)
 wireguard_allowed_ips: "0.0.0.0/0"  # Allow all traffic through VPN
 
 # docker

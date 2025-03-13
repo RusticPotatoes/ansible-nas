@@ -38,7 +38,7 @@ homebridge_enabled: true
 grafana_enabled: true
 promtail_enabled: true
 semaphore_enabled: true
-dashy_enabled: true
+dashy_enabled: false
 organizr_enabled: true
 octoprint_enabled: false
 overseerr_enabled: true
@@ -46,6 +46,7 @@ thelounge_enabled: true
 unifi_enabled: true
 mongodb_enabled: true
 pihole_enabled: true
+wireguard_enabled: true
 
 # # Containers that should use the VPN
 gluetun_name: "container:{{ gluetun_container_name }}"
