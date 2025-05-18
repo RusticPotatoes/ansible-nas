@@ -31,6 +31,11 @@
         name: "{{ gluetun_container_name }}"
         state: stopped
 
+    - name: Remove Gluetun auth directory
+      ansible.builtin.file:
+        path: "{{ gluetun_config_directory }}/auth"
+        state: absent
+
     - name: Create Gluetun config directories
       ansible.builtin.file:
         path: "{{ item }}"
@@ -39,6 +44,24 @@
         group: 1000
       loop:
         - "{{ gluetun_config_directory }}/wireguard"
+        - "{{ gluetun_config_directory }}/auth"
+
+    - name: Create minimal Gluetun auth config file for future compatibility
+      ansible.builtin.copy:
+        dest: "{{ gluetun_config_directory }}/auth/config.toml"
+        content: |
+          [[roles]]
+          name = "default"
+          routes = [
+            "GET /v1/dns/status",
+            "GET /v1/publicip/ip",
+            "GET /v1/openvpn/status",
+            "GET /v1/updater/status"
+          ]
+          auth = "none"
+        owner: 1000
+        group: 1000
+        mode: '0644'
 
     - name: Flatten child container ports
       ansible.builtin.set_fact:
@@ -58,19 +81,17 @@
         volumes:
           - "{{ gluetun_config_directory }}/wireguard:/gluetun/wireguard/:rw"
           - "/etc/resolv.conf:/etc/resolv.conf:rw"
+          - "{{ gluetun_config_directory }}/auth/config.toml:/gluetun/auth/config.toml:ro"
         ports: "{{ gluetun_combined_ports }}"
-        # dns_servers: "{{ default_dns_servers }}"
         env:
           VPN_SERVICE_PROVIDER: "custom"
           VPN_TYPE: "wireguard"
-          DOT: "on"  # Enable DNS over TLS
-          FIREWALL: "on"  # Enable Gluetun firewall to prevent leaks
-          # BLOCK_MALICIOUS: "on"
-          # BLOCK_SURVEILLANCE: "on"
-          # BLOCK_ADS: "on"
-          # DNS_ADDRESS: "{{ default_dns_servers }}"
+          DNS_UPDATE_PERIOD: "30m"
           VPN_INTERFACE: "wg0"
           VPN_OUTPUT_INTERFACE: "eth0"
+          BLOCK_MALICIOUS: "off"
+          CONTROL_SERVER_LOGGING: "on"
+          HTTP_CONTROL_SERVER_AUTH_CONFIG_FILEPATH: "/gluetun/auth/config.toml"
         restart_policy: unless-stopped
         image_name_mismatch: recreate
         memory: "{{ gluetun_memory }}"
@@ -82,17 +103,17 @@
           traefik.http.routers.gluetun.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.gluetun.loadbalancer.server.port: "8000"
         healthcheck:
-          test: ["CMD", "curl", "-sf", "http://localhost:8000/vpn/status"]
+          test: ["CMD", "wget", "-qO-", "http://localhost:8000/v1/dns/status"]
           interval: 60s
           timeout: 10s
           retries: 3
           start_period: 30s
 
-    - name: Wait for Gluetun to be fully running
+    - name: Wait for Gluetun container to be healthy
       community.docker.docker_container_info:
         name: "{{ gluetun_container_name }}"
       register: gluetun_status
-      until: gluetun_status.container.State.Status == "running"
+      until: gluetun_status.container.State.Health.Status == "healthy"
       retries: 30
       delay: 5
       changed_when: false
