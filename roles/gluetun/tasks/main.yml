@@ -59,11 +59,16 @@
           - "{{ gluetun_config_directory }}/wireguard:/gluetun/wireguard/:rw"
           - "/etc/resolv.conf:/etc/resolv.conf:rw"
         ports: "{{ gluetun_combined_ports }}"
+        # dns_servers: "{{ default_dns_servers }}"
         env:
           VPN_SERVICE_PROVIDER: "custom"
           VPN_TYPE: "wireguard"
-          DOT: "off"
-          FIREWALL: "off"
+          DOT: "on"  # Enable DNS over TLS
+          FIREWALL: "on"  # Enable Gluetun firewall to prevent leaks
+          BLOCK_MALICIOUS: "on"
+          BLOCK_SURVEILLANCE: "on"
+          BLOCK_ADS: "on"
+          DNS_ADDRESS: "{{ default_dns_servers }}"
           VPN_INTERFACE: "wg0"
           VPN_OUTPUT_INTERFACE: "eth0"
         restart_policy: unless-stopped
@@ -76,6 +81,12 @@
           traefik.http.routers.gluetun.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.gluetun.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.gluetun.loadbalancer.server.port: "8000"
+        healthcheck:
+          test: ["CMD", "curl", "-sf", "http://localhost:8000/vpn/status"]
+          interval: 60s
+          timeout: 10s
+          retries: 3
+          start_period: 30s
 
     - name: Wait for Gluetun to be fully running
       community.docker.docker_container_info:
