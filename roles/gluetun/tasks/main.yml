@@ -65,9 +65,9 @@
           VPN_TYPE: "wireguard"
           DOT: "on"  # Enable DNS over TLS
           FIREWALL: "on"  # Enable Gluetun firewall to prevent leaks
-          BLOCK_MALICIOUS: "on"
-          BLOCK_SURVEILLANCE: "on"
-          BLOCK_ADS: "on"
+          # BLOCK_MALICIOUS: "on"
+          # BLOCK_SURVEILLANCE: "on"
+          # BLOCK_ADS: "on"
           # DNS_ADDRESS: "{{ default_dns_servers }}"
           VPN_INTERFACE: "wg0"
           VPN_OUTPUT_INTERFACE: "eth0"
