@@ -68,7 +68,7 @@
           BLOCK_MALICIOUS: "on"
           BLOCK_SURVEILLANCE: "on"
           BLOCK_ADS: "on"
-          DNS_ADDRESS: "{{ default_dns_servers }}"
+          # DNS_ADDRESS: "{{ default_dns_servers }}"
           VPN_INTERFACE: "wg0"
           VPN_OUTPUT_INTERFACE: "eth0"
         restart_policy: unless-stopped
