@@ -1,0 +1,57 @@
+---
+- name: Start Readarr
+  block:
+    - name: Create Readarr Directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ readarr_data_directory }}"
+
+    - name: Readarr Docker Container
+      community.docker.docker_container:
+        name: "{{ readarr_container_name }}"
+        image: "{{ readarr_image_name }}:{{ readarr_image_version }}"
+        pull: true
+        volumes:
+          - "{{ readarr_books_directory }}:/books:rw"
+          - "{{ readarr_download_directory }}:/downloads:rw"
+          - "{{ readarr_data_directory }}:/config:rw"
+        # ports:
+        #   - "{{ readarr_port }}:8787"
+        network_mode: "container:{{ gluetun_container_name }}"
+        env:
+          TZ: "{{ ansible_nas_timezone }}"
+          PUID: "{{ readarr_user_id }}"
+          PGID: "{{ readarr_group_id }}"
+        restart_policy: unless-stopped
+        memory: "{{ readarr_memory }}"
+        labels:
+          traefik.enable: "{{ readarr_available_externally | string }}"
+          traefik.http.routers.readarr.rule: "Host(`{{ readarr_hostname }}.{{ ansible_nas_domain }}`)"
+          traefik.http.routers.readarr.tls.certresolver: "letsencrypt"
+          traefik.http.routers.readarr.tls.domains[0].main: "{{ ansible_nas_domain }}"
+          traefik.http.routers.readarr.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
+          traefik.http.services.readarr.loadbalancer.server.port: "8787"
+          homepage.group: "Download Tools"
+          homepage.name: "Readarr"
+          homepage.icon: "readarr"
+          homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ readarr_port }}"
+
+  when: readarr_enabled is true
+
+- name: Stop Radarr
+  block:
+    - name: Stop Radarr
+      community.docker.docker_container:
+        name: "{{ radarr_container_name }}"
+        state: absent
+  when: radarr_enabled is false
+
+- name: Stop Readarr
+  block:
+    - name: Stop Readarr
+      community.docker.docker_container:
+        name: "{{ readarr_container_name }}"
+        state: absent
+  when: readarr_enabled is false

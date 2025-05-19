@@ -7,6 +7,10 @@
       loop: "{{ gluetun_routed_containers }}"
       register: child_container_info
 
+    - name: Debug child container info
+      debug:
+        var: child_container_info
+
     - name: Determine which containers are actually running
       ansible.builtin.set_fact:
         running_routed_containers: >-

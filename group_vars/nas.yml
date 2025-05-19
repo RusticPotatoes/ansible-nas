@@ -47,6 +47,7 @@ unifi_enabled: true
 mongodb_enabled: true
 pihole_enabled: true
 wireguard_enabled: true
+readarr_enabled: true
 
 # # Containers that should use the VPN
 gluetun_name: "container:{{ gluetun_container_name }}"
@@ -78,3 +79,8 @@ gluetun_routed_containers:
     image: "linuxserver/nzbget:latest"
     ports:
       - "6789:6789"
+
+  - name: "readarr"
+    image: "linuxserver/readarr:latest"
+    ports:
+      - "8787:8787"
