@@ -380,6 +380,11 @@
         - radarr
         - gluetun
 
+    - role: readarr
+      tags:
+        - readarr
+        - gluetun
+
     - role: romm
       tags:
         - romm
