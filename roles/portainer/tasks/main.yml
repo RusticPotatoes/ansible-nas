@@ -27,7 +27,7 @@
           - "/var/run/docker.sock:/var/run/docker.sock:ro"
           - "/etc/timezone:/etc/timezone:ro"
         ports:
-          - "{{ portainer_port }}:9000"  # Use HTTP port instead of 9443
+          - "{{ portainer_port }}:9000"
         restart_policy: unless-stopped
         memory: "{{ portainer_memory }}"
         command: "--http-enabled"  # Enable HTTP mode, disable HTTPS
