@@ -2,7 +2,7 @@
 watchtower_enabled: false
 
 # Sets the 6 field cron schedule to use for checks and updates. This will check at 5am daily.
-watchtower_cron_schedule: 0 0 5 * * *
+watchtower_cron_schedule: 0 0 3 * * *
 
 # Sets the Watchtower Docker start command. Different options can be supplied based on whether you want to receive
 # notifications or not, some examples are provided below. See https://containrrr.dev/watchtower/arguments/ for more options.

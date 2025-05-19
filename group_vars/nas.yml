@@ -48,6 +48,7 @@ mongodb_enabled: true
 pihole_enabled: true
 wireguard_enabled: true
 readarr_enabled: true
+watchtower_enabled: true
 
 # # Containers that should use the VPN
 gluetun_name: "container:{{ gluetun_container_name }}"
