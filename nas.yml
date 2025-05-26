@@ -157,6 +157,10 @@
       tags:
         - emby
 
+    - role: ebook2audiobook
+      tags:
+        - ebook2audiobook
+
     - role: esphome
       tags:
         - esphome
@@ -309,6 +313,10 @@
       tags:
         - netdata
 
+    - role: newspaper
+      tags:
+        - newspaper
+
     - role: nextcloud
       tags:
         - nextcloud
@@ -357,6 +365,10 @@
     - role: portainer
       tags:
         - portainer
+
+    - role: postgres
+      tags:
+        - postgres
 
     - role: prowlarr
       tags:

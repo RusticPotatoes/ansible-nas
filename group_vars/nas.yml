@@ -23,7 +23,6 @@ homepage_enabled: true
 portainer_enabled: true
 homeassistant_enabled: true
 plex_enabled: true
-jackett_enabled: false
 gluetun_enabled: true
 radarr_enabled: true
 sonarr_enabled: true
@@ -34,13 +33,13 @@ logging_enabled: true
 prowlarr_enabled: true
 minio_enabled: true
 loki_enabled: true
+logging_stack_enabled: true
 homebridge_enabled: true
 grafana_enabled: true
 promtail_enabled: true
 semaphore_enabled: true
 dashy_enabled: false
 organizr_enabled: true
-octoprint_enabled: false
 overseerr_enabled: true
 thelounge_enabled: true
 unifi_enabled: true
@@ -49,6 +48,9 @@ pihole_enabled: true
 wireguard_enabled: true
 readarr_enabled: true
 watchtower_enabled: true
+newspaper_enabled: true
+ebook2audiobook_enabled: true
+postgres_enabled: true
 
 # # Containers that should use the VPN
 gluetun_name: "container:{{ gluetun_container_name }}"
