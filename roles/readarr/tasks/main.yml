@@ -40,14 +40,6 @@
 
   when: readarr_enabled is true
 
-- name: Stop Radarr
-  block:
-    - name: Stop Radarr
-      community.docker.docker_container:
-        name: "{{ radarr_container_name }}"
-        state: absent
-  when: radarr_enabled is false
-
 - name: Stop Readarr
   block:
     - name: Stop Readarr
