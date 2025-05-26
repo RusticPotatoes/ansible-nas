@@ -1,0 +1,46 @@
+---
+- name: Start newspaper
+  block:
+    - name: Create newspaper Directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ newspaper_data_directory }}"
+
+    - name: newspaper Docker Container
+      community.docker.docker_container:
+        name: "{{ newspaper_container_name }}"
+        image: "{{ newspaper_image_name }}:{{ newspaper_image_version }}"
+        pull: true
+        volumes:
+          - "{{ newspaper_data_directory }}:/config:rw"
+        ports:
+          - "{{ newspaper_port }}:8080"
+        env:
+          TZ: "{{ ansible_nas_timezone }}"
+          PUID: "{{ newspaper_user_id }}"
+          PGID: "{{ newspaper_group_id }}"
+        restart_policy: unless-stopped
+        memory: "{{ newspaper_memory }}"
+        labels:
+          traefik.enable: "{{ newspaper_available_externally | string }}"
+          traefik.http.routers.newspaper.rule: "Host(`{{ newspaper_hostname }}.{{ ansible_nas_domain }}`)"
+          traefik.http.routers.newspaper.tls.certresolver: "letsencrypt"
+          traefik.http.routers.newspaper.tls.domains[0].main: "{{ ansible_nas_domain }}"
+          traefik.http.routers.newspaper.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
+          traefik.http.services.newspaper.loadbalancer.server.port: "8787"
+          homepage.group: "Download Tools"
+          homepage.name: "newspaper"
+          homepage.icon: "newspaper"
+          homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ newspaper_port }}"
+
+  when: newspaper_enabled is true
+
+- name: Stop newspaper
+  block:
+    - name: Stop newspaper
+      community.docker.docker_container:
+        name: "{{ newspaper_container_name }}"
+        state: absent
+  when: newspaper_enabled is false
