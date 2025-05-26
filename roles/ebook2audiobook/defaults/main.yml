@@ -1,0 +1,25 @@
+---
+ebook2audiobook_enabled: false
+ebook2audiobook_available_externally: false
+
+# directories
+ebook2audiobook_books_directory: "{{ books_root }}"
+ebook2audiobook_audiobooks_directory: "{{ audiobooks_root }}"
+ebook2audiobook_download_directory: "{{ downloads_root }}"
+ebook2audiobook_data_directory: "{{ docker_home }}/ebook2audiobook"
+
+# uid / gid
+ebook2audiobook_user_id: "0"
+ebook2audiobook_group_id: "0"
+
+# network
+ebook2audiobook_port: "7860"
+ebook2audiobook_hostname: "ebook2audiobook"
+
+# docker
+ebook2audiobook_container_name: "ebook2audiobook"
+ebook2audiobook_image_name: "athomasson2/ebook2audiobook"
+ebook2audiobook_image_version: "latest"
+
+# specs
+ebook2audiobook_memory: 8g
