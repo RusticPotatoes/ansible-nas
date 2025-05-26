@@ -1,0 +1,44 @@
+- name: Debug postgres Enabled Variable
+  debug:
+    var: postgres_enabled
+
+- name: Create postgres Docker network
+  community.docker.docker_network:
+    name: postgres_net
+    state: present
+
+- name: Start postgres
+  block:
+
+    - name: Create postgres Directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ postgres_data_directory }}"
+
+    - name: postgres Docker Container (Simplified)
+      community.docker.docker_container:
+        name: "{{ postgres_container_name }}"
+        image: "{{ postgres_image_name }}:{{ postgres_image_version }}"
+        pull: true
+        volumes:
+          - "{{ postgres_data_directory }}:/var/lib/postgresql/data"
+        ports:
+          - "{{ postgres_port }}:5432"
+        networks:
+          - name: postgres_net
+        env:
+          POSTGRES_USER: "{{ postgres_user | default('postgres') }}"
+          POSTGRES_PASSWORD: "{{ postgres_password | default('postgres') }}"
+          POSTGRES_DB: "{{ postgres_db | default('default') }}"
+        restart_policy: unless-stopped
+  when: postgres_enabled is true
+
+- name: Stop postgres
+  block:
+    - name: Stop postgres
+      community.docker.docker_container:
+        name: "{{ postgres_container_name }}"
+        state: absent
+  when: postgres_enabled is false

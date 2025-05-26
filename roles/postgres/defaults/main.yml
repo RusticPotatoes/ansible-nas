@@ -1,0 +1,20 @@
+---
+postgres_enabled: false
+postgres_available_externally: false
+
+# directories
+postgres_data_directory: "{{ docker_home }}/postgres"
+
+
+# network
+postgres_port: "5432"
+postgres_hostname: "postgres"
+postgres_ip_allowlist: "0.0.0.0/0"
+
+# docker
+postgres_container_name: "postgres"
+postgres_image_name: "postgres"
+postgres_image_version: "16-alpine"
+
+# specs
+postgres_memory: 1g
