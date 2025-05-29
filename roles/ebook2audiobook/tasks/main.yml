@@ -9,7 +9,7 @@
         - "{{ ebook2audiobook_data_directory }}"
         - "{{ ebook2audiobook_data_directory }}/audiobooks"
         - "{{ ebook2audiobook_audiobooks_directory }}"
-        - - "{{ ebook2audiobook_audiobooks_directory }}/temp"
+        - - "{{ ebook2audiobook_audiobooks_directory }}/tmp"
 
     - name: ebook2audiobook Docker Container
       community.docker.docker_container:
@@ -19,7 +19,7 @@
         volumes:
           - "{{ ebook2audiobook_books_directory }}:/app/input_folder:rw"
           - "{{ ebook2audiobook_audiobooks_directory }}:/app/audiobooks:rw"
-          - "{{ ebook2audiobook_audiobooks_directory }}/temp:/app/temp:rw"
+          - "{{ ebook2audiobook_audiobooks_directory }}/tmp:/app/tmp:rw"
           - "{{ ebook2audiobook_data_directory }}:/config:rw"
         ports:
           - "{{ ebook2audiobook_port }}:7860"
