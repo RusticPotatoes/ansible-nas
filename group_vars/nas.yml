@@ -51,6 +51,7 @@ watchtower_enabled: true
 newspaper_enabled: true
 ebook2audiobook_enabled: true
 postgres_enabled: true
+# librechat_enabled: true
 
 # # Containers that should use the VPN
 gluetun_name: "container:{{ gluetun_container_name }}"
