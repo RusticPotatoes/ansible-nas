@@ -39,20 +39,6 @@
           MONGO_AUTHSOURCE: "admin"
         restart_policy: unless-stopped
         memory: "{{ unifi_memory }}"
-        labels:
-          traefik.enable: "{{ unifi_available_externally | string }}"
-          traefik.http.routers.unifi.rule: "Host(`{{ unifi_hostname }}.{{ ansible_nas_domain }}`)"
-          traefik.http.routers.unifi.tls.certresolver: "letsencrypt"
-          traefik.http.routers.unifi.tls.domains[0].main: "{{ ansible_nas_domain }}"
-          traefik.http.routers.unifi.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
-          traefik.http.services.unifi.loadbalancer.server.port: "8112"
-          homepage.group: Download Tools
-          homepage.name: unifi
-          homepage.icon: unifi.png
-          homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ unifi_port }}"
-          homepage.description: BitTorrent client
-          homepage.widget.type: unifi
-          homepage.widget.url: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ unifi_port }}"
   when: unifi_enabled is true
 
 - name: Stop unifi
