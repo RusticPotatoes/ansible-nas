@@ -15,9 +15,11 @@
       ansible.builtin.set_fact:
         running_routed_containers: >-
           {{
-            child_container_info.results
+            (child_container_info.results | default([]))
             | selectattr('container', 'defined')
-            | selectattr('container.State.Status', '==', 'running')
+            | rejectattr('container', 'none')                 
+            | selectattr('container.State', 'defined')
+            | selectattr('container.State.Status', 'equalto', 'running')
             | map(attribute='item')
             | list
           }}
