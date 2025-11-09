@@ -249,6 +249,10 @@
       tags:
         - krusader
 
+    # - role: librechat
+    #   tags:
+    #     - librechat
+
     - role: lidarr
       tags:
         - lidarr
@@ -392,10 +396,10 @@
         - radarr
         - gluetun
 
-    - role: readarr
-      tags:
-        - readarr
-        - gluetun
+    # - role: readarr
+    #   tags:
+    #     - readarr
+    #     - gluetun
 
     - role: romm
       tags:
