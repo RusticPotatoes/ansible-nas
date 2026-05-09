@@ -92,17 +92,70 @@ groups:
       isPaused: false
     - uid: loki-logs-error
       title: Loki Logs Error
-      condition: A
+      condition: C
       data:
       - refId: A
-        queryType: "instant"
+        queryType: "range"
         relativeTimeRange:
           from: 300
           to: 0
         datasourceUid: loki
         model:
-          expr: 'sum(count_over_time({container=~".+"} |= "error" [5m])) > 10'
-          instant: true
+          expr: 'sum(count_over_time({container=~".+"} |~ "(?i)error|fatal|exception" [5m]))'
+          queryType: "range"
+          refId: A
+      - refId: B
+        relativeTimeRange:
+          from: 0
+          to: 0
+        datasourceUid: __expr__
+        model:
+          conditions:
+            - evaluator:
+                params: []
+                type: gt
+              operator:
+                type: and
+              query:
+                params:
+                  - B
+              reducer:
+                params: []
+                type: last
+              type: query
+          datasource:
+            type: __expr__
+            uid: __expr__
+          expression: A
+          reducer: last
+          refId: B
+          type: reduce
+      - refId: C
+        relativeTimeRange:
+          from: 0
+          to: 0
+        datasourceUid: __expr__
+        model:
+          conditions:
+            - evaluator:
+                params:
+                  - 10
+                type: gt
+              operator:
+                type: and
+              query:
+                params:
+                  - C
+              reducer:
+                params: []
+                type: last
+              type: query
+          datasource:
+            type: __expr__
+            uid: __expr__
+          expression: B
+          refId: C
+          type: threshold
       noDataState: "OK"
       execErrState: "Error"
       for: 5m
