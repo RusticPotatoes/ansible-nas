@@ -20,6 +20,7 @@
       ansible.builtin.template:
         src: datasources/ansible-nas.yml
         dest: "{{ stats_grafana_config_directory }}/provisioning/datasources/ansible-nas.yml"
+      notify: restart grafana
 
     - name: Copy Grafana dashboards configuration
       ansible.builtin.copy:
@@ -30,21 +31,25 @@
       ansible.builtin.copy:
         src: dashboards/ansible-nas-overview.json
         dest: "{{ stats_grafana_config_directory }}/dashboards/ansible-nas-overview.json"
+      notify: restart grafana
 
     - name: Copy Grafana Ansible-NAS v3 dashboard
       ansible.builtin.copy:
         src: dashboards/ansible-nas-overview-v3.json
         dest: "{{ stats_grafana_config_directory }}/dashboards/ansible-nas-overview-v3.json"
+      notify: restart grafana
 
     - name: Template Grafana contact points
       ansible.builtin.template:
         src: contact-points.yml.j2
         dest: "{{ stats_grafana_config_directory }}/provisioning/alerting/contact-points.yml"
+      notify: restart grafana
 
     - name: Template Grafana alert rules
       ansible.builtin.template:
         src: alert-rules.yml.j2
         dest: "{{ stats_grafana_config_directory }}/provisioning/alerting/alert-rules.yml"
+      notify: restart grafana
 
     - name: Grafana Docker Container
       community.docker.docker_container:
