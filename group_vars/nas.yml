@@ -60,7 +60,7 @@ promtail_enabled: true
 semaphore_enabled: false
 dashy_enabled: false
 organizr_enabled: true
-overseerr_enabled: true
+overseerr_enabled: false
 thelounge_enabled: true
 unifi_enabled: true
 mongodb_enabled: true
