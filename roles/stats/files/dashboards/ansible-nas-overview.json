@@ -1486,7 +1486,7 @@
       },
       "id": 43,
       "panels": [],
-      "title": "ZFS",
+      "title": "Btrfs",
       "type": "row"
     },
     {
@@ -1535,15 +1535,7 @@
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
-      "repeat": "zfs_pool",
-      "repeatDirection": "v",
-      "seriesOverrides": [
-        {
-          "$$hashKey": "object:6518",
-          "alias": "Data Written",
-          "transform": "negative-Y"
-        }
-      ],
+      "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -1554,27 +1546,15 @@
             "uid": "ansible_nas"
           },
           "editorMode": "code",
-          "expr": "rate(zfs_pool_nread{host=\"$server\"}[$__rate_interval])",
-          "legendFormat": "Read",
+          "expr": "disk_used_percent{host=\"$server\",fstype=\"btrfs\"}",
+          "legendFormat": "{{path}} used",
           "range": true,
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "ansible_nas"
-          },
-          "editorMode": "code",
-          "expr": "rate(zfs_pool_nwritten{host=\"$server\"}[$__rate_interval]) * -1",
-          "hide": false,
-          "legendFormat": "Write",
-          "range": true,
-          "refId": "B"
         }
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "Pool $zfs_pool Data I/O",
+      "title": "Btrfs Mount Usage",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1589,9 +1569,11 @@
       "yaxes": [
         {
           "$$hashKey": "object:5924",
-          "format": "decbytes",
+          "format": "percent",
           "logBase": 1,
-          "show": true
+          "show": true,
+          "min": "0",
+          "max": "100"
         },
         {
           "$$hashKey": "object:5925",
@@ -1650,12 +1632,10 @@
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
-      "repeat": "zfs_pool",
-      "repeatDirection": "v",
       "seriesOverrides": [
         {
           "$$hashKey": "object:6518",
-          "alias": "Data Written",
+          "alias": "/.* write/",
           "transform": "negative-Y"
         }
       ],
@@ -1669,8 +1649,8 @@
             "uid": "ansible_nas"
           },
           "editorMode": "code",
-          "expr": "rate(zfs_pool_reads{host=\"$server\"}[$__rate_interval])",
-          "legendFormat": "Read",
+          "expr": "rate(diskio_read_bytes{host=\"$server\",name=~\"$btrfs_device\"}[$__rate_interval])",
+          "legendFormat": "{{name}} read",
           "range": true,
           "refId": "A"
         },
@@ -1680,16 +1660,16 @@
             "uid": "ansible_nas"
           },
           "editorMode": "code",
-          "expr": "rate(zfs_pool_writes{host=\"$server\"}[$__rate_interval]) * -1\n",
+          "expr": "rate(diskio_write_bytes{host=\"$server\",name=~\"$btrfs_device\"}[$__rate_interval]) * -1",
           "hide": false,
-          "legendFormat": "Write",
+          "legendFormat": "{{name}} write",
           "range": true,
           "refId": "B"
         }
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "Pool $zfs_pool Iops",
+      "title": "Btrfs Device Data I/O",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1704,7 +1684,7 @@
       "yaxes": [
         {
           "$$hashKey": "object:5924",
-          "format": "iops",
+          "format": "decbytes",
           "logBase": 1,
           "show": true
         },
@@ -2453,8 +2433,8 @@
       {
         "current": {
           "selected": true,
-          "text": "bender",
-          "value": "bender"
+          "text": "ansible-nas",
+          "value": "ansible-nas"
         },
         "datasource": {
           "type": "prometheus",
@@ -2490,15 +2470,15 @@
           "type": "prometheus",
           "uid": "ansible_nas"
         },
-        "definition": "label_values(zfs_pool_reads,pool)",
+        "definition": "label_values(disk_used_percent{fstype=\"btrfs\"},device)",
         "hide": 0,
         "includeAll": true,
-        "label": "ZFS Pool",
+        "label": "Btrfs Device",
         "multi": false,
-        "name": "zfs_pool",
+        "name": "btrfs_device",
         "options": [],
         "query": {
-          "query": "label_values(zfs_pool_reads,pool)",
+          "query": "label_values(disk_used_percent{fstype=\"btrfs\"},device)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
