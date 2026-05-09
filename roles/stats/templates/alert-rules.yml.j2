@@ -38,7 +38,7 @@ groups:
           to: 0
         datasourceUid: ansible_nas
         model:
-          expr: '(node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1'
+          expr: 'disk_used_percent{fstype!~"tmpfs|devtmpfs|devfs|squashfs|nsfs|efivarfs"} > 90'
           instant: true
       noDataState: "OK"
       execErrState: "Error"
