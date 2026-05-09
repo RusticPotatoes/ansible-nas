@@ -39,6 +39,12 @@
           MONGO_AUTHSOURCE: "admin"
         restart_policy: unless-stopped
         memory: "{{ unifi_memory }}"
+        labels:
+          homepage.group: Networking
+          homepage.name: UniFi
+          homepage.icon: unifi
+          homepage.href: "https://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ unifi_port }}"
+          homepage.description: Network controller
   when: unifi_enabled is true
 
 - name: Stop unifi

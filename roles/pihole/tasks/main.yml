@@ -39,11 +39,17 @@
           - "80:80/tcp"
         env:
           TZ: "{{ pihole_timezone }}"
-          WEBPASSWORD: "admin"
+          WEBPASSWORD: "{{ pihole_web_password }}"
         capabilities:
           - "NET_ADMIN"
         restart_policy: unless-stopped
         memory: "{{ pihole_memory }}"
+        labels:
+          homepage.group: Networking
+          homepage.name: Pi-hole
+          homepage.icon: pi-hole
+          homepage.href: "http://192.168.1.2/admin"
+          homepage.description: DNS filtering
       when: pihole_enabled is true
 
 - name: Stop pihole

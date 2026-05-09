@@ -1,8 +1,18 @@
 ---
 - name: Ansible-NAS
   hosts: nas
+  become: true
   become_method: sudo
   become_user: root
+
+  pre_tasks:
+    - name: Add extra Samba shares
+      ansible.builtin.set_fact:
+        samba_shares: "{{ samba_shares + samba_extra_shares }}"
+      when: samba_extra_shares is defined
+      tags:
+        - always
+        - samba
 
   roles:
     ###
@@ -50,6 +60,27 @@
     - role: logging
       tags:
         - logging
+
+    - role: minio
+      tags:
+        - minio
+
+    - role: stats
+      tags:
+        - stats
+
+    - role: loki
+      tags:
+        - loki
+
+    - role: promtail
+      tags:
+        - promtail
+
+    - role: vpn-download-stack
+      tags:
+        - vpn-download-stack
+        - gluetun
 
 
     ###
@@ -257,10 +288,6 @@
       tags:
         - lidarr
 
-    - role: loki
-      tags:
-        - loki
-
     - role: mealie
       tags:
         - mealie
@@ -280,10 +307,6 @@
     - role: miniflux
       tags:
         - miniflux
-
-    - role: minio
-      tags:
-        - minio
 
     - role: mosquitto
       tags:
@@ -379,10 +402,6 @@
         - prowlarr
         - gluetun
 
-    - role: promtail
-      tags:
-        - promtail
-
     - role: pyload
       tags:
         - pyload
@@ -433,10 +452,6 @@
     - role: speedtest-tracker
       tags:
         - speedtest-tracker
-
-    - role: stats
-      tags:
-        - stats
 
     - role: syncthing
       tags:

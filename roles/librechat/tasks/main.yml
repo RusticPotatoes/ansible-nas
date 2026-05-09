@@ -1,0 +1,77 @@
+---
+- name: Create internal Docker network for LibreChat and MCP
+  community.docker.docker_network:
+    name: librechat_internal_net
+    driver: bridge
+
+- name: Start librechat
+  block:
+    - name: Create librechat Directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ librechat_data_directory }}"
+        - "{{ librechat_audiobooks_directory }}"
+        
+
+    - name: Create librechat.yaml config file
+      ansible.builtin.template:
+        src: librechat.yaml.j2
+        dest: "{{ librechat_data_directory }}/librechat.yaml"
+        mode: '0644'
+
+    - name: librechat Docker Container
+      community.docker.docker_container:
+        name: "{{ librechat_container_name }}"
+        image: "{{ librechat_image_name }}:{{ librechat_image_version }}"
+        pull: true
+        volumes:
+          - "{{ librechat_books_directory }}:/app/input_folder:rw"
+          - "{{ librechat_audiobooks_directory }}:/app/audiobooks:rw"
+          - "{{ librechat_audiobooks_directory }}/tmp:/app/tmp:rw"
+          - "{{ librechat_data_directory }}:/config:rw"
+          - "{{ librechat_data_directory }}/librechat.yaml:/app/librechat.yaml:rw"
+        ports:
+          - "{{ librechat_port }}:3080"
+        env:
+          TZ: "{{ ansible_nas_timezone }}"
+          PUID: "{{ librechat_user_id }}"
+          PGID: "{{ librechat_group_id }}"
+          MONGO_URI: "mongodb://{{ mongodb_user }}:{{ mongodb_password }}@{{ ansible_default_ipv4.address }}:27017/librechat?authSource=admin"
+          CREDS_KEY: "{{ librechat_encryption_key }}"
+          CREDS_IV: "{{ librechat_jwt_secret }}"
+          JWT_SECRET: "{{ librechat_jwt_secret }}"
+          JWT_REFRESH_SECRET: "{{ librechat_jwt_secret }}"
+          REFRESH_TOKEN_SECRET: "{{ librechat_jwt_secret }}"
+          DEFAULT_MODEL: "ollama:qwen2.5"
+          PORT: "{{ librechat_port }}"
+          LOG_LEVEL: "info"
+          ADMIN_EMAIL: "{{ librechat_admin_email }}"
+          ADMIN_PASSWORD: "{{ librechat_admin_password }}"
+          ALLOW_REGISTRATION: "true"
+          DISABLE_TELEMETRY: "true"
+          ALLOW_SOCIAL_LOGIN: "true"
+          allowPlugins: "true"
+        restart_policy: unless-stopped
+        # device_requests:
+        #   - capabilities: [["gpu"]]
+        memory: "{{ librechat_memory }}"
+        labels:
+          homepage.group: AI
+          homepage.name: LibreChat
+          homepage.icon: librechat
+          homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ librechat_port }}"
+          homepage.description: Chat UI
+        # networks:
+        #   - name: librechat_internal_net
+
+  when: librechat_enabled is true
+
+- name: Stop librechat
+  block:
+    - name: Stop librechat
+      community.docker.docker_container:
+        name: "{{ librechat_container_name }}"
+        state: absent
+  when: librechat_enabled is false

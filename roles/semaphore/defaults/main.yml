@@ -22,3 +22,8 @@ semaphore_image_version: "latest"
 
 # specs
 semaphore_memory: 1g
+
+# admin account
+semaphore_admin_user: "{{ vault_semaphore_admin_user | default('admin') }}"
+semaphore_admin_password: "{{ vault_semaphore_admin_password | default('') }}"
+semaphore_admin_email: "{{ vault_semaphore_admin_email | default('admin@localhost') }}"

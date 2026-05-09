@@ -17,9 +17,8 @@
           - "{{ radarr_movies_directory }}:/movies:rw"
           - "{{ radarr_download_directory }}:/downloads:rw"
           - "{{ radarr_data_directory }}:/config:rw"
-        # ports:
-        #   - "{{ radarr_port }}:7878"
-        network_mode: "container:{{ gluetun_container_name }}"
+        ports: "{{ [radarr_port ~ ':7878'] if not (vpn_download_stack_enabled | default(false) | bool) else omit }}"
+        network_mode: "{{ gluetun_name if (vpn_download_stack_enabled | default(false) | bool) else omit }}"
         env:
           TZ: "{{ ansible_nas_timezone }}"
           PUID: "{{ radarr_user_id }}"

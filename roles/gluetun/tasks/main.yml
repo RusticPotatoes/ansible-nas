@@ -7,10 +7,6 @@
       loop: "{{ gluetun_routed_containers }}"
       register: child_container_info
 
-    - name: Debug child container info
-      debug:
-        var: child_container_info
-
     - name: Determine which containers are actually running
       ansible.builtin.set_fact:
         running_routed_containers: >-
@@ -108,6 +104,11 @@
           traefik.http.routers.gluetun.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.gluetun.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.gluetun.loadbalancer.server.port: "8000"
+          homepage.group: Networking
+          homepage.name: Gluetun
+          homepage.icon: gluetun
+          homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:8000"
+          homepage.description: VPN gateway
         healthcheck:
           test: ["CMD", "wget", "-qO-", "http://localhost:8000/v1/dns/status"]
           interval: 60s

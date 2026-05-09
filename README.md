@@ -125,6 +125,7 @@ If you have a spare domain name you can configure applications to be accessible 
 Ansible-NAS application [stacks](https://ansible-nas.io/docs/category/stacks/) are a number of applications deployed together and preconfigured to perform a common goal.
 
 * [Logging](https://ansible-nas.io/docs/applications/stacks/logging/) - application logging capture and search service based on Grafana Loki.
+* [VPN Downloads](https://ansible-nas.io/docs/applications/stacks/vpn-download-stack/) - route download tools through a shared Gluetun VPN container.
 
 ## What This Could Do
 

@@ -1,0 +1,46 @@
+---
+- name: Start VPN download stack
+  block:
+    - name: Enable VPN download roles
+      ansible.builtin.set_fact:
+        gluetun_enabled: true
+        prowlarr_enabled: "{{ (prowlarr_enabled | default(false) | bool) or (vpn_download_stack_prowlarr_enabled | bool) }}"
+        deluge_enabled: "{{ (deluge_enabled | default(false) | bool) or (vpn_download_stack_deluge_enabled | bool) }}"
+        radarr_enabled: "{{ (radarr_enabled | default(false) | bool) or (vpn_download_stack_radarr_enabled | bool) }}"
+        sonarr_enabled: "{{ (sonarr_enabled | default(false) | bool) or (vpn_download_stack_sonarr_enabled | bool) }}"
+        nzbget_enabled: "{{ (nzbget_enabled | default(false) | bool) or (vpn_download_stack_nzbget_enabled | bool) }}"
+        readarr_enabled: "{{ (readarr_enabled | default(false) | bool) or (vpn_download_stack_readarr_enabled | bool) }}"
+        jackett_enabled: "{{ (jackett_enabled | default(false) | bool) or (vpn_download_stack_jackett_enabled | bool) }}"
+        sabnzbd_enabled: "{{ (sabnzbd_enabled | default(false) | bool) or (vpn_download_stack_sabnzbd_enabled | bool) }}"
+
+    - name: Configure Gluetun-routed download services
+      ansible.builtin.set_fact:
+        gluetun_routed_containers: >-
+          {{
+            []
+            + ([{'name': prowlarr_container_name, 'ports': [prowlarr_port ~ ':9696']}] if (prowlarr_enabled | default(false) | bool) else [])
+            + ([{'name': deluge_container_name, 'ports': [deluge_port ~ ':8112']}] if (deluge_enabled | default(false) | bool) else [])
+            + ([{'name': radarr_container_name, 'ports': [radarr_port ~ ':7878']}] if (radarr_enabled | default(false) | bool) else [])
+            + ([{'name': sonarr_container_name, 'ports': [sonarr_port ~ ':8989']}] if (sonarr_enabled | default(false) | bool) else [])
+            + ([{'name': nzbget_container_name, 'ports': [nzbget_port ~ ':6789']}] if (nzbget_enabled | default(false) | bool) else [])
+            + ([{'name': readarr_container_name, 'ports': [readarr_port ~ ':8787']}] if (readarr_enabled | default(false) | bool) else [])
+            + ([{'name': jackett_container_name, 'ports': [jackett_port ~ ':9117']}] if (jackett_enabled | default(false) | bool) else [])
+            + ([{'name': sabnzbd_container_name, 'ports': [sabnzbd_port ~ ':8080']}] if (sabnzbd_enabled | default(false) | bool) else [])
+          }}
+  when: vpn_download_stack_enabled is true
+
+- name: Stop VPN download stack
+  block:
+    - name: Disable VPN download roles
+      ansible.builtin.set_fact:
+        gluetun_enabled: false
+        prowlarr_enabled: false
+        deluge_enabled: false
+        radarr_enabled: false
+        sonarr_enabled: false
+        nzbget_enabled: false
+        readarr_enabled: false
+        jackett_enabled: false
+        sabnzbd_enabled: false
+        gluetun_routed_containers: []
+  when: vpn_download_stack_enabled is false

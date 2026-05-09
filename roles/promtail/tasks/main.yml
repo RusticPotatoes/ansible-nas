@@ -43,6 +43,11 @@
           traefik.http.routers.promtail.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.promtail.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.promtail.loadbalancer.server.port: "9080"
+          homepage.group: Monitoring
+          homepage.name: Promtail
+          homepage.icon: promtail
+          homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ promtail_port }}"
+          homepage.description: Log shipper
   when: promtail_enabled is true
 
 - name: Stop promtail

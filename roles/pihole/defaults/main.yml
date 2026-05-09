@@ -18,6 +18,7 @@ pihole_port: "8443"
 pihole_hostname: "pihole"
 
 pihole_timezone: "{{ ansible_nas_timezone }}"
+pihole_web_password: "{{ vault_pihole_web_password | default('') }}"
 
 # specs
 pihole_memory: 1g

@@ -4,6 +4,8 @@ gluetun_available_externally: false
 
 # Networking
 gluetun_network_name: "gluetun"
+gluetun_name: "container:{{ gluetun_container_name }}"
+gluetun_routed_containers: []
 
 # Container Settings
 gluetun_container_name: "gluetun"
