@@ -45,6 +45,12 @@
         dest: "{{ stats_grafana_config_directory }}/provisioning/alerting/contact-points.yml"
       notify: restart grafana
 
+    - name: Template Grafana notification policies
+      ansible.builtin.template:
+        src: notification-policies.yml.j2
+        dest: "{{ stats_grafana_config_directory }}/provisioning/alerting/notification-policies.yml"
+      notify: restart grafana
+
     - name: Template Grafana alert rules
       ansible.builtin.template:
         src: alert-rules.yml.j2
