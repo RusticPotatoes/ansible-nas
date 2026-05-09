@@ -1228,6 +1228,42 @@
       }
     },
     {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 30
+      },
+      "id": 104,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{container=~\".+\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Docker Logs",
+      "type": "logs"
+    },
+    {
       "collapsed": false,
       "datasource": {
         "type": "influxdb",
@@ -1237,7 +1273,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 30
+        "y": 39
       },
       "id": 58,
       "panels": [],
@@ -1265,7 +1301,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 31
+        "y": 40
       },
       "hiddenSeries": false,
       "id": 22,
@@ -1360,7 +1396,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 31
+        "y": 40
       },
       "hiddenSeries": false,
       "id": 27,
@@ -1446,7 +1482,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 40
+        "y": 49
       },
       "id": 43,
       "panels": [],
@@ -1474,7 +1510,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 41
+        "y": 50
       },
       "hiddenSeries": false,
       "id": 19,
@@ -1589,7 +1625,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 41
+        "y": 50
       },
       "hiddenSeries": false,
       "id": 62,
@@ -1693,7 +1729,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 48
+        "y": 57
       },
       "id": 50,
       "panels": [],
@@ -1721,7 +1757,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 49
+        "y": 58
       },
       "hiddenSeries": false,
       "id": 36,
@@ -1836,7 +1872,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 49
+        "y": 58
       },
       "hiddenSeries": false,
       "id": 61,
@@ -1936,7 +1972,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 91
+        "y": 100
       },
       "id": 74,
       "panels": [],
@@ -1971,7 +2007,7 @@
         "h": 5,
         "w": 24,
         "x": 0,
-        "y": 92
+        "y": 101
       },
       "id": 88,
       "options": {
@@ -2066,7 +2102,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 97
+        "y": 106
       },
       "id": 86,
       "options": {
@@ -2158,7 +2194,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 97
+        "y": 106
       },
       "id": 87,
       "options": {
@@ -2195,7 +2231,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 105
+        "y": 114
       },
       "id": 100,
       "panels": [],
@@ -2267,7 +2303,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 106
+        "y": 115
       },
       "id": 102,
       "options": {
@@ -2375,7 +2411,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 106
+        "y": 115
       },
       "id": 103,
       "options": {
@@ -2527,6 +2563,6 @@
   "timezone": "",
   "title": "Ansible-NAS Overview v2",
   "uid": "LCZ9YkQnz",
-  "version": 20,
+  "version": 21,
   "weekStart": ""
 }

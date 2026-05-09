@@ -20,6 +20,7 @@
         state: directory
       with_items:
         - "{{ loki_data_directory }}"
+        - "{{ loki_data_directory }}/rules"
 
     - name: Create Minio buckets for Loki
       ansible.builtin.file:
@@ -47,6 +48,7 @@
           - 9095
         volumes:
           - "{{ loki_data_directory }}/config.yml:/etc/loki/config.yml"
+          - "{{ loki_data_directory }}/rules:/loki/rules"
         restart_policy: unless-stopped
         memory: "{{ loki_memory }}"
         restart: "{{ loki_config is changed }}"

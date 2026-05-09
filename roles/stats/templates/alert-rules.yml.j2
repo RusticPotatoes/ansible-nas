@@ -15,7 +15,7 @@ groups:
         relativeTimeRange:
           from: 300
           to: 0
-        datasourceUid: prometheus
+        datasourceUid: ansible_nas
         model:
           expr: 'count(container_health_status{health_status="unhealthy"}) > 0'
           instant: true
@@ -36,7 +36,7 @@ groups:
         relativeTimeRange:
           from: 300
           to: 0
-        datasourceUid: prometheus
+        datasourceUid: ansible_nas
         model:
           expr: '(node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1'
           instant: true
@@ -57,7 +57,7 @@ groups:
         relativeTimeRange:
           from: 300
           to: 0
-        datasourceUid: prometheus
+        datasourceUid: ansible_nas
         model:
           expr: '(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.9'
           instant: true
@@ -78,7 +78,7 @@ groups:
         relativeTimeRange:
           from: 300
           to: 0
-        datasourceUid: prometheus
+        datasourceUid: ansible_nas
         model:
           expr: 'node_network_up{device!~"lo|docker.*|veth.*|br-.*"} == 0'
           instant: true
@@ -101,7 +101,7 @@ groups:
           to: 0
         datasourceUid: loki
         model:
-          expr: 'count_over_time({job=~".+"} |= "error" [5m]) > 10'
+          expr: 'sum(count_over_time({container=~".+"} |= "error" [5m])) > 10'
           instant: true
       noDataState: "OK"
       execErrState: "Error"
