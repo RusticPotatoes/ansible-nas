@@ -13,3 +13,8 @@ syntax:
 
 tags:
 	ansible-playbook -i $(INVENTORY) $(PLAYBOOK) -e @$(VAULT_FILE) --vault-password-file $(VAULT_PASSWORD_FILE) --tags "$(TAGS)"
+decrypt:
+	ansible-vault decrypt $(VAULT_FILE) --vault-password-file $(VAULT_PASSWORD_FILE)
+
+encrypt:
+	ansible-vault encrypt $(VAULT_FILE) --vault-password-file $(VAULT_PASSWORD_FILE)

@@ -14,5 +14,3 @@ datasources:
 deleteDatasources:
   - name: "InfluxDB"
     orgId: 1
-  - name: "Alertmanager"
-    orgId: 1

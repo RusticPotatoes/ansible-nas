@@ -1,0 +1,110 @@
+groups:
+  - name: docker_alerts
+    rules:
+      # Alert if a container is down (not running)
+      - alert: ContainerDown
+        expr: docker_container_running{host="$server"} == 0
+        for: 5m  # Wait 5 minutes to avoid false positives
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container {{ $labels.container_name }} is down"
+          description: "Container {{ $labels.container_name }} on {{ $labels.host }} has been down for more than 5 minutes."
+
+      # Alert if container CPU usage is high (>80%)
+      - alert: HighContainerCPU
+        expr: docker_container_cpu_usage_percent{host="$server"} > 80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on container {{ $labels.container_name }}"
+          description: "Container {{ $labels.container_name }} CPU usage is {{ $value }}% (threshold: 80%)."
+
+      # Alert if container memory usage is high (>90%)
+      - alert: HighContainerMemory
+        expr: docker_container_mem_usage_percent{host="$server"} > 90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on container {{ $labels.container_name }}"
+          description: "Container {{ $labels.container_name }} memory usage is {{ $value }}% (threshold: 90%)."
+
+  - name: disk_alerts
+    rules:
+      # Alert if disk space is low (<10% free)
+      - alert: LowDiskSpace
+        expr: (1 - disk_used_percent{host="$server", path="/"} / 100) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space on {{ $labels.path }}"
+          description: "Disk space on {{ $labels.path }} is below 10% free ({{ $value }}% free)."
+
+      # Alert if disk I/O is high (read/write rates > threshold)
+      - alert: HighDiskIO
+        expr: rate(diskio_read_bytes{host="$server"}[5m]) + rate(diskio_write_bytes{host="$server"}[5m]) > 100000000  # ~100MB/s
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High disk I/O on {{ $labels.name }}"
+          description: "Disk {{ $labels.name }} I/O rate is {{ $value }} bytes/sec (threshold: 100MB/s)."
+
+  - name: memory_alerts
+    rules:
+      # Alert if memory usage is high (>90%)
+      - alert: HighMemoryUsage
+        expr: mem_used_percent{host="$server"} > 90
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High memory usage on {{ $labels.host }}"
+          description: "Memory usage is {{ $value }}% (threshold: 90%). Consider freeing memory or scaling resources."
+
+      # Alert if swap usage is high (>50%)
+      - alert: HighSwapUsage
+        expr: swap_used_percent{host="$server"} > 50
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High swap usage on {{ $labels.host }}"
+          description: "Swap usage is {{ $value }}% (threshold: 50%). Memory may be insufficient."
+
+  - name: network_alerts
+    rules:
+      # Alert if network errors are high
+      - alert: HighNetworkErrors
+        expr: rate(node_network_receive_errs_total{host="$server"}[5m]) + rate(node_network_transmit_errs_total{host="$server"}[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High network errors on {{ $labels.device }}"
+          description: "Network device {{ $labels.device }} has {{ $value }} errors/sec. Check network connectivity."
+
+      # Alert if network traffic is unusually high (e.g., >1GB/s combined)
+      - alert: HighNetworkTraffic
+        expr: rate(node_network_receive_bytes_total{host="$server"}[5m]) + rate(node_network_transmit_bytes_total{host="$server"}[5m]) > 1000000000
+        for: 10m
+        labels:
+          severity: info  # Or warning if you want notifications
+        annotations:
+          summary: "High network traffic on {{ $labels.device }}"
+          description: "Network device {{ $labels.device }} traffic is {{ $value }} bytes/sec. Monitor for anomalies."
+
+  - name: loki_alerts
+    rules:
+      # Alert if Loki is dropping log messages
+      - alert: LokiLogMessagesDropped
+        expr: rate(loki_log_messages_dropped_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Loki is dropping log messages"
+          description: "Loki has dropped {{ $value }} log messages in the last 5 minutes. Check Loki configuration and capacity."

@@ -1,0 +1,113 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: ansible-nas-alerts
+    folder: Ansible-NAS
+    interval: 1m
+    rules:
+    - uid: docker-unhealthy
+      title: Docker Container Unhealthy
+      condition: A
+      data:
+      - refId: A
+        queryType: "instant"
+        relativeTimeRange:
+          from: 300
+          to: 0
+        datasourceUid: prometheus
+        model:
+          expr: 'count(container_health_status{health_status="unhealthy"}) > 0'
+          instant: true
+      noDataState: "OK"
+      execErrState: "Error"
+      for: 5m
+      annotations:
+        summary: "One or more Docker containers are unhealthy"
+      labels:
+        severity: warning
+      isPaused: false
+    - uid: disk-space-low
+      title: Disk Space Low
+      condition: A
+      data:
+      - refId: A
+        queryType: "instant"
+        relativeTimeRange:
+          from: 300
+          to: 0
+        datasourceUid: prometheus
+        model:
+          expr: '(node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1'
+          instant: true
+      noDataState: "OK"
+      execErrState: "Error"
+      for: 5m
+      annotations:
+        summary: "Disk space is below 10%"
+      labels:
+        severity: critical
+      isPaused: false
+    - uid: memory-high
+      title: High Memory Usage
+      condition: A
+      data:
+      - refId: A
+        queryType: "instant"
+        relativeTimeRange:
+          from: 300
+          to: 0
+        datasourceUid: prometheus
+        model:
+          expr: '(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.9'
+          instant: true
+      noDataState: "OK"
+      execErrState: "Error"
+      for: 5m
+      annotations:
+        summary: "Memory usage is above 90%"
+      labels:
+        severity: warning
+      isPaused: false
+    - uid: network-down
+      title: Network Interface Down
+      condition: A
+      data:
+      - refId: A
+        queryType: "instant"
+        relativeTimeRange:
+          from: 300
+          to: 0
+        datasourceUid: prometheus
+        model:
+          expr: 'node_network_up{device!~"lo|docker.*|veth.*|br-.*"} == 0'
+          instant: true
+      noDataState: "OK"
+      execErrState: "Error"
+      for: 5m
+      annotations:
+        summary: "Network interface is down"
+      labels:
+        severity: critical
+      isPaused: false
+    - uid: loki-logs-error
+      title: Loki Logs Error
+      condition: A
+      data:
+      - refId: A
+        queryType: "instant"
+        relativeTimeRange:
+          from: 300
+          to: 0
+        datasourceUid: loki
+        model:
+          expr: 'count_over_time({job=~".+"} |= "error" [5m]) > 10'
+          instant: true
+      noDataState: "OK"
+      execErrState: "Error"
+      for: 5m
+      annotations:
+        summary: "High number of error logs detected"
+      labels:
+        severity: warning
+      isPaused: false

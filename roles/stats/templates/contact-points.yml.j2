@@ -1,0 +1,11 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: telegram
+    receivers:
+    - uid: telegram
+      type: telegram
+      settings:
+        bottoken: "{{ stats_telegram_bot_token }}"
+        chatid: "{{ stats_telegram_chat_id }}"
