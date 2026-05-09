@@ -11,6 +11,11 @@ ebook2audiobook_models_directory: "{{ ebook2audiobook_data_directory }}/models"
 ebook2audiobook_voices_directory: "{{ ebook2audiobook_data_directory }}/voices"
 ebook2audiobook_tmp_directory: "{{ ebook2audiobook_data_directory }}/tmp"
 
+# Copy the image's built-in voices into the persistent host voice directory
+# when it is empty. Without this, the /app/voices bind mount hides voices that
+# are baked into the container image and the UI shows "none".
+ebook2audiobook_seed_builtin_voices: true
+
 # Optional voice seed. The app lists custom/builtin voices from:
 # voices/<language>/<age>/<gender>/<name>_24000.wav
 # Set ebook2audiobook_seed_voice_source to a local audio file you have rights to

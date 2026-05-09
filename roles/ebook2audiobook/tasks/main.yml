@@ -34,6 +34,25 @@
         creates: "{{ ebook2audiobook_seed_voice_path }}"
       when: ebook2audiobook_seed_voice_source | length > 0
 
+    - name: Find existing ebook2audiobook voice files
+      ansible.builtin.find:
+        paths: "{{ ebook2audiobook_voices_directory }}"
+        patterns: "*_24000.wav"
+        recurse: true
+      register: ebook2audiobook_existing_voices
+
+    - name: Seed ebook2audiobook built-in voices
+      ansible.builtin.command:
+        cmd: >-
+          docker run --rm
+          --entrypoint /bin/sh
+          -v {{ ebook2audiobook_voices_directory }}:/voice-output:rw
+          {{ ebook2audiobook_image_name }}:{{ ebook2audiobook_image_version }}
+          -lc 'cp -a /app/voices/. /voice-output/.'
+      when:
+        - ebook2audiobook_seed_builtin_voices | bool
+        - ebook2audiobook_existing_voices.matched == 0
+
     - name: Find ebook2audiobook discovered voice files
       ansible.builtin.find:
         paths: "{{ ebook2audiobook_voices_directory }}"
