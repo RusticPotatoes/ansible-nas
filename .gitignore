@@ -19,3 +19,17 @@ Session.vim
 
 # IntelliJ
 /.idea/
+
+# Vault
+vault.yml
+vault*.yml
+vault_password*.txt
+.vault_pass
+.vault-password
+
+# Local secrets / environment overrides
+.env
+.env.*
+!.env.example
+*.local.yml
+*.secret.yml

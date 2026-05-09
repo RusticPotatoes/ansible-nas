@@ -26,16 +26,22 @@
           SEMAPHORE_DB_DIALECT: "postgres"
           SEMAPHORE_DB_HOST: "postgres"
           SEMAPHORE_DB_PORT: "5432"
-          SEMAPHORE_DB_USER: "postgres"
-          SEMAPHORE_DB_PASS: "postgres"
+          SEMAPHORE_DB_USER: "{{ postgres_user }}"
+          SEMAPHORE_DB_PASS: "{{ postgres_password }}"
           SEMAPHORE_DB: "semaphore"
-          SEMAPHORE_ADMIN: "admin"
-          SEMAPHORE_ADMIN_PASSWORD: "admin"
-          SEMAPHORE_ADMIN_EMAIL: "admin@localhost"
+          SEMAPHORE_ADMIN: "{{ semaphore_admin_user }}"
+          SEMAPHORE_ADMIN_PASSWORD: "{{ semaphore_admin_password }}"
+          SEMAPHORE_ADMIN_EMAIL: "{{ semaphore_admin_email }}"
         restart_policy: unless-stopped
         memory: "{{ semaphore_memory }}"
         networks:
           - name: postgres_net
+        labels:
+          homepage.group: System Tools
+          homepage.name: Semaphore
+          homepage.icon: semaphore
+          homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ semaphore_port }}"
+          homepage.description: Ansible automation UI
   when: semaphore_enabled is true
 
 - name: Stop semaphore

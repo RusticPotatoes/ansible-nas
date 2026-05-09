@@ -1,0 +1,27 @@
+version: 1.1.4
+cache: true
+endpoints:
+  custom:
+    - name: "Ollama"
+      apiKey: "ollama"
+      baseURL: "{{ librechat_ollama_base_url }}"
+      models:
+        default: [
+          "qwen2.5:7B"
+          ]
+        fetch: true 
+      titleConvo: true
+      titleModel: "current_model"
+
+mcpServers:
+{% if librechat_applescript_mcp_url | length > 0 %}
+  applescript_execute:
+    type: sse
+    url: "{{ librechat_applescript_mcp_url }}"
+    timeout: 60000
+{% endif %}
+{% if librechat_apple_mcp_url | length > 0 %}
+  applemcp_execute:
+    type: sse
+    url: "{{ librechat_apple_mcp_url }}"
+{% endif %}

@@ -30,6 +30,11 @@
         src: dashboards/ansible-nas-overview.json
         dest: "{{ stats_grafana_config_directory }}/dashboards/ansible-nas-overview.json"
 
+    - name: Copy Grafana Ansible-NAS v3 dashboard
+      ansible.builtin.copy:
+        src: dashboards/ansible-nas-overview-v3.json
+        dest: "{{ stats_grafana_config_directory }}/dashboards/ansible-nas-overview-v3.json"
+
     - name: Grafana Docker Container
       community.docker.docker_container:
         name: "{{ stats_grafana_container_name }}"

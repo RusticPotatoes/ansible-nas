@@ -7,9 +7,10 @@
         state: directory
       with_items:
         - "{{ ebook2audiobook_data_directory }}"
-        - "{{ ebook2audiobook_data_directory }}/audiobooks"
+        - "{{ ebook2audiobook_models_directory }}"
+        - "{{ ebook2audiobook_voices_directory }}"
+        - "{{ ebook2audiobook_tmp_directory }}"
         - "{{ ebook2audiobook_audiobooks_directory }}"
-        - - "{{ ebook2audiobook_audiobooks_directory }}/tmp"
 
     - name: ebook2audiobook Docker Container
       community.docker.docker_container:
@@ -17,20 +18,19 @@
         image: "{{ ebook2audiobook_image_name }}:{{ ebook2audiobook_image_version }}"
         pull: true
         volumes:
-          - "{{ ebook2audiobook_books_directory }}:/app/input_folder:rw"
+          - "{{ ebook2audiobook_books_directory }}:/app/ebooks:rw"
           - "{{ ebook2audiobook_audiobooks_directory }}:/app/audiobooks:rw"
-          - "{{ ebook2audiobook_audiobooks_directory }}/tmp:/app/tmp:rw"
-          - "{{ ebook2audiobook_data_directory }}:/config:rw"
+          - "{{ ebook2audiobook_models_directory }}:/app/models:rw"
+          - "{{ ebook2audiobook_voices_directory }}:/app/voices:rw"
+          - "{{ ebook2audiobook_tmp_directory }}:/app/tmp:rw"
         ports:
           - "{{ ebook2audiobook_port }}:7860"
-        # network_mode: "container:{{ gluetun_container_name }}"
         env:
           TZ: "{{ ansible_nas_timezone }}"
           PUID: "{{ ebook2audiobook_user_id }}"
           PGID: "{{ ebook2audiobook_group_id }}"
         restart_policy: unless-stopped
-        device_requests:
-          - capabilities: [["gpu"]]
+        device_requests: "{{ ebook2audiobook_device_requests if (ebook2audiobook_gpu_enabled | bool) else omit }}"
         memory: "{{ ebook2audiobook_memory }}"
         labels:
           traefik.enable: "{{ ebook2audiobook_available_externally | string }}"
@@ -38,11 +38,11 @@
           traefik.http.routers.ebook2audiobook.tls.certresolver: "letsencrypt"
           traefik.http.routers.ebook2audiobook.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.ebook2audiobook.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
-          traefik.http.services.ebook2audiobook.loadbalancer.server.port: "8787"
-          homepage.group: "Download Tools"
-          homepage.name: "ebook2audiobook"
-          homepage.icon: "ebook2audiobook"
-          homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ ebook2audiobook_port }}"
+          traefik.http.services.ebook2audiobook.loadbalancer.server.port: "7860"
+      vars:
+        ebook2audiobook_device_requests:
+          - capabilities:
+              - ["gpu"]
 
   when: ebook2audiobook_enabled is true
 

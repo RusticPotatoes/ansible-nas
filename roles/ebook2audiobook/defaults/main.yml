@@ -7,6 +7,9 @@ ebook2audiobook_books_directory: "{{ books_root }}"
 ebook2audiobook_audiobooks_directory: "{{ audiobooks_root }}"
 ebook2audiobook_download_directory: "{{ downloads_root }}"
 ebook2audiobook_data_directory: "{{ docker_home }}/ebook2audiobook"
+ebook2audiobook_models_directory: "{{ ebook2audiobook_data_directory }}/models"
+ebook2audiobook_voices_directory: "{{ ebook2audiobook_data_directory }}/voices"
+ebook2audiobook_tmp_directory: "{{ ebook2audiobook_data_directory }}/tmp"
 
 # uid / gid
 ebook2audiobook_user_id: "0"
@@ -19,7 +22,8 @@ ebook2audiobook_hostname: "ebook2audiobook"
 # docker
 ebook2audiobook_container_name: "ebook2audiobook"
 ebook2audiobook_image_name: "athomasson2/ebook2audiobook"
-ebook2audiobook_image_version: "latest"
+ebook2audiobook_image_version: "cuda12-v25.5.29"
+ebook2audiobook_gpu_enabled: true
 
 # specs
 ebook2audiobook_memory: 8g

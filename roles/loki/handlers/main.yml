@@ -1,8 +1,8 @@
 ---
 - name: Restart Grafana
   community.docker.docker_container:
-    name: grafana
-    image: grafana/grafana:latest
+    name: "{{ stats_grafana_container_name }}"
+    image: "{{ stats_grafana_image_name }}:{{ stats_grafana_image_version }}"
     state: started
     restart: true
   listen: "restart grafana"

@@ -18,6 +18,25 @@ primary_eth: "enp6s0"
 
 # ansible_os_family: "Debian"
 
+# Keep Docker pulls independent of local DNS/Pi-hole availability.
+docker_daemon_json:
+  data-root: "{{ docker_image_directory }}"
+  storage-driver: "{{ docker_storage_driver }}"
+  dns:
+    - "1.1.1.1"
+    - "1.0.0.1"
+
+# Secrets expected from vault.yml. Keep the vault file ignored and pass it with
+# `make deploy` / `make tags`.
+minio_admin_username: "{{ vault_minio_admin_username | default('admin') }}"
+minio_admin_password: "{{ vault_minio_admin_password | mandatory }}"
+pihole_web_password: "{{ vault_pihole_web_password | mandatory }}"
+postgres_user: "{{ vault_postgres_user | default('postgres') }}"
+postgres_password: "{{ vault_postgres_password | mandatory }}"
+semaphore_admin_user: "{{ vault_semaphore_admin_user | default('admin') }}"
+semaphore_admin_password: "{{ vault_semaphore_admin_password | mandatory }}"
+semaphore_admin_email: "{{ vault_semaphore_admin_email | default('admin@localhost') }}"
+
 ## Enable some applications
 homepage_enabled: true
 portainer_enabled: true
@@ -31,13 +50,14 @@ deluge_enabled: true
 nzbget_enabled: true
 logging_enabled: true
 prowlarr_enabled: true
+vpn_download_stack_enabled: true
 minio_enabled: true
 loki_enabled: true
 logging_stack_enabled: true
 homebridge_enabled: true
 grafana_enabled: true
 promtail_enabled: true
-semaphore_enabled: true
+semaphore_enabled: false
 dashy_enabled: false
 organizr_enabled: true
 overseerr_enabled: true
@@ -51,40 +71,65 @@ watchtower_enabled: true
 newspaper_enabled: true
 ebook2audiobook_enabled: true
 postgres_enabled: true
-# librechat_enabled: true
+librechat_enabled: false
 
-# # Containers that should use the VPN
-gluetun_name: "container:{{ gluetun_container_name }}"
+# Observability
+#
+# The stats role already collects host and Docker metrics for every enabled
+# service via Telegraf, and the logging stack ships every container's stdout
+# logs to Loki via Promtail. These jobs add native Prometheus endpoints for the
+# enabled services in this NAS that expose them.
+stats_prometheus_scrape_jobs:
+  - name: "loki"
+    metrics_path: "/metrics"
+    targets:
+      - "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ loki_http_port }}"
+
+  - name: "promtail"
+    metrics_path: "/metrics"
+    targets:
+      - "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ promtail_port }}"
+
+  - name: "minio"
+    metrics_path: "/minio/v2/metrics/cluster"
+    targets:
+      - "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ minio_api_port }}"
+
+# Uncomment after creating a Home Assistant long-lived access token and enabling
+# the Prometheus integration in Home Assistant.
+# stats_hass_long_lived_access_token: "replace-me"
 
 lan_subnets: "{{ ansible_nas_subnet }}"
-gluetun_routed_containers:
 
-  - name: "prowlarr"
-    image: "ghcr.io/linuxserver/prowlarr:develop"
-    ports:
-      - "9696:9696"
+# Extra browseable read-only Samba shares for the top-level mounted filesystems.
+# Existing media sub-shares keep their current writable behavior.
+samba_extra_shares:
+  - name: media-root
+    comment: "Top-level media mount"
+    guest_ok: yes
+    public: yes
+    writable: no
+    read_only: yes
+    browseable: yes
+    path: /mnt/media
+    directory_mode: "0755"
 
-  - name: "deluge"
-    image: "linuxserver/deluge:latest"
-    ports:
-      - "8112:8112"
+  - name: docker-root
+    comment: "Top-level Docker data mount"
+    guest_ok: yes
+    public: yes
+    writable: no
+    read_only: yes
+    browseable: yes
+    path: /mnt/docker
+    directory_mode: "0755"
 
-  - name: "radarr"
-    image: "linuxserver/radarr:latest"
-    ports:
-      - "7878:7878"
-
-  - name: "sonarr"
-    image: "linuxserver/sonarr:latest"
-    ports:
-      - "8989:8989"
-
-  - name: "nzbget"
-    image: "linuxserver/nzbget:latest"
-    ports:
-      - "6789:6789"
-
-  - name: "readarr"
-    image: "linuxserver/readarr:latest"
-    ports:
-      - "8787:8787"
+  - name: archive-root
+    comment: "Top-level archive mount"
+    guest_ok: yes
+    public: yes
+    writable: no
+    read_only: yes
+    browseable: yes
+    path: /mnt/archive
+    directory_mode: "0755"

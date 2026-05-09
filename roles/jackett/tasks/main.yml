@@ -16,9 +16,8 @@
           - "{{ jackett_data_directory }}:/config:rw"
           - "/etc/localtime:/etc/localtime:ro"
           - "{{ jackett_torrents_root }}:/downloads"
-        # ports:
-        #   - "{{ jackett_port }}:9117"
-        network_mode: "container:{{ gluetun_container_name }}"
+        ports: "{{ [jackett_port ~ ':9117'] if not (vpn_download_stack_enabled | default(false) | bool) else omit }}"
+        network_mode: "{{ gluetun_name if (vpn_download_stack_enabled | default(false) | bool) else omit }}"
         env:
           TZ: "{{ ansible_nas_timezone }}"
         restart_policy: unless-stopped

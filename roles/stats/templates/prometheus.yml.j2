@@ -29,11 +29,41 @@ scrape_configs:
                     "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ stats_prometheus_smartctl_port }}"
                  ]
 
+{% if traefik_enabled is defined and traefik_enabled %}
   - job_name: "traefik"
     static_configs:
       - targets: [
                     "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:8083"
                  ]
+{% endif %}
+
+{% for job in stats_prometheus_scrape_jobs %}
+  - job_name: "{{ job.name }}"
+{% if job.metrics_path is defined %}
+    metrics_path: {{ job.metrics_path }}
+{% endif %}
+{% if job.scheme is defined %}
+    scheme: {{ job.scheme }}
+{% endif %}
+{% if job.scrape_interval is defined %}
+    scrape_interval: {{ job.scrape_interval }}
+{% endif %}
+{% if job.scrape_timeout is defined %}
+    scrape_timeout: {{ job.scrape_timeout }}
+{% endif %}
+{% if job.bearer_token is defined %}
+    bearer_token: "{{ job.bearer_token }}"
+{% endif %}
+{% if job.authorization is defined %}
+    authorization:
+      credentials: "{{ job.authorization.credentials }}"
+{% endif %}
+    static_configs:
+      - targets:
+{% for target in job.targets %}
+          - "{{ target }}"
+{% endfor %}
+{% endfor %}
 
 {% if stats_internet_speed_test_enabled %}
   - job_name: "speedtest"
@@ -58,12 +88,13 @@ scrape_configs:
                  ]
 {% endif %}
 
-
+{% if homeassistant_enabled is defined and homeassistant_enabled and stats_hass_long_lived_access_token is defined %}
   - job_name: "homeassistant"
     metrics_path: /api/prometheus
     authorization:
-      credentials: "{{ stats_hass_long_lived_access_token | default("abcd") }}"
+      credentials: "{{ stats_hass_long_lived_access_token }}"
     static_configs:
       - targets: [
                     "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:8123"
                  ]
+{% endif %}
