@@ -11,6 +11,19 @@ ebook2audiobook_models_directory: "{{ ebook2audiobook_data_directory }}/models"
 ebook2audiobook_voices_directory: "{{ ebook2audiobook_data_directory }}/voices"
 ebook2audiobook_tmp_directory: "{{ ebook2audiobook_data_directory }}/tmp"
 
+# Optional voice seed. The app lists custom/builtin voices from:
+# voices/<language>/<age>/<gender>/<name>_24000.wav
+# Set ebook2audiobook_seed_voice_source to a local audio file you have rights to
+# use, and Ansible will convert it to the expected 24 kHz mono wav format.
+ebook2audiobook_seed_voice_source: ""
+ebook2audiobook_seed_voice_name: "Narrator"
+ebook2audiobook_seed_voice_language: "eng"
+ebook2audiobook_seed_voice_age: "adult"
+ebook2audiobook_seed_voice_gender: "male"
+ebook2audiobook_seed_voice_safe_name: "{{ ebook2audiobook_seed_voice_name | regex_replace('[^A-Za-z0-9_-]', '') }}"
+ebook2audiobook_seed_voice_directory: "{{ ebook2audiobook_voices_directory }}/{{ ebook2audiobook_seed_voice_language }}/{{ ebook2audiobook_seed_voice_age }}/{{ ebook2audiobook_seed_voice_gender }}"
+ebook2audiobook_seed_voice_path: "{{ ebook2audiobook_seed_voice_directory }}/{{ ebook2audiobook_seed_voice_safe_name }}_24000.wav"
+
 # uid / gid
 ebook2audiobook_user_id: "0"
 ebook2audiobook_group_id: "0"
@@ -24,6 +37,13 @@ ebook2audiobook_container_name: "ebook2audiobook"
 ebook2audiobook_image_name: "athomasson2/ebook2audiobook"
 ebook2audiobook_image_version: "cuda12-v25.5.29"
 ebook2audiobook_gpu_enabled: true
+ebook2audiobook_nvidia_visible_devices: "all"
+ebook2audiobook_nvidia_driver_capabilities: "compute,utility"
+ebook2audiobook_device_requests:
+  - driver: nvidia
+    count: -1
+    capabilities:
+      - ["gpu"]
 
 # specs
 ebook2audiobook_memory: 8g
