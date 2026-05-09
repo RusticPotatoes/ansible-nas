@@ -24,6 +24,11 @@
         dest: "{{ stats_prometheus_config_directory }}/prometheus.yml"
       register: prometheus_config
 
+    - name: Copy Prometheus alert rules
+      ansible.builtin.copy:
+        src: prometheus/alert_rules.yml
+        dest: "{{ stats_prometheus_config_directory }}/alert_rules.yml"
+
     - name: Prometheus Docker Container
       community.docker.docker_container:
         name: "{{ stats_prometheus_container_name }}"
@@ -31,6 +36,7 @@
         pull: true
         volumes:
           - "{{ stats_prometheus_config_directory }}/prometheus.yml:/etc/prometheus/prometheus.yml:ro"
+          - "{{ stats_prometheus_config_directory }}/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro"
           - "{{ stats_prometheus_data_directory }}:/prometheus:rw"
           - "/etc/timezone:/etc/timezone:ro"
         ports:

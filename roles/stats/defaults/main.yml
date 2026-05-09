@@ -51,6 +51,10 @@ stats_hddtemp_memory: 128m
 stats_speedtest_exporter_memory: 256m
 stats_grafana_memory: 1g
 
+# grafana alerting
+stats_telegram_bot_token: "{{ vault_ansible_nas_telegram_bot_token }}"
+stats_telegram_chat_id: "{{ vault_ansible_nas_telegram_chat_id }}"
+
 # config
 stats_prometheus_retention_time: 365d
 stats_prometheus_retention_size: 30GB

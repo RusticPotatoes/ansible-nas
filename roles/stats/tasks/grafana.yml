@@ -14,6 +14,7 @@
         - "{{ stats_grafana_config_directory }}/dashboards"
         - "{{ stats_grafana_config_directory }}/provisioning/datasources"
         - "{{ stats_grafana_config_directory }}/provisioning/dashboards"
+        - "{{ stats_grafana_config_directory }}/provisioning/alerting"
 
     - name: Template Grafana data source
       ansible.builtin.template:
@@ -34,6 +35,16 @@
       ansible.builtin.copy:
         src: dashboards/ansible-nas-overview-v3.json
         dest: "{{ stats_grafana_config_directory }}/dashboards/ansible-nas-overview-v3.json"
+
+    - name: Template Grafana contact points
+      ansible.builtin.template:
+        src: contact-points.yml.j2
+        dest: "{{ stats_grafana_config_directory }}/provisioning/alerting/contact-points.yml"
+
+    - name: Template Grafana alert rules
+      ansible.builtin.template:
+        src: alert-rules.yml.j2
+        dest: "{{ stats_grafana_config_directory }}/provisioning/alerting/alert-rules.yml"
 
     - name: Grafana Docker Container
       community.docker.docker_container:
