@@ -95,6 +95,11 @@
           traefik.http.routers.ebook2audiobook.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.ebook2audiobook.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.ebook2audiobook.loadbalancer.server.port: "7860"
+          homepage.group: AI
+          homepage.name: eBook2AudioBook
+          homepage.icon: audiobook
+          homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ ebook2audiobook_port }}"
+          homepage.description: Convert ebooks into audiobooks
 
   when: ebook2audiobook_enabled is true
 
