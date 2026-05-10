@@ -81,6 +81,7 @@
           GF_UNIFIED_ALERTING_STATE_HISTORY_ENABLED: "true"
           GF_UNIFIED_ALERTING_STATE_HISTORY_BACKEND: "loki"
           GF_UNIFIED_ALERTING_STATE_HISTORY_LOKI_REMOTE_URL: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ loki_http_port | default('3100') }}"
+          GF_UNIFIED_ALERTING_STATE_HISTORY_LOKI_TENANT_ID: "1"
           GF_FEATURE_TOGGLES_ENABLE: "alertingCentralAlertHistory"
         restart_policy: unless-stopped
         memory: 1g
