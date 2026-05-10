@@ -63,6 +63,12 @@ gpu_is_available() {
   return 0
 }
 
+ebook_is_already_running() {
+  local container_path="$1"
+
+  docker top "$container" -eo args 2>/dev/null | grep -F -- "$container_path" >/dev/null
+}
+
 convert_one() {
   local ebook_path="$1"
   local relative_path marker_path container_path marker_dir
@@ -73,6 +79,11 @@ convert_one() {
   container_path="/app/ebooks/${relative_path}"
 
   if [ -f "$marker_path" ]; then
+    return 0
+  fi
+
+  if ebook_is_already_running "$container_path"; then
+    echo "Skipping ${relative_path}; conversion is already running"
     return 0
   fi
 

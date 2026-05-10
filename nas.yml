@@ -80,7 +80,7 @@
     - role: gatus
       tags:
         - gatus
-        - observability
+        - monitoring
 
     - role: vpn-download-stack
       tags:
