@@ -125,11 +125,63 @@
       delay: 5
       changed_when: false
 
+    - name: Install Gluetun stack restart script
+      ansible.builtin.template:
+        src: gluetun-stack-restart.sh.j2
+        dest: "{{ gluetun_periodic_restart_script_path }}"
+        owner: root
+        group: root
+        mode: '0755'
+      when: gluetun_periodic_restart_enabled | bool
+
+    - name: Install Gluetun stack restart systemd service
+      ansible.builtin.template:
+        src: gluetun-stack-restart.service.j2
+        dest: /etc/systemd/system/gluetun-stack-restart.service
+        owner: root
+        group: root
+        mode: '0644'
+      when: gluetun_periodic_restart_enabled | bool
+
+    - name: Install Gluetun stack restart systemd timer
+      ansible.builtin.template:
+        src: gluetun-stack-restart.timer.j2
+        dest: /etc/systemd/system/gluetun-stack-restart.timer
+        owner: root
+        group: root
+        mode: '0644'
+      when: gluetun_periodic_restart_enabled | bool
+
+    - name: Enable Gluetun stack restart timer
+      ansible.builtin.systemd:
+        name: gluetun-stack-restart.timer
+        enabled: true
+        state: started
+        daemon_reload: true
+      when: gluetun_periodic_restart_enabled | bool
+
+    - name: Disable Gluetun stack restart timer
+      ansible.builtin.systemd:
+        name: gluetun-stack-restart.timer
+        enabled: false
+        state: stopped
+        daemon_reload: true
+      failed_when: false
+      when: not (gluetun_periodic_restart_enabled | bool)
+
   when: gluetun_enabled is true
 
 
 - name: Stop gluetun
   block:
+    - name: Disable Gluetun stack restart timer
+      ansible.builtin.systemd:
+        name: gluetun-stack-restart.timer
+        enabled: false
+        state: stopped
+        daemon_reload: true
+      failed_when: false
+
     - name: Stop gluetun
       community.docker.docker_container:
         name: "{{ gluetun_container_name }}"

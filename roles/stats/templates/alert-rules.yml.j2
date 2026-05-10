@@ -6,6 +6,28 @@ groups:
     folder: Ansible-NAS
     interval: 1m
     rules:
+    - uid: docker-container-stopped
+      title: Docker Container Stopped
+      condition: A
+      data:
+      - refId: A
+        queryType: "instant"
+        relativeTimeRange:
+          from: 600
+          to: 0
+        datasourceUid: ansible_nas
+        model:
+          expr: 'docker_container_status{container_status=~"created|restarting|removing|paused|exited|dead"} == 1'
+          instant: true
+      noDataState: "OK"
+      execErrState: "Error"
+      for: 10m
+      annotations:
+        summary: "{% raw %}{{ $labels.container_name }}{% endraw %} has not been running for more than 10 minutes"
+        description: "{% raw %}{{ $labels.container_name }}{% endraw %} is in Docker state {% raw %}{{ $labels.container_status }}{% endraw %} on {% raw %}{{ $labels.host }}{% endraw %}."
+      labels:
+        severity: critical
+      isPaused: false
     - uid: docker-unhealthy
       title: Docker Container Unhealthy
       condition: A
