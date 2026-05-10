@@ -15,6 +15,12 @@ gluetun_memory: "512m"
 gluetun_periodic_restart_enabled: false
 gluetun_periodic_restart_interval: "2h"
 gluetun_periodic_restart_script_path: "/usr/local/sbin/gluetun-stack-restart"
+gluetun_recover_with_ansible_enabled: true
+gluetun_ansible_repo_path: "{{ playbook_dir }}"
+gluetun_ansible_playbook: "{{ playbook_dir }}/nas.yml"
+gluetun_ansible_inventory: "{{ inventory_file | default(playbook_dir + '/inventories/inventory.ini') }}"
+gluetun_ansible_vault_file: "{{ playbook_dir }}/vault.yml"
+gluetun_ansible_vault_password_file: "{{ playbook_dir }}/vault_password.txt"
 
 # gluetun config directory (persistent storage)
 gluetun_config_directory: "/{{ docker_home }}/gluetun"

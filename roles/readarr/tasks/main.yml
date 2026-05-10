@@ -12,7 +12,7 @@
       community.docker.docker_container:
         name: "{{ readarr_container_name }}"
         image: "{{ readarr_image_name }}:{{ readarr_image_version }}"
-        pull: true
+        pull: "{{ docker_container_pull | default(true) }}"
         volumes:
           - "{{ readarr_books_directory }}:/books:rw"
           - "{{ readarr_download_directory }}:/downloads:rw"

@@ -22,7 +22,7 @@
       community.docker.docker_container:
         name: deluge
         image: linuxserver/deluge
-        pull: true
+        pull: "{{ docker_container_pull | default(true) }}"
         volumes:
           - "{{ deluge_config_directory }}:/config:rw"
           - "{{ deluge_download_directory }}:/downloads:rw"

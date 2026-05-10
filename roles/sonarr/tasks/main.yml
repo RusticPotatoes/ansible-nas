@@ -25,7 +25,7 @@
       community.docker.docker_container:
         name: "{{ sonarr_container_name }}"
         image: "{{ sonarr_image_name }}:{{ sonarr_image_version }}"
-        pull: true
+        pull: "{{ docker_container_pull | default(true) }}"
         volumes:
           - "{{ sonarr_tv_directory }}:/tv:rw"
           - "{{ sonarr_download_directory }}:/downloads:rw"

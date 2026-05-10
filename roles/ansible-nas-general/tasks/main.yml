@@ -26,6 +26,40 @@
   register: result
   until: result is succeeded
 
+- name: Install unattended-upgrades
+  ansible.builtin.apt:
+    name:
+      - unattended-upgrades
+      - apt-listchanges
+    state: present
+  register: result
+  until: result is succeeded
+  when: ansible_nas_unattended_upgrades_enabled | bool
+
+- name: Enable unattended apt periodic jobs
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    mode: '0644'
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+      APT::Periodic::AutocleanInterval "7";
+  when: ansible_nas_unattended_upgrades_enabled | bool
+
+- name: Configure unattended-upgrades policy
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/52ansible-nas-unattended-upgrades
+    mode: '0644'
+    content: |
+      Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+      Unattended-Upgrade::Remove-New-Unused-Dependencies "{{ ansible_nas_unattended_remove_unused_dependencies | bool | lower }}";
+      Unattended-Upgrade::Remove-Unused-Dependencies "{{ ansible_nas_unattended_remove_unused_dependencies | bool | lower }}";
+      Unattended-Upgrade::Automatic-Reboot "{{ ansible_nas_unattended_reboot | bool | lower }}";
+      Unattended-Upgrade::Automatic-Reboot-WithUsers "{{ ansible_nas_unattended_reboot_with_users | bool | lower }}";
+      Unattended-Upgrade::Automatic-Reboot-Time "{{ ansible_nas_unattended_reboot_time }}";
+      Unattended-Upgrade::SyslogEnable "true";
+  when: ansible_nas_unattended_upgrades_enabled | bool
+
 - name: "Set hostname to {{ ansible_nas_hostname }}"
   ansible.builtin.hostname:
     name: "{{ ansible_nas_hostname }}"
@@ -61,6 +95,19 @@
   when:
     - ansible_nas_configure_systemd_resolved | bool
     - ansible_nas_resolved_config is changed
+
+- name: Write a simple host resolv.conf for Docker registry pulls
+  ansible.builtin.copy:
+    dest: /etc/resolv.conf
+    mode: '0644'
+    content: |
+      {% for server in ansible_nas_resolved_dns_servers %}
+      nameserver {{ server }}
+      {% endfor %}
+      options timeout:2 attempts:3
+  when:
+    - ansible_nas_configure_systemd_resolved | bool
+    - ansible_nas_resolved_use_uplink_resolv_conf | bool
 
 - name: "Permission share directories"
   ansible.builtin.file:

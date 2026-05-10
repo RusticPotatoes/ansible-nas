@@ -26,3 +26,12 @@ ansible_nas_resolved_fallback_dns_servers: "{{ default_dns_servers | default(['1
 ansible_nas_resolved_domains:
   - "~."
 ansible_nas_resolved_cache_no_negative: true
+ansible_nas_resolved_use_uplink_resolv_conf: false
+
+# Configure unattended apt updates. Automatic reboots only happen when apt
+# leaves /var/run/reboot-required behind.
+ansible_nas_unattended_upgrades_enabled: false
+ansible_nas_unattended_reboot: false
+ansible_nas_unattended_reboot_with_users: false
+ansible_nas_unattended_reboot_time: "04:00"
+ansible_nas_unattended_remove_unused_dependencies: true
