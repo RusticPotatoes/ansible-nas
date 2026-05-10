@@ -18,7 +18,13 @@ primary_eth: "enp6s0"
 
 # ansible_os_family: "Debian"
 
-# Keep Docker pulls independent of local DNS/Pi-hole availability.
+# Keep host-level lookups, including Docker image pulls, independent of
+# Pi-hole/router DNS. More-specific local DNS domains learned from the network
+# still win over this catch-all route.
+ansible_nas_configure_systemd_resolved: true
+
+# Keep container DNS independent of local DNS/Pi-hole availability.
+# Docker image pulls use the host resolver configured by ansible-nas-general.
 docker_daemon_json:
   data-root: "{{ docker_image_directory }}"
   storage-driver: "{{ docker_storage_driver }}"

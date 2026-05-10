@@ -34,6 +34,34 @@
   community.general.timezone:
     name: "{{ ansible_nas_timezone }}"
 
+- name: Create systemd-resolved drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/resolved.conf.d
+    state: directory
+    mode: '0755'
+  when: ansible_nas_configure_systemd_resolved | bool
+
+- name: Configure host DNS for reliable registry pulls
+  ansible.builtin.copy:
+    dest: /etc/systemd/resolved.conf.d/ansible-nas.conf
+    mode: '0644'
+    content: |
+      [Resolve]
+      DNS={{ ansible_nas_resolved_dns_servers | join(' ') }}
+      FallbackDNS={{ ansible_nas_resolved_fallback_dns_servers | join(' ') }}
+      Domains={{ ansible_nas_resolved_domains | join(' ') }}
+      Cache={{ ansible_nas_resolved_cache_no_negative | bool | ternary('no-negative', 'yes') }}
+  register: ansible_nas_resolved_config
+  when: ansible_nas_configure_systemd_resolved | bool
+
+- name: Restart systemd-resolved
+  ansible.builtin.service:
+    name: systemd-resolved
+    state: restarted
+  when:
+    - ansible_nas_configure_systemd_resolved | bool
+    - ansible_nas_resolved_config is changed
+
 - name: "Permission share directories"
   ansible.builtin.file:
     path: "{{ item.path }}"
