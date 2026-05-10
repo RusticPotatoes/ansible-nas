@@ -64,6 +64,7 @@ postgres_password: "{{ vault_postgres_password | mandatory }}"
 semaphore_admin_user: "{{ vault_semaphore_admin_user | default('admin') }}"
 semaphore_admin_password: "{{ vault_semaphore_admin_password | mandatory }}"
 semaphore_admin_email: "{{ vault_semaphore_admin_email | default('admin@localhost') }}"
+ansible_nas_user_password: "{{ ansible_become_password }}"
 
 ## Enable some applications
 homepage_enabled: true
@@ -108,7 +109,7 @@ unifi_enabled: true
 mongodb_enabled: true
 pihole_enabled: true
 wireguard_enabled: true
-# readarr_enabled: true
+readarr_enabled: false
 watchtower_enabled: true
 newspaper_enabled: true
 ebook2audiobook_enabled: true

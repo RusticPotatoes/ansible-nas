@@ -13,3 +13,24 @@
     create_home: no
     group: ansible-nas
     shell: /usr/sbin/nologin
+
+- name: Create ansible_nas_user account
+  ansible.builtin.user:
+    name: "{{ ansible_nas_user }}"
+    state: present
+    groups: docker
+    append: yes
+    create_home: yes
+    shell: /bin/bash
+  when: ansible_nas_user is defined
+
+- name: Add ansible_nas_user to Samba
+  ansible.builtin.command:
+    cmd: "smbpasswd -a {{ ansible_nas_user }} -s"
+    stdin: "{{ ansible_become_password }}\n{{ ansible_become_password }}\n"
+  when: 
+    - ansible_nas_user is defined
+    - ansible_become_password is defined
+  register: samba_user_result
+  changed_when: "'Added user' in samba_user_result.stdout"
+  failed_when: false
