@@ -9,11 +9,20 @@
         - "{{ unifi_config_directory }}"
         - "{{ unifi_download_directory }}"
 
+    - name: Pull unifi Docker image
+      community.docker.docker_image:
+        name: "{{ unifi_image_name }}:{{ unifi_image_version }}"
+        source: pull
+      register: unifi_image_pull
+      until: unifi_image_pull is succeeded
+      retries: "{{ unifi_image_pull_retries }}"
+      delay: "{{ unifi_image_pull_delay }}"
+
     - name: unifi Docker Container
       community.docker.docker_container:
-        name: unifi
-        image: lscr.io/linuxserver/unifi-network-application:latest
-        pull: true
+        name: "{{ unifi_container_name }}"
+        image: "{{ unifi_image_name }}:{{ unifi_image_version }}"
+        pull: false
         volumes:
           - "{{ unifi_config_directory }}:/config:rw"
           - "{{ unifi_download_directory }}:/downloads:rw"
