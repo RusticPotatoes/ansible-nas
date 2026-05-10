@@ -10,6 +10,7 @@
         - "{{ ebook2audiobook_models_directory }}"
         - "{{ ebook2audiobook_voices_directory }}"
         - "{{ ebook2audiobook_tmp_directory }}"
+        - "{{ ebook2audiobook_processed_directory }}"
         - "{{ ebook2audiobook_audiobooks_directory }}"
 
     - name: Create ebook2audiobook seeded voice directory
@@ -105,9 +106,61 @@
       until: docker_container_result is succeeded
       retries: "{{ docker_container_pull_retries }}"
       delay: "{{ docker_container_pull_delay }}"
+
+    - name: Install ebook2audiobook auto-convert script
+      ansible.builtin.template:
+        src: ebook2audiobook-auto-convert.sh.j2
+        dest: "{{ ebook2audiobook_auto_convert_script_path }}"
+        owner: root
+        group: root
+        mode: '0755'
+      when: ebook2audiobook_auto_convert_enabled | bool
+
+    - name: Install ebook2audiobook auto-convert systemd service
+      ansible.builtin.template:
+        src: ebook2audiobook-auto-convert.service.j2
+        dest: /etc/systemd/system/ebook2audiobook-auto-convert.service
+        owner: root
+        group: root
+        mode: '0644'
+      when: ebook2audiobook_auto_convert_enabled | bool
+
+    - name: Install ebook2audiobook auto-convert systemd timer
+      ansible.builtin.template:
+        src: ebook2audiobook-auto-convert.timer.j2
+        dest: /etc/systemd/system/ebook2audiobook-auto-convert.timer
+        owner: root
+        group: root
+        mode: '0644'
+      when: ebook2audiobook_auto_convert_enabled | bool
+
+    - name: Enable ebook2audiobook auto-convert timer
+      ansible.builtin.systemd:
+        name: ebook2audiobook-auto-convert.timer
+        enabled: true
+        state: started
+        daemon_reload: true
+      when: ebook2audiobook_auto_convert_enabled | bool
+
+    - name: Disable ebook2audiobook auto-convert timer
+      ansible.builtin.systemd:
+        name: ebook2audiobook-auto-convert.timer
+        enabled: false
+        state: stopped
+        daemon_reload: true
+      failed_when: false
+      when: not (ebook2audiobook_auto_convert_enabled | bool)
   when: ebook2audiobook_enabled is true
 - name: Stop ebook2audiobook
   block:
+    - name: Disable ebook2audiobook auto-convert timer
+      ansible.builtin.systemd:
+        name: ebook2audiobook-auto-convert.timer
+        enabled: false
+        state: stopped
+        daemon_reload: true
+      failed_when: false
+
     - name: Stop ebook2audiobook
       community.docker.docker_container:
         name: "{{ ebook2audiobook_container_name }}"

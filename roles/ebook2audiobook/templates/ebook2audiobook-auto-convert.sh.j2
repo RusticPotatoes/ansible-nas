@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+container="{{ ebook2audiobook_container_name }}"
+books_dir="{{ ebook2audiobook_books_directory }}"
+processed_dir="{{ ebook2audiobook_processed_directory }}"
+lock_file="${processed_dir}/auto-convert.lock"
+
+mkdir -p "$processed_dir"
+exec 9>"$lock_file"
+if ! flock -n 9; then
+  echo "ebook2audiobook conversion is already running"
+  exit 0
+fi
+
+if [ "$(docker inspect -f '{% raw %}{{.State.Running}}{% endraw %}' "$container" 2>/dev/null || true)" != "true" ]; then
+  echo "Container ${container} is not running"
+  exit 1
+fi
+
+convert_one() {
+  local ebook_path="$1"
+  local relative_path marker_path container_path marker_dir
+
+  relative_path="${ebook_path#${books_dir}/}"
+  marker_path="${processed_dir}/${relative_path}.success"
+  marker_dir="$(dirname "$marker_path")"
+  container_path="/app/ebooks/${relative_path}"
+
+  if [ -f "$marker_path" ]; then
+    return 0
+  fi
+
+  mkdir -p "$marker_dir"
+  echo "Converting ${relative_path}"
+  docker exec "$container" /app/ebook2audiobook.sh \
+    --headless \
+    --ebook "$container_path" \
+    --language "{{ ebook2audiobook_auto_convert_language }}" \
+    --device "{{ ebook2audiobook_auto_convert_device }}" \
+    --output_format "{{ ebook2audiobook_auto_convert_output_format }}" \
+    --output_dir "{{ ebook2audiobook_auto_convert_output_directory }}"
+
+  date --iso-8601=seconds > "$marker_path"
+}
+
+find_args=( "$books_dir" -type f "(" )
+{% for extension in ebook2audiobook_auto_convert_extensions %}
+find_args+=( -iname "*.{{ extension }}" )
+{% if not loop.last %}
+find_args+=( -o )
+{% endif %}
+{% endfor %}
+find_args+=( ")" -print0 )
+
+while IFS= read -r -d '' ebook; do
+  convert_one "$ebook"
+done < <(find "${find_args[@]}")

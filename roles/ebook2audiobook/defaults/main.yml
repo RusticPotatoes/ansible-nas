@@ -10,6 +10,23 @@ ebook2audiobook_data_directory: "{{ docker_home }}/ebook2audiobook"
 ebook2audiobook_models_directory: "{{ ebook2audiobook_data_directory }}/models"
 ebook2audiobook_voices_directory: "{{ ebook2audiobook_data_directory }}/voices"
 ebook2audiobook_tmp_directory: "{{ ebook2audiobook_data_directory }}/tmp"
+ebook2audiobook_processed_directory: "{{ ebook2audiobook_data_directory }}/processed"
+
+# Automatic conversion. A systemd timer scans the books directory and runs
+# ebook2audiobook headless for ebook files that do not have a success marker.
+ebook2audiobook_auto_convert_enabled: false
+ebook2audiobook_auto_convert_interval: "30m"
+ebook2audiobook_auto_convert_script_path: "/usr/local/sbin/ebook2audiobook-auto-convert"
+ebook2audiobook_auto_convert_language: "eng"
+ebook2audiobook_auto_convert_device: "{{ 'gpu' if (ebook2audiobook_gpu_enabled | bool) else 'cpu' }}"
+ebook2audiobook_auto_convert_output_format: "m4b"
+ebook2audiobook_auto_convert_output_directory: "/app/audiobooks/auto"
+ebook2audiobook_auto_convert_extensions:
+  - epub
+  - mobi
+  - azw3
+  - pdf
+  - txt
 
 # Copy the image's built-in voices into the persistent host voice directory
 # when it is empty. Without this, the /app/voices bind mount hides voices that

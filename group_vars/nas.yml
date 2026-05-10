@@ -90,6 +90,8 @@ wireguard_enabled: true
 watchtower_enabled: true
 newspaper_enabled: true
 ebook2audiobook_enabled: true
+ebook2audiobook_auto_convert_enabled: true
+ebook2audiobook_auto_convert_interval: "30m"
 postgres_enabled: true
 librechat_enabled: false
 
