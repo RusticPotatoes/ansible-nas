@@ -1,0 +1,114 @@
+ui:
+  title: Ansible-NAS Synthetic Monitoring
+  header: Media Pipeline Health
+
+metrics: true
+
+endpoints:
+  - name: Sonarr API
+    group: Media Pipeline - Service Health
+    url: "http://{{ ansible_nas_ip }}:8989/api/v3/system/status?apikey={{ sonarr_api_key }}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].version != ''"
+
+  - name: Prowlarr API
+    group: Media Pipeline - Service Health
+    url: "http://{{ ansible_nas_ip }}:9696/api/v1/system/status?apikey={{ prowlarr_api_key }}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].version != ''"
+
+  - name: NZBGet API
+    group: Media Pipeline - Service Health
+    url: "http://{{ nzbget_user }}:{{ nzbget_pass | urlencode }}@{{ ansible_nas_ip }}:6789/jsonrpc/status"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: Deluge Web UI
+    group: Media Pipeline - Service Health
+    url: "http://{{ ansible_nas_ip }}:8112"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: Sonarr Health Checks
+    group: Media Pipeline - App Health
+    url: "http://{{ ansible_nas_ip }}:8989/api/v3/health?apikey={{ sonarr_api_key }}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: Prowlarr Health Checks
+    group: Media Pipeline - App Health
+    url: "http://{{ ansible_nas_ip }}:9696/api/v1/health?apikey={{ prowlarr_api_key }}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: Sonarr Download Clients Configured
+    group: Media Pipeline - Handoffs
+    url: "http://{{ ansible_nas_ip }}:8989/api/v3/downloadclient?apikey={{ sonarr_api_key }}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: Prowlarr Applications Configured
+    group: Media Pipeline - Handoffs
+    url: "http://{{ ansible_nas_ip }}:9696/api/v1/applications?apikey={{ prowlarr_api_key }}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: Prowlarr Indexers Configured
+    group: Media Pipeline - Handoffs
+    url: "http://{{ ansible_nas_ip }}:9696/api/v1/indexer?apikey={{ prowlarr_api_key }}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: Sonarr Queue Not Growing
+    group: Media Pipeline - Queues
+    url: "http://{{ ansible_nas_ip }}:8989/api/v3/queue?page=1&pageSize=100&apikey={{ sonarr_api_key }}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].totalRecords < 20"
+
+  - name: NZBGet Queue Reachable
+    group: Media Pipeline - Queues
+    url: "http://{{ nzbget_user }}:{{ nzbget_pass | urlencode }}@{{ ansible_nas_ip }}:6789/jsonrpc/listgroups"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: NZBGet History Reachable
+    group: Media Pipeline - Queues
+    url: "http://{{ nzbget_user }}:{{ nzbget_pass | urlencode }}@{{ ansible_nas_ip }}:6789/jsonrpc/history"
+    interval: 10m
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: Sonarr Web UI
+    group: Media Pipeline - Web UIs
+    url: "http://{{ ansible_nas_ip }}:8989"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: Prowlarr Web UI
+    group: Media Pipeline - Web UIs
+    url: "http://{{ ansible_nas_ip }}:9696"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: NZBGet Web UI
+    group: Media Pipeline - Web UIs
+    url: "http://{{ nzbget_user }}:{{ nzbget_pass | urlencode }}@{{ ansible_nas_ip }}:6789"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"

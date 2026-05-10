@@ -1,0 +1,20 @@
+---
+gatus_enabled: false
+gatus_available_externally: false
+
+# directories
+gatus_data_directory: "{{ docker_home }}/gatus"
+gatus_config_file: "{{ gatus_data_directory }}/config.yml"
+
+# network
+gatus_port: "9382"
+gatus_hostname: "gatus"
+gatus_use_vpn: false
+
+# specs
+gatus_memory: "512m"
+
+# docker
+gatus_container_name: gatus
+gatus_image_name: twinproduction/gatus
+gatus_image_version: latest
