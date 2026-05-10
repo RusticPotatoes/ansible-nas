@@ -58,6 +58,8 @@ stats_loki_logs_error_threshold: 60
 stats_loki_container_logs_error_threshold: 120
 stats_loki_container_logs_error_anomaly_floor: 30
 stats_loki_container_logs_error_anomaly_stddev_multiplier: 4
+stats_gatus_endpoint_alert_window: 3m
+stats_gatus_endpoint_alert_for: 2m
 
 # config
 stats_prometheus_retention_time: 365d

@@ -77,6 +77,11 @@
       tags:
         - promtail
 
+    - role: gatus
+      tags:
+        - gatus
+        - observability
+
     - role: vpn-download-stack
       tags:
         - vpn-download-stack

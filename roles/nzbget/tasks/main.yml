@@ -17,6 +17,7 @@
         owner: "{{ nzbget_user_id }}"
         group: "{{ nzbget_group_id }}"
         mode: "0775"
+        recurse: true
 
     - name: NZBGet
       community.docker.docker_container:

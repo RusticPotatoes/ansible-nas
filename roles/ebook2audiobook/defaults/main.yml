@@ -23,6 +23,11 @@ ebook2audiobook_auto_convert_output_format: "m4b"
 ebook2audiobook_auto_convert_output_directory: "/app/audiobooks/auto"
 ebook2audiobook_auto_convert_host_output_directory: "{{ ebook2audiobook_audiobooks_directory }}/auto"
 ebook2audiobook_auto_convert_timeout: "2h"
+ebook2audiobook_auto_convert_max_jobs: 0
+ebook2audiobook_auto_convert_gpu_guard_enabled: "{{ ebook2audiobook_gpu_enabled }}"
+ebook2audiobook_auto_convert_gpu_max_utilization: 90
+ebook2audiobook_auto_convert_gpu_average_samples: 3
+ebook2audiobook_auto_convert_gpu_average_sample_interval: 5
 ebook2audiobook_auto_convert_extensions:
   - epub
   - mobi

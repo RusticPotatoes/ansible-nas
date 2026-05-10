@@ -5,6 +5,12 @@ container="{{ ebook2audiobook_container_name }}"
 books_dir="{{ ebook2audiobook_books_directory }}"
 processed_dir="{{ ebook2audiobook_processed_directory }}"
 lock_file="${processed_dir}/auto-convert.lock"
+max_jobs={{ ebook2audiobook_auto_convert_max_jobs | int }}
+converted_jobs=0
+gpu_guard_enabled="{{ ebook2audiobook_auto_convert_gpu_guard_enabled | bool | lower }}"
+gpu_max_utilization={{ ebook2audiobook_auto_convert_gpu_max_utilization | int }}
+gpu_average_samples={{ ebook2audiobook_auto_convert_gpu_average_samples | int }}
+gpu_average_sample_interval={{ ebook2audiobook_auto_convert_gpu_average_sample_interval | int }}
 
 mkdir -p "$processed_dir"
 exec 9>"$lock_file"
@@ -17,6 +23,45 @@ if [ "$(docker inspect -f '{% raw %}{{.State.Running}}{% endraw %}' "$container"
   echo "Container ${container} is not running"
   exit 1
 fi
+
+gpu_average_utilization() {
+  local total=0 sample_count=0 sample utilization
+
+  if ! command -v nvidia-smi >/dev/null 2>&1; then
+    echo "0"
+    return 0
+  fi
+
+  for ((sample=1; sample<=gpu_average_samples; sample++)); do
+    utilization="$(
+      nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null \
+        | awk '{sum += $1; count++} END {if (count > 0) printf "%.0f", sum / count; else print 0}'
+    )"
+    total=$((total + utilization))
+    sample_count=$((sample_count + 1))
+    if [ "$sample" -lt "$gpu_average_samples" ]; then
+      sleep "$gpu_average_sample_interval"
+    fi
+  done
+
+  echo $((total / sample_count))
+}
+
+gpu_is_available() {
+  local average_utilization
+
+  if [ "$gpu_guard_enabled" != "true" ]; then
+    return 0
+  fi
+
+  average_utilization="$(gpu_average_utilization)"
+  if [ "$average_utilization" -ge "$gpu_max_utilization" ]; then
+    echo "GPU average utilization is ${average_utilization}%, at or above ${gpu_max_utilization}%; skipping new conversion"
+    return 1
+  fi
+
+  return 0
+}
 
 convert_one() {
   local ebook_path="$1"
@@ -31,6 +76,15 @@ convert_one() {
     return 0
   fi
 
+  if [ "$max_jobs" -gt 0 ] && [ "$converted_jobs" -ge "$max_jobs" ]; then
+    echo "Reached max conversions for this run (${max_jobs})"
+    return 1
+  fi
+
+  if ! gpu_is_available; then
+    return 1
+  fi
+
   mkdir -p "$marker_dir"
   echo "Converting ${relative_path}"
   docker exec "$container" /app/ebook2audiobook.sh \
@@ -42,6 +96,7 @@ convert_one() {
     --output_dir "{{ ebook2audiobook_auto_convert_output_directory }}"
 
   date --iso-8601=seconds > "$marker_path"
+  converted_jobs=$((converted_jobs + 1))
 }
 
 find_args=( "$books_dir" -type f "(" )
@@ -54,5 +109,5 @@ find_args+=( -o )
 find_args+=( ")" -print0 )
 
 while IFS= read -r -d '' ebook; do
-  convert_one "$ebook"
+  convert_one "$ebook" || break
 done < <(find "${find_args[@]}")
