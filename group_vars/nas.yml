@@ -43,6 +43,8 @@ portainer_enabled: true
 homeassistant_enabled: true
 plex_enabled: true
 gluetun_enabled: true
+gluetun_periodic_restart_enabled: true
+gluetun_periodic_restart_interval: "2h"
 radarr_enabled: true
 sonarr_enabled: true
 stats_enabled: true
@@ -110,6 +112,8 @@ samba_extra_shares:
     public: yes
     writable: no
     read_only: yes
+    write_list: "{{ ansible_nas_user }}"
+    user: "{{ samba_guest_account }}"
     browseable: yes
     path: /mnt/media
     directory_mode: "0755"
@@ -120,6 +124,8 @@ samba_extra_shares:
     public: yes
     writable: no
     read_only: yes
+    write_list: "{{ ansible_nas_user }}"
+    user: "{{ samba_guest_account }}"
     browseable: yes
     path: /mnt/docker
     directory_mode: "0755"
@@ -130,6 +136,8 @@ samba_extra_shares:
     public: yes
     writable: no
     read_only: yes
+    write_list: "{{ ansible_nas_user }}"
+    user: "{{ samba_guest_account }}"
     browseable: yes
     path: /mnt/archive
     directory_mode: "0755"
