@@ -101,22 +101,19 @@ homebridge_enabled: true
 grafana_enabled: true
 promtail_enabled: true
 semaphore_enabled: false
-dashy_enabled: false
-organizr_enabled: true
-overseerr_enabled: false
+overseerr_enabled: true
 thelounge_enabled: true
 unifi_enabled: true
 mongodb_enabled: true
 pihole_enabled: true
 wireguard_enabled: true
-readarr_enabled: false
 watchtower_enabled: true
 newspaper_enabled: true
 ebook2audiobook_enabled: true
 ebook2audiobook_auto_convert_enabled: true
 ebook2audiobook_auto_convert_interval: "30m"
 postgres_enabled: true
-librechat_enabled: false
+gatus_enabled: true
 
 # Observability
 #
