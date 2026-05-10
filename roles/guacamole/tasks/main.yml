@@ -45,7 +45,10 @@
           traefik.http.routers.guacamole.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.guacamole.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.guacamole.loadbalancer.server.port: "8080"
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
     - name: Restart Guacamole Container
       community.docker.docker_container:
         name: "{{ guacamole_container_name }}"

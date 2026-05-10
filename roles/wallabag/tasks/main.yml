@@ -33,8 +33,11 @@
           traefik.http.routers.wallabag.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.wallabag.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.wallabag.loadbalancer.server.port: "80"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: wallabag_enabled is true
-
 - name: Stop Wallabag
   block:
     - name: Stop Wallabag

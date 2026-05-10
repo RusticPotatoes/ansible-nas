@@ -11,7 +11,10 @@
           - "{{ stats_prometheus_smartctl_port }}:9902"
         restart_policy: unless-stopped
         memory: "{{ stats_prometheus_smartctl_memory }}"
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
     - name: Hddtemp Docker Container
       community.docker.docker_container:
         name: "{{ stats_hddtemp_docker_container_name }}"
@@ -27,7 +30,10 @@
           - "/dev:/dev:ro"
         restart_policy: unless-stopped
         memory: "{{ stats_hddtemp_memory }}"
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
     - name: Speedtest Exporter Docker Container
       community.docker.docker_container:
         name: "{{ stats_speedtest_container_name }}"
@@ -38,8 +44,11 @@
         restart_policy: unless-stopped
         memory: "{{ stats_speedtest_exporter_memory }}"
       when: stats_internet_speed_test_enabled
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: stats_enabled is true
-
 - name: Stop Exporters
   block:
     - name: Stop Smartctl Exporter

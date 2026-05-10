@@ -30,8 +30,11 @@
           traefik.http.routers.dokuwiki.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.dokuwiki.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.dokuwiki.loadbalancer.server.port: "80"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: dokuwiki_enabled is true
-
 - name: Stop Dokuwiki
   block:
     - name: Stop Dokuwiki

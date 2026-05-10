@@ -27,8 +27,11 @@
           MEMBERS: "{{ minecraft_bedrock_server_members }}"
           VISITORS: "{{ minecraft_bedrock_server_visitors }}"
         restart_policy: unless-stopped
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: minecraft_bedrock_server_enabled is true
-
 - name: Stop Minecraft Bedrock Server
   block:
     - name: Stop Minecraft Bedrock Server

@@ -115,7 +115,10 @@
           timeout: 10s
           retries: 3
           start_period: 30s
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
     - name: Wait for Gluetun container to be healthy
       community.docker.docker_container_info:
         name: "{{ gluetun_container_name }}"

@@ -31,7 +31,10 @@
         networks:
           - name: "{{ piwigo_network_name }}"
         network_mode: "{{ piwigo_network_name }}"
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
     - name: Piwigo Docker Container
       community.docker.docker_container:
         name: "{{ piwigo_container_name }}"
@@ -64,8 +67,11 @@
           homepage.icon: piwigo.png
           homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ piwigo_port }}"
           homepage.description: Photos client
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: piwigo_enabled is true
-
 - name: Stop Piwigo
   block:
     - name: Stop Piwigo

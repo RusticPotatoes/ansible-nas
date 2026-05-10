@@ -20,8 +20,11 @@
         network_mode: host
         restart_policy: unless-stopped
         memory: "{{ mymediaforalexa_memory }}"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: mymediaforalexa_enabled is true
-
 - name: Stop Mymediaforalexa
   block:
     - name: Stop Mymediaforalexa

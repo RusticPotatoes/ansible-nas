@@ -5,6 +5,10 @@
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
+        owner: "{{ prowlarr_user_id }}"
+        group: "{{ prowlarr_group_id }}"
+        mode: "0775"
+        recurse: true
       with_items:
         - "{{ prowlarr_data_directory }}"
 
@@ -36,8 +40,11 @@
           homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ prowlarr_port }}"
           homepage.description: Indexer Proxy
 
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: prowlarr_enabled is true
-
 - name: Stop Prowlarr
   block:
     - name: Stop Prowlarr

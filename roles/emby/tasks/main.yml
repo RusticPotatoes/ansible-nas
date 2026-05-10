@@ -34,8 +34,11 @@
           traefik.http.routers.emby.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.emby.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.emby.loadbalancer.server.port: "8096"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: emby_enabled is true
-
 - name: Stop Emby
   block:
     - name: Stop Emby

@@ -27,8 +27,11 @@
         restart_policy: unless-stopped
         memory: "{{ cloudflare_memory }}"
         recreate: "{{ template_files_result is changed }}"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: cloudflare_ddns_enabled is true
-
 - name: Stop Cloudflare DDNS
   block:
     - name: Stop Cloudflare DDNS

@@ -35,8 +35,11 @@
           traefik.http.routers.booksonic.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.booksonic.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.booksonic.loadbalancer.server.port: "4040"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: booksonic_enabled is true
-
 - name: Stop Booksonic
   block:
     - name: Stop Booksonic

@@ -29,7 +29,10 @@
           MYSQL_ROOT_PASSWORD: "{{ joomla_database_password }}"
         restart_policy: unless-stopped
         memory: "{{ joomla_db_memory }}"
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
     - name: Joomla Docker Container
       community.docker.docker_container:
         name: "{{ joomla_container_name }}"
@@ -55,8 +58,11 @@
           traefik.http.routers.joomla.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.joomla.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.joomla.loadbalancer.server.port: "80"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: joomla_enabled is true
-
 - name: Stop Joomla
   block:
     - name: Stop Joomla

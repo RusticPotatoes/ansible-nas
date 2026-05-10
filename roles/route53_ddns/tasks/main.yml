@@ -24,8 +24,11 @@
         restart_policy: unless-stopped
         memory: "{{ route53_memory }}"
         recreate: "{{ template_config is changed }}"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: route53_enabled is true
-
 - name: Stop AWS Route53 Dynamic DNS
   block:
     - name: Stop AWS Route53 Dynamic DNS

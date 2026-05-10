@@ -1,12 +1,25 @@
 ---
 - name: Start Sonarr
   block:
-    - name: Create Sonarr Directories
+    - name: Create Sonarr config directory
+      ansible.builtin.file:
+        path: "{{ sonarr_data_directory }}"
+        state: directory
+        owner: "{{ sonarr_user_id }}"
+        group: "{{ sonarr_group_id }}"
+        mode: "0775"
+        recurse: true
+
+    - name: Create Sonarr media directories
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
+        owner: "{{ sonarr_user_id }}"
+        group: "{{ sonarr_group_id }}"
+        mode: "0775"
       with_items:
-        - "{{ sonarr_data_directory }}"
+        - "{{ sonarr_tv_directory }}"
+        - "{{ sonarr_download_directory }}"
 
     - name: Sonarr
       community.docker.docker_container:
@@ -37,8 +50,11 @@
           homepage.icon: sonarr
           homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ sonarr_port }}"
           homepage.description: TV automation
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: sonarr_enabled is true
-
 - name: Stop Sonarr
   block:
     - name: Stop Sonarr

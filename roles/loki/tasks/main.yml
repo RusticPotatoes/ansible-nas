@@ -67,7 +67,10 @@
           prometheus.io/scrape: "true"
           prometheus.io/port: "3100"
           prometheus.io/path: "/metrics"
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
     - name: Template Grafana Loki data source
       ansible.builtin.template:
         src: grafana-datasource.yml

@@ -28,7 +28,10 @@
         networks:
           - name: "{{ paperless_ng_network_name }}"
         network_mode: "{{ paperless_ng_network_name }}"
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
     - name: Create paperless_ng postgres Docker Container
       community.docker.docker_container:
         name: "{{ paperless_ng_db_container_name }}"
@@ -45,7 +48,10 @@
         networks:
           - name: "{{ paperless_ng_network_name }}"
         network_mode: "{{ paperless_ng_network_name }}"
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
     - name: Create paperless_ng UI Docker Container
       community.docker.docker_container:
         name: "{{ paperless_ng_uiserver_container_name }}"
@@ -76,8 +82,11 @@
           traefik.http.routers.paperless_ng.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.paperless_ng.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.paperless_ng.loadbalancer.server.port: "8080"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: paperless_ng_enabled is true
-
 - name: Stop paperless_ng
   block:
     - name: Stop paperless_ng

@@ -39,8 +39,11 @@
           homepage.description: Manage subtitles
           homepage.widget.type: bazarr
           homepage.widget.url: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ bazarr_port }}"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: bazarr_enabled is true
-
 - name: Stop Bazarr
   block:
     - name: Stop Bazarr

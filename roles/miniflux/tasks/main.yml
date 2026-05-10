@@ -27,7 +27,10 @@
           POSTGRES_PASSWORD: "supersecure"
         restart_policy: unless-stopped
         memory: "{{ miniflux_postgres_memory }}"
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
     - name: Create Miniflux Docker Container
       community.docker.docker_container:
         name: "{{ miniflux_container_name }}"
@@ -53,8 +56,11 @@
           traefik.http.routers.miniflux.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.miniflux.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.miniflux.loadbalancer.server.port: "8080"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: miniflux_enabled is true
-
 - name: Stop Miniflux
   block:
     - name: Stop Miniflux

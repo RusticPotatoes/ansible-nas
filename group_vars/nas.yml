@@ -59,6 +59,18 @@ nzbget_enabled: true
 logging_enabled: true
 prowlarr_enabled: true
 vpn_download_stack_enabled: true
+vpn_download_stack_user_id: "999"
+vpn_download_stack_group_id: "1001"
+prowlarr_user_id: "{{ vpn_download_stack_user_id }}"
+prowlarr_group_id: "{{ vpn_download_stack_group_id }}"
+deluge_user_id: "{{ vpn_download_stack_user_id }}"
+deluge_group_id: "{{ vpn_download_stack_group_id }}"
+radarr_user_id: "{{ vpn_download_stack_user_id }}"
+radarr_group_id: "{{ vpn_download_stack_group_id }}"
+sonarr_user_id: "{{ vpn_download_stack_user_id }}"
+sonarr_group_id: "{{ vpn_download_stack_group_id }}"
+nzbget_user_id: "{{ vpn_download_stack_user_id }}"
+nzbget_group_id: "{{ vpn_download_stack_group_id }}"
 minio_enabled: true
 loki_enabled: true
 logging_stack_enabled: true

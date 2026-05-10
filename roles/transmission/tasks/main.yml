@@ -37,8 +37,11 @@
           traefik.http.routers.transmission.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.transmission.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.transmission.loadbalancer.server.port: "9091"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: transmission_enabled is true
-
 - name: Stop Transmission
   block:
     - name: Stop Transmission

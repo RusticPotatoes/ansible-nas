@@ -31,8 +31,11 @@
           traefik.http.routers.couchdb.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.couchdb.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.couchdb.loadbalancer.server.port: "5984"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: couchdb_enabled is true
-
 - name: Stop CouchDB
   block:
     - name: Stop CouchDB

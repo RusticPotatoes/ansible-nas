@@ -66,8 +66,11 @@
         # networks:
         #   - name: librechat_internal_net
 
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: librechat_enabled is true
-
 - name: Stop librechat
   block:
     - name: Stop librechat
