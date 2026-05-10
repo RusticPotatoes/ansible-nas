@@ -1,0 +1,11 @@
+[Unit]
+Description=Scan for ebooks to convert to audiobooks
+
+[Timer]
+OnBootSec={{ ebook2audiobook_auto_convert_interval }}
+OnUnitActiveSec={{ ebook2audiobook_auto_convert_interval }}
+Persistent=true
+Unit=ebook2audiobook-auto-convert.service
+
+[Install]
+WantedBy=timers.target
