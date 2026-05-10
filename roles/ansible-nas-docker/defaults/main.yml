@@ -16,6 +16,9 @@ docker_daemon_json:
   data-root: "{{ docker_image_directory }}"
   storage-driver: "{{ docker_storage_driver }}"
 
+docker_systemd_environment:
+  GODEBUG: "netdns=cgo"
+
 # Periodic Docker cleanup. This intentionally does not prune volumes by
 # default, because many Ansible-NAS apps keep important state in volumes/binds.
 docker_prune_enabled: false

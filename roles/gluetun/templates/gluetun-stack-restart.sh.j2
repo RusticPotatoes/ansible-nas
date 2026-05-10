@@ -58,12 +58,30 @@ if [ "$status" != "healthy" ] && [ "$status" != "none" ]; then
 fi
 
 log "Starting Gluetun-routed containers"
+failed_children=()
 for child in "${children[@]}"; do
   if container_exists "$child"; then
-    docker start "$child"
+    if ! docker start "$child"; then
+      log "Failed to start ${child}; it may need to be recreated"
+      failed_children+=( "$child" )
+    fi
   else
     log "${child} does not exist; skipping"
   fi
 done
+
+{% if gluetun_recover_with_ansible_enabled | bool %}
+if [ "${failed_children[*]:-}" != "" ]; then
+  log "Running targeted Ansible repair for Gluetun-routed containers: ${failed_children[*]}"
+  cd "{{ gluetun_ansible_repo_path }}"
+  ansible-playbook \
+    -i "{{ gluetun_ansible_inventory }}" \
+    "{{ gluetun_ansible_playbook }}" \
+    -e "@{{ gluetun_ansible_vault_file }}" \
+    -e "docker_container_pull=false" \
+    --vault-password-file "{{ gluetun_ansible_vault_password_file }}" \
+    --tags gluetun
+fi
+{% endif %}
 
 log "Gluetun stack restart complete"

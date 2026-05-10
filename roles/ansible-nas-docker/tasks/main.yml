@@ -48,6 +48,23 @@
     groups: docker
     append: yes
 
+- name: Create Docker systemd drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/system/docker.service.d
+    state: directory
+    mode: '0755'
+
+- name: Configure Docker service environment
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/docker.service.d/ansible-nas.conf
+    mode: '0644'
+    content: |
+      [Service]
+      {% for name, value in docker_systemd_environment.items() %}
+      Environment="{{ name }}={{ value }}"
+      {% endfor %}
+  register: docker_systemd_config
+
 - name: Generate Docker daemon.json
   ansible.builtin.copy:
     dest: /etc/docker/daemon.json
@@ -55,10 +72,11 @@
   register: docker_config
 
 - name: Restart Docker # noqa no-handler
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: docker
     state: restarted
-  when: docker_config.changed
+    daemon_reload: true
+  when: docker_config.changed or docker_systemd_config.changed
 
 - name: Install Docker prune script
   ansible.builtin.template:

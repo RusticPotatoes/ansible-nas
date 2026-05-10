@@ -12,7 +12,7 @@
       community.docker.docker_container:
         name: "{{ sabnzbd_container_name }}"
         image: "{{ sabnzbd_image_name }}:{{ sabnzbd_image_version }}"
-        pull: true
+        pull: "{{ docker_container_pull | default(true) }}"
         volumes:
           - "{{ sabnzbd_data_directory }}:/config:rw"
           - "{{ sabnzbd_downloads_directory }}:/downloads"

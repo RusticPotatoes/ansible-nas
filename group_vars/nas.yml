@@ -22,12 +22,23 @@ primary_eth: "enp6s0"
 # Pi-hole/router DNS. More-specific local DNS domains learned from the network
 # still win over this catch-all route.
 ansible_nas_configure_systemd_resolved: true
+ansible_nas_resolved_use_uplink_resolv_conf: true
+ansible_nas_resolved_dns_servers:
+  - "1.1.1.1"
+  - "9.9.9.9"
+ansible_nas_resolved_fallback_dns_servers:
+  - "1.1.1.1"
+  - "9.9.9.9"
 
 # Keep container DNS independent of local DNS/Pi-hole availability.
 # Docker image pulls use the host resolver configured by ansible-nas-general.
 docker_daemon_json:
   data-root: "{{ docker_image_directory }}"
   storage-driver: "{{ docker_storage_driver }}"
+  log-driver: "json-file"
+  log-opts:
+    max-size: "10m"
+    max-file: "3"
   dns:
     - "1.1.1.1"
     - "1.0.0.1"
@@ -36,6 +47,12 @@ docker_daemon_json:
 docker_prune_enabled: true
 docker_prune_interval: "Sun *-*-* 04:30:00"
 docker_prune_until: "168h"
+
+# Let Ubuntu apply routine updates unattended and reboot only when packages
+# leave /var/run/reboot-required behind.
+ansible_nas_unattended_upgrades_enabled: true
+ansible_nas_unattended_reboot: true
+ansible_nas_unattended_reboot_time: "04:00"
 
 # Secrets expected from vault.yml. Keep the vault file ignored and pass it with
 # `make deploy` / `make tags`.

@@ -22,7 +22,7 @@
       community.docker.docker_container:
         name: "{{ nzbget_container_name }}"
         image: "{{ nzbget_image_name }}:{{ nzbget_image_version }}"
-        pull: true
+        pull: "{{ docker_container_pull | default(true) }}"
         volumes:
           - "{{ nzbget_download_directory }}:/downloads:rw"
           - "{{ nzbget_data_directory }}:/config:rw"

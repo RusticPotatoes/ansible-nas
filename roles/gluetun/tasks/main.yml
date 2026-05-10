@@ -82,7 +82,6 @@
           - NET_ADMIN
         volumes:
           - "{{ gluetun_config_directory }}/wireguard:/gluetun/wireguard/:rw"
-          - "/etc/resolv.conf:/etc/resolv.conf:rw"
           - "{{ gluetun_config_directory }}/auth/config.toml:/gluetun/auth/config.toml:ro"
         ports: "{{ gluetun_combined_ports }}"
         env:
