@@ -39,6 +39,8 @@ ingester:
 
 limits_config:
   allow_structured_metadata: false
+  split_queries_by_interval: 24h
+  max_query_parallelism: 32
 
 ruler:
   rule_path: /loki/rules

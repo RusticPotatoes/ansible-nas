@@ -54,6 +54,10 @@ stats_grafana_memory: 1g
 # grafana alerting
 stats_telegram_bot_token: "{{ vault_ansible_nas_telegram_bot_token }}"
 stats_telegram_chat_id: "{{ vault_ansible_nas_telegram_chat_id }}"
+stats_loki_logs_error_threshold: 60
+stats_loki_container_logs_error_threshold: 120
+stats_loki_container_logs_error_anomaly_floor: 30
+stats_loki_container_logs_error_anomaly_stddev_multiplier: 4
 
 # config
 stats_prometheus_retention_time: 365d

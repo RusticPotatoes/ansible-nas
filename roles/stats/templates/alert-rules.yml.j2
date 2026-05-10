@@ -101,7 +101,7 @@ groups:
           to: 0
         datasourceUid: loki
         model:
-          expr: 'sum(count_over_time({container=~".+"} |~ "(?i)error|fatal|exception" [5m]))'
+          expr: 'sum(count_over_time({container=~".+"} |~ "(^|[[:space:]])(ERROR|level=error)([[:space:]]|$)" [5m]))'
           queryType: "range"
           refId: A
       - refId: B
@@ -139,7 +139,7 @@ groups:
           conditions:
             - evaluator:
                 params:
-                  - 10
+                  - {{ stats_loki_logs_error_threshold }}
                 type: gt
               operator:
                 type: and
@@ -160,7 +160,271 @@ groups:
       execErrState: "Error"
       for: 5m
       annotations:
-        summary: "High number of error logs detected"
+        summary: "More than {{ stats_loki_logs_error_threshold }} error logs detected in 5 minutes"
+      labels:
+        severity: warning
+      isPaused: false
+    - uid: loki-container-logs-error
+      title: Loki Container Logs Error
+      condition: C
+      data:
+      - refId: A
+        queryType: "range"
+        relativeTimeRange:
+          from: 300
+          to: 0
+        datasourceUid: loki
+        model:
+          expr: 'sum by (container) (count_over_time({container=~".+"} |~ "(^|[[:space:]])(ERROR|level=error)([[:space:]]|$)" [5m]))'
+          queryType: "range"
+          refId: A
+      - refId: B
+        relativeTimeRange:
+          from: 0
+          to: 0
+        datasourceUid: __expr__
+        model:
+          conditions:
+            - evaluator:
+                params: []
+                type: gt
+              operator:
+                type: and
+              query:
+                params:
+                  - B
+              reducer:
+                params: []
+                type: last
+              type: query
+          datasource:
+            type: __expr__
+            uid: __expr__
+          expression: A
+          reducer: last
+          refId: B
+          type: reduce
+      - refId: C
+        relativeTimeRange:
+          from: 0
+          to: 0
+        datasourceUid: __expr__
+        model:
+          conditions:
+            - evaluator:
+                params:
+                  - {{ stats_loki_container_logs_error_threshold }}
+                type: gt
+              operator:
+                type: and
+              query:
+                params:
+                  - C
+              reducer:
+                params: []
+                type: last
+              type: query
+          datasource:
+            type: __expr__
+            uid: __expr__
+          expression: B
+          refId: C
+          type: threshold
+      noDataState: "OK"
+      execErrState: "Error"
+      for: 5m
+      annotations:
+        summary: "{% raw %}{{ $labels.container }}{% endraw %} logged more than {{ stats_loki_container_logs_error_threshold }} errors in 5 minutes"
+      labels:
+        severity: warning
+      isPaused: false
+    - uid: loki-container-error-spike
+      title: Loki Container Error Spike
+      condition: N
+      data:
+      - refId: A
+        queryType: "range"
+        relativeTimeRange:
+          from: 300
+          to: 0
+        datasourceUid: loki
+        model:
+          expr: 'sum by (container) (count_over_time({container=~".+"} |~ "(^|[[:space:]])(ERROR|level=error)([[:space:]]|$)" [5m]))'
+          queryType: "range"
+          refId: A
+      - refId: B
+        queryType: "range"
+        relativeTimeRange:
+          from: 300
+          to: 0
+        datasourceUid: loki
+        model:
+          expr: 'sum by (container) (count_over_time({container=~".+"} |~ "(^|[[:space:]])(ERROR|level=error)([[:space:]]|$)" [5m] offset 1d))'
+          queryType: "range"
+          refId: B
+      - refId: C
+        queryType: "range"
+        relativeTimeRange:
+          from: 300
+          to: 0
+        datasourceUid: loki
+        model:
+          expr: 'sum by (container) (count_over_time({container=~".+"} |~ "(^|[[:space:]])(ERROR|level=error)([[:space:]]|$)" [5m] offset 2d))'
+          queryType: "range"
+          refId: C
+      - refId: D
+        queryType: "range"
+        relativeTimeRange:
+          from: 300
+          to: 0
+        datasourceUid: loki
+        model:
+          expr: 'sum by (container) (count_over_time({container=~".+"} |~ "(^|[[:space:]])(ERROR|level=error)([[:space:]]|$)" [5m] offset 3d))'
+          queryType: "range"
+          refId: D
+      - refId: E
+        queryType: "range"
+        relativeTimeRange:
+          from: 300
+          to: 0
+        datasourceUid: loki
+        model:
+          expr: 'sum by (container) (count_over_time({container=~".+"} |~ "(^|[[:space:]])(ERROR|level=error)([[:space:]]|$)" [5m] offset 7d))'
+          queryType: "range"
+          refId: E
+      - refId: F
+        relativeTimeRange:
+          from: 0
+          to: 0
+        datasourceUid: __expr__
+        model:
+          datasource:
+            type: __expr__
+            uid: __expr__
+          expression: A
+          reducer: last
+          refId: F
+          type: reduce
+      - refId: G
+        relativeTimeRange:
+          from: 0
+          to: 0
+        datasourceUid: __expr__
+        model:
+          datasource:
+            type: __expr__
+            uid: __expr__
+          expression: B
+          reducer: last
+          refId: G
+          type: reduce
+      - refId: H
+        relativeTimeRange:
+          from: 0
+          to: 0
+        datasourceUid: __expr__
+        model:
+          datasource:
+            type: __expr__
+            uid: __expr__
+          expression: C
+          reducer: last
+          refId: H
+          type: reduce
+      - refId: I
+        relativeTimeRange:
+          from: 0
+          to: 0
+        datasourceUid: __expr__
+        model:
+          datasource:
+            type: __expr__
+            uid: __expr__
+          expression: D
+          reducer: last
+          refId: I
+          type: reduce
+      - refId: J
+        relativeTimeRange:
+          from: 0
+          to: 0
+        datasourceUid: __expr__
+        model:
+          datasource:
+            type: __expr__
+            uid: __expr__
+          expression: E
+          reducer: last
+          refId: J
+          type: reduce
+      - refId: K
+        relativeTimeRange:
+          from: 0
+          to: 0
+        datasourceUid: __expr__
+        model:
+          datasource:
+            type: __expr__
+            uid: __expr__
+          expression: ($G + $H + $I + $J) / 4
+          refId: K
+          type: math
+      - refId: L
+        relativeTimeRange:
+          from: 0
+          to: 0
+        datasourceUid: __expr__
+        model:
+          datasource:
+            type: __expr__
+            uid: __expr__
+          expression: ((($G - $K) ** 2 + ($H - $K) ** 2 + ($I - $K) ** 2 + ($J - $K) ** 2) / 4) ** 0.5
+          refId: L
+          type: math
+      - refId: M
+        relativeTimeRange:
+          from: 0
+          to: 0
+        datasourceUid: __expr__
+        model:
+          datasource:
+            type: __expr__
+            uid: __expr__
+          expression: $F > {{ stats_loki_container_logs_error_anomaly_floor }} && $F > ($K + {{ stats_loki_container_logs_error_anomaly_stddev_multiplier }} * $L)
+          refId: M
+          type: math
+      - refId: N
+        relativeTimeRange:
+          from: 0
+          to: 0
+        datasourceUid: __expr__
+        model:
+          conditions:
+            - evaluator:
+                params:
+                  - 0
+                type: gt
+              operator:
+                type: and
+              query:
+                params:
+                  - N
+              reducer:
+                params: []
+                type: last
+              type: query
+          datasource:
+            type: __expr__
+            uid: __expr__
+          expression: M
+          refId: N
+          type: threshold
+      noDataState: "OK"
+      execErrState: "Error"
+      for: 10m
+      annotations:
+        summary: "{% raw %}{{ $labels.container }}{% endraw %} error logs are unusually high"
+        description: "{% raw %}{{ $labels.container }}{% endraw %} is over {{ stats_loki_container_logs_error_anomaly_floor }} errors in 5 minutes and above its historical baseline by {{ stats_loki_container_logs_error_anomaly_stddev_multiplier }} standard deviations."
       labels:
         severity: warning
       isPaused: false

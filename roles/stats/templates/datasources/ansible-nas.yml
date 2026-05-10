@@ -14,7 +14,7 @@ datasources:
     type: loki
     access: proxy
     orgId: 1
-    url: http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:3100
+    url: http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ loki_http_port | default('3100') }}
     uid: loki
     version: 2
     jsonData:
