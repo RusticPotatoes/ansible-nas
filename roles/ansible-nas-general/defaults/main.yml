@@ -17,3 +17,12 @@ ansible_nas_extra_packages:
 # Sets the timezone for your Ansible NAS
 # You can find a list here https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 ansible_nas_timezone: Etc/UTC
+
+# Configure systemd-resolved so host-level lookups, including Docker image
+# pulls, do not depend on LAN DNS services.
+ansible_nas_configure_systemd_resolved: false
+ansible_nas_resolved_dns_servers: "{{ default_dns_servers | default(['1.1.1.1', '9.9.9.9']) }}"
+ansible_nas_resolved_fallback_dns_servers: "{{ default_dns_servers | default(['1.1.1.1', '9.9.9.9']) }}"
+ansible_nas_resolved_domains:
+  - "~."
+ansible_nas_resolved_cache_no_negative: true
