@@ -415,7 +415,7 @@
         - radarr
         - gluetun
 
-    # - role: readarr
+    # - role: readarr # retired 
     #   tags:
     #     - readarr
     #     - gluetun
