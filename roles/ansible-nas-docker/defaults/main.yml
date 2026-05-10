@@ -15,3 +15,15 @@ docker_storage_driver: overlay2
 docker_daemon_json:
   data-root: "{{ docker_image_directory }}"
   storage-driver: "{{ docker_storage_driver }}"
+
+# Periodic Docker cleanup. This intentionally does not prune volumes by
+# default, because many Ansible-NAS apps keep important state in volumes/binds.
+docker_prune_enabled: false
+docker_prune_interval: "weekly"
+docker_prune_script_path: "/usr/local/sbin/ansible-nas-docker-prune"
+docker_prune_until: "168h"
+docker_prune_images: true
+docker_prune_containers: true
+docker_prune_networks: true
+docker_prune_build_cache: true
+docker_prune_volumes: false

@@ -59,4 +59,47 @@
     name: docker
     state: restarted
   when: docker_config.changed
-  
+
+- name: Install Docker prune script
+  ansible.builtin.template:
+    src: ansible-nas-docker-prune.sh.j2
+    dest: "{{ docker_prune_script_path }}"
+    owner: root
+    group: root
+    mode: '0755'
+  when: docker_prune_enabled | bool
+
+- name: Install Docker prune systemd service
+  ansible.builtin.template:
+    src: ansible-nas-docker-prune.service.j2
+    dest: /etc/systemd/system/ansible-nas-docker-prune.service
+    owner: root
+    group: root
+    mode: '0644'
+  when: docker_prune_enabled | bool
+
+- name: Install Docker prune systemd timer
+  ansible.builtin.template:
+    src: ansible-nas-docker-prune.timer.j2
+    dest: /etc/systemd/system/ansible-nas-docker-prune.timer
+    owner: root
+    group: root
+    mode: '0644'
+  when: docker_prune_enabled | bool
+
+- name: Enable Docker prune timer
+  ansible.builtin.systemd:
+    name: ansible-nas-docker-prune.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: docker_prune_enabled | bool
+
+- name: Disable Docker prune timer
+  ansible.builtin.systemd:
+    name: ansible-nas-docker-prune.timer
+    enabled: false
+    state: stopped
+    daemon_reload: true
+  failed_when: false
+  when: not (docker_prune_enabled | bool)

@@ -32,6 +32,11 @@ docker_daemon_json:
     - "1.1.1.1"
     - "1.0.0.1"
 
+# Keep Docker's image/cache sprawl under control. Volumes are not pruned.
+docker_prune_enabled: true
+docker_prune_interval: "Sun *-*-* 04:30:00"
+docker_prune_until: "168h"
+
 # Secrets expected from vault.yml. Keep the vault file ignored and pass it with
 # `make deploy` / `make tags`.
 minio_admin_username: "{{ vault_minio_admin_username | default('admin') }}"

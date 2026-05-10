@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+log() {
+  printf '%s %s\n' "$(date --iso-8601=seconds)" "$*"
+}
+
+log "Docker disk usage before cleanup"
+docker system df || true
+
+{% if docker_prune_containers | bool %}
+log "Pruning stopped containers older than {{ docker_prune_until }}"
+docker container prune --force --filter "until={{ docker_prune_until }}"
+{% endif %}
+
+{% if docker_prune_networks | bool %}
+log "Pruning unused networks older than {{ docker_prune_until }}"
+docker network prune --force --filter "until={{ docker_prune_until }}"
+{% endif %}
+
+{% if docker_prune_images | bool %}
+log "Pruning unused images older than {{ docker_prune_until }}"
+docker image prune --all --force --filter "until={{ docker_prune_until }}"
+{% endif %}
+
+{% if docker_prune_build_cache | bool %}
+log "Pruning build cache older than {{ docker_prune_until }}"
+docker builder prune --all --force --filter "until={{ docker_prune_until }}"
+{% endif %}
+
+{% if docker_prune_volumes | bool %}
+log "Pruning unused volumes older than {{ docker_prune_until }}"
+docker volume prune --force --filter "label!=keep" --filter "until={{ docker_prune_until }}"
+{% endif %}
+
+log "Docker disk usage after cleanup"
+docker system df || true
