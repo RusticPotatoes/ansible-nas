@@ -48,79 +48,37 @@
   "liveNow": false,
   "panels": [
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "ansible_nas"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 1
-              },
-              {
-                "color": "red",
-                "value": 5
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
       "gridPos": {
-        "h": 9,
-        "w": 8,
+        "h": 18,
+        "w": 24,
         "x": 0,
         "y": 0
       },
       "id": 1,
       "options": {
-        "displayMode": "gradient",
-        "maxVizHeight": 300,
-        "minVizHeight": 16,
-        "minVizWidth": 8,
-        "namePlacement": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
+        "alertInstanceLabelFilter": "",
+        "alertName": "",
+        "dashboardAlerts": false,
+        "datasource": "grafana",
+        "groupBy": [],
+        "groupMode": "default",
+        "maxItems": 20,
+        "showInactiveAlerts": true,
+        "showInstances": true,
+        "sortOrder": 1,
+        "stateFilter": {
+          "error": true,
+          "firing": true,
+          "noData": true,
+          "normal": true,
+          "pending": true,
+          "recovering": true
         },
-        "showUnfilled": true,
-        "sizing": "auto",
-        "valueMode": "color"
+        "viewMode": "list"
       },
       "pluginVersion": "13.0.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "ansible_nas"
-          },
-          "editorMode": "code",
-          "expr": "sum by (state) (grafana_alerting_alerts)",
-          "instant": false,
-          "legendFormat": "{{state}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Current Alert State Counts",
-      "type": "bargauge"
+      "title": "Current Alert Rules",
+      "type": "alertlist"
     },
     {
       "datasource": {
@@ -181,9 +139,9 @@
       },
       "gridPos": {
         "h": 9,
-        "w": 16,
-        "x": 8,
-        "y": 0
+        "w": 24,
+        "x": 0,
+        "y": 18
       },
       "id": 2,
       "options": {
@@ -279,7 +237,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 9
+        "y": 27
       },
       "id": 3,
       "options": {
@@ -375,7 +333,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 9
+        "y": 27
       },
       "id": 4,
       "options": {
@@ -411,42 +369,28 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
       "gridPos": {
         "h": 11,
         "w": 24,
         "x": 0,
-        "y": 17
+        "y": 35
       },
       "id": 5,
       "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "prettifyLogMessage": true,
-        "showCommonLabels": false,
-        "showLabels": false,
+        "limit": 50,
+        "navigateAfter": "10m",
+        "navigateBefore": "10m",
+        "navigateToPanel": false,
+        "onlyFromThisDashboard": false,
+        "onlyInTimeRange": true,
+        "showTags": true,
         "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": true
+        "showUser": false,
+        "tags": []
       },
       "pluginVersion": "13.0.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "editorMode": "code",
-          "expr": "{from=\"state-history\"} | json | line_format \"{{.ruleTitle}}: {{.previous}} -> {{.current}} {{.labels_alertname}}\"",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
       "title": "Recent Alert State Changes",
-      "type": "logs"
+      "type": "annolist"
     }
   ],
   "refresh": "1m",
