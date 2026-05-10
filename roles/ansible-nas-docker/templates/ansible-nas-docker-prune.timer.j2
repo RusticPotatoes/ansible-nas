@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Docker resource cleanup
+
+[Timer]
+OnCalendar={{ docker_prune_interval }}
+Persistent=true
+Unit=ansible-nas-docker-prune.service
+
+[Install]
+WantedBy=timers.target
