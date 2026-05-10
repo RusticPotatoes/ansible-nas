@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Gluetun stack restart on a schedule
+
+[Timer]
+OnBootSec={{ gluetun_periodic_restart_interval }}
+OnUnitActiveSec={{ gluetun_periodic_restart_interval }}
+Persistent=true
+Unit=gluetun-stack-restart.service
+
+[Install]
+WantedBy=timers.target

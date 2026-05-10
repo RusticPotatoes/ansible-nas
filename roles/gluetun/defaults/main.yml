@@ -12,6 +12,9 @@ gluetun_container_name: "gluetun"
 gluetun_image_name: "qmcgaw/gluetun"
 gluetun_image_version: "latest"
 gluetun_memory: "512m"
+gluetun_periodic_restart_enabled: false
+gluetun_periodic_restart_interval: "2h"
+gluetun_periodic_restart_script_path: "/usr/local/sbin/gluetun-stack-restart"
 
 # gluetun config directory (persistent storage)
 gluetun_config_directory: "/{{ docker_home }}/gluetun"

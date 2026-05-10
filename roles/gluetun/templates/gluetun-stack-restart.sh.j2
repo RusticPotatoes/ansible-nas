@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+gluetun_container="{{ gluetun_container_name }}"
+children=(
+{% for container in gluetun_routed_containers %}
+  "{{ container.name }}"
+{% endfor %}
+)
+
+log() {
+  printf '%s %s\n' "$(date --iso-8601=seconds)" "$*"
+}
+
+container_exists() {
+  docker inspect "$1" >/dev/null 2>&1
+}
+
+container_running() {
+  [ "$(docker inspect -f '{% raw %}{{.State.Running}}{% endraw %}' "$1" 2>/dev/null || true)" = "true" ]
+}
+
+health_status() {
+  docker inspect -f '{% raw %}{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}{% endraw %}' "$1" 2>/dev/null || true
+}
+
+log "Stopping Gluetun-routed containers"
+for child in "${children[@]}"; do
+  if container_running "$child"; then
+    docker stop "$child"
+  fi
+done
+
+log "Restarting ${gluetun_container}"
+if container_exists "$gluetun_container"; then
+  docker restart "$gluetun_container"
+else
+  log "${gluetun_container} does not exist"
+  exit 1
+fi
+
+log "Waiting for ${gluetun_container} health"
+for _ in $(seq 1 60); do
+  status="$(health_status "$gluetun_container")"
+  if [ "$status" = "healthy" ] || [ "$status" = "none" ]; then
+    break
+  fi
+  if [ "$status" = "unhealthy" ]; then
+    log "${gluetun_container} is unhealthy"
+  fi
+  sleep 5
+done
+
+status="$(health_status "$gluetun_container")"
+if [ "$status" != "healthy" ] && [ "$status" != "none" ]; then
+  log "${gluetun_container} did not become healthy; current status: ${status}"
+  exit 1
+fi
+
+log "Starting Gluetun-routed containers"
+for child in "${children[@]}"; do
+  if container_exists "$child"; then
+    docker start "$child"
+  else
+    log "${child} does not exist; skipping"
+  fi
+done
+
+log "Gluetun stack restart complete"
