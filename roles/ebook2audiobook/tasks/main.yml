@@ -12,6 +12,7 @@
         - "{{ ebook2audiobook_tmp_directory }}"
         - "{{ ebook2audiobook_processed_directory }}"
         - "{{ ebook2audiobook_audiobooks_directory }}"
+        - "{{ ebook2audiobook_auto_convert_host_output_directory }}"
 
     - name: Create ebook2audiobook seeded voice directory
       ansible.builtin.file:

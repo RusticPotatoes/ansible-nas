@@ -21,6 +21,8 @@ ebook2audiobook_auto_convert_language: "eng"
 ebook2audiobook_auto_convert_device: "{{ 'gpu' if (ebook2audiobook_gpu_enabled | bool) else 'cpu' }}"
 ebook2audiobook_auto_convert_output_format: "m4b"
 ebook2audiobook_auto_convert_output_directory: "/app/audiobooks/auto"
+ebook2audiobook_auto_convert_host_output_directory: "{{ ebook2audiobook_audiobooks_directory }}/auto"
+ebook2audiobook_auto_convert_timeout: "2h"
 ebook2audiobook_auto_convert_extensions:
   - epub
   - mobi

@@ -6,3 +6,4 @@ Requires=docker.service
 [Service]
 Type=oneshot
 ExecStart={{ ebook2audiobook_auto_convert_script_path }}
+TimeoutStartSec={{ ebook2audiobook_auto_convert_timeout }}
