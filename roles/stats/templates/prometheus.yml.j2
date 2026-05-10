@@ -28,6 +28,15 @@ scrape_configs:
                     "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ stats_grafana_port }}",
                  ]
 
+{% if gatus_enabled is defined and gatus_enabled %}
+  - job_name: "gatus"
+    metrics_path: /metrics
+    static_configs:
+      - targets: [
+                    "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ gatus_port }}"
+                 ]
+{% endif %}
+
   - job_name: "smartctl"
     static_configs:
       - targets: [

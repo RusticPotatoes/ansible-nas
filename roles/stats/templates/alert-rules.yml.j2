@@ -49,6 +49,30 @@ groups:
       labels:
         severity: warning
       isPaused: false
+{% if gatus_enabled is defined and gatus_enabled %}
+    - uid: gatus-endpoint-down
+      title: Gatus Endpoint Down
+      condition: A
+      data:
+      - refId: A
+        queryType: "instant"
+        relativeTimeRange:
+          from: 600
+          to: 0
+        datasourceUid: ansible_nas
+        model:
+          expr: 'max_over_time(gatus_results_endpoint_success[{{ stats_gatus_endpoint_alert_window }}]) == 0'
+          instant: true
+      noDataState: "OK"
+      execErrState: "Error"
+      for: {{ stats_gatus_endpoint_alert_for }}
+      annotations:
+        summary: "{% raw %}{{ $labels.group }} / {{ $labels.name }}{% endraw %} is failing synthetic checks"
+        description: "Gatus has reported {% raw %}{{ $labels.group }} / {{ $labels.name }}{% endraw %} as down for at least {{ stats_gatus_endpoint_alert_window }}."
+      labels:
+        severity: critical
+      isPaused: false
+{% endif %}
     - uid: disk-space-low
       title: Disk Space Low
       condition: A
