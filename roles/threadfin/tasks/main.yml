@@ -27,8 +27,11 @@
           homepage.description: IPTV bridge
           homepage.widget.type: xteve
           homepage.widget.url: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ threadfin_port }}"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: threadfin_enabled is true
-
 - name: Stop Threadfin
   block:
     - name: Stop Threadfin

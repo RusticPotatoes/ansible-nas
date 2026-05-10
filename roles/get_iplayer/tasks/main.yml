@@ -21,8 +21,11 @@
           - "{{ get_iplayer_port }}:8181"
         restart_policy: unless-stopped
         memory: "{{ get_iplayer_memory }}"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: get_iplayer_enabled is true
-
 - name: Stop get_iplayer
   block:
     - name: Stop get_iplayer

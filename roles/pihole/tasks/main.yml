@@ -51,7 +51,10 @@
           homepage.href: "http://192.168.1.2/admin"
           homepage.description: DNS filtering
       when: pihole_enabled is true
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
 - name: Stop pihole
   block:
     - name: Stop pihole

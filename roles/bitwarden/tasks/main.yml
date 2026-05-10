@@ -48,7 +48,10 @@
           traefik.http.middlewares.bitwarden-ipallowlist.ipallowlist.sourcerange: "{{ bitwarden_ip_allowlist }}"
         memory: "{{ bitwarden_memory }}"
         restart_policy: unless-stopped
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
     - name: Bitwarden Backup Container
       community.docker.docker_container:
         name: "{{ bitwarden_backup_container_name }}"
@@ -57,8 +60,11 @@
         restart_policy: unless-stopped
         volumes_from: bitwarden
         memory: "{{ bitwarden_backup_memory }}"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: bitwarden_enabled is true
-
 - name: Stop Bitwarden
   block:
     - name: Stop Bitwarden

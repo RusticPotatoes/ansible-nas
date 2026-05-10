@@ -1,12 +1,25 @@
 ---
 - name: Start Radarr
   block:
-    - name: Create Radarr Directories
+    - name: Create Radarr config directory
+      ansible.builtin.file:
+        path: "{{ radarr_data_directory }}"
+        state: directory
+        owner: "{{ radarr_user_id }}"
+        group: "{{ radarr_group_id }}"
+        mode: "0775"
+        recurse: true
+
+    - name: Create Radarr media directories
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
+        owner: "{{ radarr_user_id }}"
+        group: "{{ radarr_group_id }}"
+        mode: "0775"
       with_items:
-        - "{{ radarr_data_directory }}"
+        - "{{ radarr_movies_directory }}"
+        - "{{ radarr_download_directory }}"
 
     - name: Radarr Docker Container
       community.docker.docker_container:
@@ -37,8 +50,11 @@
           homepage.icon: "radarr"
           homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ radarr_port }}"
 
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: radarr_enabled is true
-
 - name: Stop Radarr
   block:
     - name: Stop Radarr

@@ -28,8 +28,11 @@
           traefik.http.routers.flaresolverr.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.flaresolverr.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.flaresolverr.loadbalancer.server.port: "8191"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: flaresolverr_enabled is true
-
 - name: Stop FlareSolverr
   block:
     - name: Stop FlareSolverr

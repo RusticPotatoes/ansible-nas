@@ -23,7 +23,10 @@
           MYSQL_PASSWORD: "{{ romm_database_password }}"
         restart_policy: unless-stopped
         memory: "{{ romm_db_memory }}"
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
     - name: Create Romm Redis
       community.docker.docker_container:
         name: "{{ romm_redis_container_name }}"
@@ -31,7 +34,10 @@
         pull: true
         restart_policy: unless-stopped
         memory: "{{ romm_redis_memory }}"
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
     - name: Romm Docker Container
       community.docker.docker_container:
         name: "{{ romm_container_name }}"
@@ -77,8 +83,11 @@
           homepage.icon: romm
           homepage.href: http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ romm_port }}
           homepage.description: Game library manager
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: romm_enabled is true
-
 - name: Stop Romm
   block:
     - name: Stop Romm

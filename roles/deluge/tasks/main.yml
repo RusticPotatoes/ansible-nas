@@ -1,13 +1,22 @@
 ---
 - name: Start Deluge
   block:
-    - name: Create Deluge Directories
+    - name: Create Deluge config directory
       ansible.builtin.file:
-        path: "{{ item }}"
+        path: "{{ deluge_config_directory }}"
         state: directory
-      with_items:
-        - "{{ deluge_config_directory }}"
-        - "{{ deluge_download_directory }}"
+        owner: "{{ deluge_user_id }}"
+        group: "{{ deluge_group_id }}"
+        mode: "0775"
+        recurse: true
+
+    - name: Create Deluge download directory
+      ansible.builtin.file:
+        path: "{{ deluge_download_directory }}"
+        state: directory
+        owner: "{{ deluge_user_id }}"
+        group: "{{ deluge_group_id }}"
+        mode: "0775"
 
     - name: Deluge Docker Container
       community.docker.docker_container:
@@ -37,8 +46,11 @@
           homepage.icon: deluge.png
           homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ deluge_port }}"
           homepage.description: BitTorrent client
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: deluge_enabled is true
-
 - name: Stop Deluge
   block:
     - name: Stop Deluge

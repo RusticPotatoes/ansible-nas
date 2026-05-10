@@ -31,8 +31,11 @@
         restart_policy: unless-stopped
         restart: "{{ mosquitto_conf is changed }}"
         memory: 1g
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: mosquitto_enabled is true
-
 - name: Stop Mosquitto
   block:
     - name: Stop Mosquitto

@@ -45,7 +45,10 @@
           traefik.http.routers.drone_ci.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.drone_ci.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.drone_ci.loadbalancer.server.port: "80"
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
     - name: Create Drone-CI Runner container
       community.docker.docker_container:
         name: "{{ drone_ci_runner_container_name }}"
@@ -63,7 +66,10 @@
           DRONE_RUNNER_NAME: "{{ drone_ci_runner_name }}"
         restart_policy: unless-stopped
         memory: "{{ drone_ci_agent_memory }}"
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
     - name: Add webhook allowed hosts to Gitea
       ansible.builtin.blockinfile:
         path: "{{ gitea_data_directory }}/gitea/gitea/conf/app.ini"

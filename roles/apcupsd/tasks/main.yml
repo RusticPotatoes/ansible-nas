@@ -37,8 +37,11 @@
           TZ: "{{ ansible_nas_timezone }}"
         restart_policy: unless-stopped
         memory: "{{ apcupsd_memory }}"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: apcupsd_enabled is true
-
 - name: Stop Apcupsd
   block:
     - name: Stop Apcupsd

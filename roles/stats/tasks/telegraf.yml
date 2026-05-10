@@ -49,8 +49,11 @@
         restart_policy: unless-stopped
         memory: 1g
         restart: "{{ telegraf_config is changed }}"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: stats_enabled is true
-
 - name: Stop Telegraf
   block:
     - name: Stop stats_telegraf

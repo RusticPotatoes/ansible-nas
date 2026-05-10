@@ -30,8 +30,11 @@
         privileged: true
         restart_policy: unless-stopped
         memory: "{{ virtual_desktop_memory }}"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
   when: virtual_desktop_enabled is true
-
 - name: Stop Virtual Desktop
   block:
     - name: Stop Virtual Desktop

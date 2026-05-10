@@ -24,7 +24,10 @@
         network_mode: bridge
         restart_policy: unless-stopped
         memory: "{{ timemachine_memory }}"
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
     - name: Install avahi
       ansible.builtin.apt:
         name: "avahi-daemon"

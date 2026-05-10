@@ -47,7 +47,10 @@
           traefik.http.routers.woodpecker_ci.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.woodpecker_ci.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.woodpecker_ci.loadbalancer.server.port: "8000"
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
     - name: Create Woodpecker-CI agent container
       community.docker.docker_container:
         name: "{{ woodpecker_ci_agent_container_name }}"
@@ -61,7 +64,10 @@
           WOODPECKER_LOG_LEVEL: "{{ woodpecker_ci_log_level }}"
         restart_policy: unless-stopped
         memory: "{{ woodpecker_ci_agent_memory }}"
-
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
     - name: Add webhook allowed hosts to Gitea
       ansible.builtin.blockinfile:
         path: "{{ gitea_data_directory }}/gitea/gitea/conf/app.ini"
