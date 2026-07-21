@@ -87,6 +87,8 @@
         env:
           VPN_SERVICE_PROVIDER: "custom"
           VPN_TYPE: "wireguard"
+          DNS_UPSTREAM_RESOLVER_TYPE: "doh"      # was defaulting to dot (port 853, intermittently reset by VPN exit)
+          DNS_UPSTREAM_RESOLVERS: "cloudflare"
           DNS_UPDATE_PERIOD: "30m"
           VPN_INTERFACE: "wg0"
           VPN_OUTPUT_INTERFACE: "eth0"
@@ -96,6 +98,9 @@
         restart_policy: unless-stopped
         image_name_mismatch: recreate
         memory: "{{ gluetun_memory }}"
+        sysctls:
+          net.ipv6.conf.all.disable_ipv6: "1"      # tunnel has no working IPv6; stop apps trying dead AAAA routes
+          net.ipv6.conf.default.disable_ipv6: "1"
         labels:
           traefik.enable: "{{ gluetun_available_externally | string }}"
           traefik.http.routers.gluetun.rule: "Host(`{{ gluetun_hostname }}.{{ ansible_nas_domain }}`)"

@@ -208,6 +208,7 @@
     - role: flaresolverr
       tags:
         - flaresolverr
+        - gluetun
 
     - role: freshrss
       tags:

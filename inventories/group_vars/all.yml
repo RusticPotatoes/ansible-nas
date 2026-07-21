@@ -40,6 +40,11 @@ gluetun_name: "container:{{ gluetun_container_name }}"
 # lan_subnets: "192.168.1.0/24,0.0.0.0/0"
 gluetun_routed_containers:
 
+  - name: "flaresolverr"
+    image: "flaresolverr/flaresolverr:latest"
+    ports:
+      - "8191:8191"
+
   - name: "prowlarr"
     image: "ghcr.io/linuxserver/prowlarr:develop"
     ports:
