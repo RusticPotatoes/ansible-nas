@@ -15,8 +15,8 @@
         pull: true
         volumes:
           - "{{ flaresolverr_config_directory }}:/config:rw"
-        ports:
-          - "{{ flaresolverr_port }}:8191"
+        ports: "{{ [flaresolverr_port ~ ':8191'] if not (vpn_download_stack_enabled | default(false) | bool) else omit }}"
+        network_mode: "{{ gluetun_name if (vpn_download_stack_enabled | default(false) | bool) else omit }}"
         env:
           TZ: "{{ ansible_nas_timezone }}"
         restart_policy: unless-stopped
@@ -28,6 +28,11 @@
           traefik.http.routers.flaresolverr.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.flaresolverr.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.flaresolverr.loadbalancer.server.port: "8191"
+          homepage.group: Download Tools
+          homepage.name: FlareSolverr
+          homepage.icon: flaresolverr
+          homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ flaresolverr_port }}"
+          homepage.description: Cloudflare challenge solver
       register: docker_container_result
       until: docker_container_result is succeeded
       retries: "{{ docker_container_pull_retries }}"

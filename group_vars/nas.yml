@@ -33,6 +33,10 @@ ansible_nas_resolved_fallback_dns_servers:
 # Keep container DNS independent of local DNS/Pi-hole availability.
 # Docker image pulls use the host resolver configured by ansible-nas-general.
 docker_daemon_json:
+  # cgroupfs driver keeps GPU containers from losing access on systemctl
+  # daemon-reload (nvidia-container-toolkit cgroup bug, GitHub issue #48).
+  exec-opts:
+    - "native.cgroupdriver=cgroupfs"
   data-root: "{{ docker_image_directory }}"
   storage-driver: "{{ docker_storage_driver }}"
   log-driver: "json-file"
@@ -82,6 +86,11 @@ nzbget_enabled: true
 logging_enabled: true
 prowlarr_enabled: true
 vpn_download_stack_enabled: true
+
+# FlareSolverr solves Cloudflare challenges for Prowlarr indexers (e.g. EZTV).
+# Routed through gluetun so it shares Prowlarr's VPN exit IP (cf_clearance is IP-bound).
+flaresolverr_enabled: true
+flaresolverr_memory: "1g"
 vpn_download_stack_user_id: "999"
 vpn_download_stack_group_id: "1001"
 prowlarr_user_id: "{{ vpn_download_stack_user_id }}"

@@ -33,3 +33,14 @@ vault_password*.txt
 !.env.example
 *.local.yml
 *.secret.yml
+
+# Backups, editor cruft, stray keys/certs (added for public-repo safety)
+*.bak
+*.bak.*
+*.orig
+*~
+*.pem
+*.key
+*.p12
+*.pfx
+*.decrypted
