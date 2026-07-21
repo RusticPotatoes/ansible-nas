@@ -1,0 +1,51 @@
+---
+# One-off: bump the host NVIDIA driver so Ollama (and other CUDA containers) get
+# real GPU acceleration. Ubuntu 24.04 shipped driver 535 here, but current
+# Ollama requires a 550+ driver — so it was silently falling back to CPU
+# inference. 570 is the current proprietary branch (successor to 535) and
+# provides CUDA 12.8, comfortably above the 550 floor. NVIDIA's Ubuntu packages
+# Conflict across branches, so installing 570 cleanly replaces the 535 stack.
+#
+# No secrets in this file — safe to track in the public repo.
+#
+# Run:  ansible-playbook -i inventories/inventory.ini nvidia.yml
+#       (reboots the NAS ONLY if the driver actually changed)
+- name: Update the NVIDIA GPU driver
+  hosts: nas
+  become: true
+  become_method: sudo
+  vars:
+    nvidia_driver_package: nvidia-driver-570   # 550+; matches the existing proprietary line
+    nvidia_driver_reboot: true                 # set false to stage the install and reboot later
+    apt_lock_timeout: 600                       # wait up to 10 min for unattended-upgrades to release the dpkg lock
+  tasks:
+    - name: "Install {{ nvidia_driver_package }} (replaces the older branch)"
+      ansible.builtin.apt:
+        name: "{{ nvidia_driver_package }}"
+        state: present
+        update_cache: true
+        lock_timeout: "{{ apt_lock_timeout }}"
+      register: nvidia_driver_apt
+
+    - name: Sweep packages orphaned from the old driver branch
+      ansible.builtin.apt:
+        autoremove: true
+        purge: true
+        lock_timeout: "{{ apt_lock_timeout }}"
+      when: nvidia_driver_apt.changed
+
+    - name: Reboot to load the new kernel module
+      ansible.builtin.reboot:
+        reboot_timeout: 900
+      when:
+        - nvidia_driver_apt.changed
+        - nvidia_driver_reboot | bool
+
+    - name: Read the active driver version
+      ansible.builtin.command: nvidia-smi --query-gpu=driver_version --format=csv,noheader
+      register: nvidia_smi
+      changed_when: false
+
+    - name: Report the active driver
+      ansible.builtin.debug:
+        msg: "Active NVIDIA driver: {{ nvidia_smi.stdout }}"
