@@ -1,0 +1,32 @@
+---
+- name: Start Open WebUI
+  block:
+    - name: Open WebUI Docker Container
+      community.docker.docker_container:
+        name: "{{ open_webui_container_name }}"
+        image: "{{ open_webui_image_name }}:{{ open_webui_image_version }}"
+        pull: "{{ docker_container_pull | default(true) }}"
+        volumes:
+          - "{{ open_webui_data_directory }}:/app/backend/data:rw"
+        ports:
+          - "{{ open_webui_port }}:8080"
+        env:
+          OLLAMA_BASE_URL: "{{ open_webui_ollama_url }}"
+        restart_policy: unless-stopped
+        memory: "{{ open_webui_memory }}"
+        labels:
+          homepage.group: AI
+          homepage.name: Open WebUI
+          homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ open_webui_port }}"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
+  when: open_webui_enabled is true
+- name: Stop Open WebUI
+  block:
+    - name: Stop Open WebUI
+      community.docker.docker_container:
+        name: "{{ open_webui_container_name }}"
+        state: absent
+  when: open_webui_enabled is false

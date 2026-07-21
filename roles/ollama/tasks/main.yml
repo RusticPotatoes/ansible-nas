@@ -1,0 +1,35 @@
+---
+- name: Start Ollama
+  block:
+    - name: Ollama Docker Container
+      community.docker.docker_container:
+        name: "{{ ollama_container_name }}"
+        image: "{{ ollama_image_name }}:{{ ollama_image_version }}"
+        pull: "{{ docker_container_pull | default(true) }}"
+        volumes:
+          - "{{ ollama_data_directory }}:/root/.ollama:rw"
+        ports:
+          - "{{ ollama_port }}:11434"
+        device_requests:
+          - driver: nvidia
+            count: -1
+            capabilities:
+              - - gpu
+        restart_policy: unless-stopped
+        memory: "{{ ollama_memory }}"
+        labels:
+          homepage.group: AI
+          homepage.name: Ollama
+          homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ ollama_port }}"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
+  when: ollama_enabled is true
+- name: Stop Ollama
+  block:
+    - name: Stop Ollama
+      community.docker.docker_container:
+        name: "{{ ollama_container_name }}"
+        state: absent
+  when: ollama_enabled is false

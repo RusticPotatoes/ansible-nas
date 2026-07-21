@@ -128,7 +128,7 @@ wireguard_enabled: true
 watchtower_enabled: true
 newspaper_enabled: true
 ebook2audiobook_enabled: true
-ebook2audiobook_auto_convert_enabled: true
+ebook2audiobook_auto_convert_enabled: false   # disabled: slow XTTS churn; revisit with Kokoro-FastAPI engine
 ebook2audiobook_auto_convert_interval: "30m"
 postgres_enabled: true
 gatus_enabled: true
@@ -199,3 +199,9 @@ samba_extra_shares:
     browseable: yes
     path: /mnt/archive
     directory_mode: "0755"
+
+# Local AI stack (GPU). Codified from the containers stood up by hand.
+ollama_enabled: true
+open_webui_enabled: true
+kokoro_fastapi_enabled: true
+faster_whisper_enabled: true

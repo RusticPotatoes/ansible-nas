@@ -1,0 +1,9 @@
+---
+open_webui_enabled: false
+open_webui_data_directory: "{{ docker_home }}/open-webui"
+open_webui_port: "8090"
+open_webui_container_name: "open-webui"
+open_webui_image_name: "ghcr.io/open-webui/open-webui"
+open_webui_image_version: "main"
+open_webui_memory: 2g
+open_webui_ollama_url: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:11434"

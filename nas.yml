@@ -210,6 +210,26 @@
         - flaresolverr
         - gluetun
 
+    - role: ollama
+      tags:
+        - ollama
+        - ai
+
+    - role: open-webui
+      tags:
+        - open-webui
+        - ai
+
+    - role: kokoro-fastapi
+      tags:
+        - kokoro-fastapi
+        - ai
+
+    - role: faster-whisper
+      tags:
+        - faster-whisper
+        - ai
+
     - role: freshrss
       tags:
         - freshrss
