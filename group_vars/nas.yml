@@ -87,6 +87,15 @@ logging_enabled: true
 prowlarr_enabled: true
 vpn_download_stack_enabled: true
 
+# Decouple step 1: radarr/sonarr orchestrate only (scraping is in prowlarr,
+# downloading in deluge/nzbget) so they don't need the VPN. Keep them enabled
+# but off gluetun's namespace, so recreating gluetun no longer cascades to them.
+radarr_vpn_enabled: false
+sonarr_vpn_enabled: false
+# Let gluetun's killswitch permit the LAN (not the internet) so prowlarr, still
+# inside the VPN, can reach radarr/sonarr (now outside) for indexer sync.
+gluetun_firewall_outbound_subnets: "192.168.3.0/24"
+
 # FlareSolverr solves Cloudflare challenges for Prowlarr indexers (e.g. EZTV).
 # Routed through gluetun so it shares Prowlarr's VPN exit IP (cf_clearance is IP-bound).
 flaresolverr_enabled: true

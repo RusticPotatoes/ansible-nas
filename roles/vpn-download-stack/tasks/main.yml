@@ -20,8 +20,8 @@
             []
             + ([{'name': prowlarr_container_name, 'ports': [prowlarr_port ~ ':9696']}] if (prowlarr_enabled | default(false) | bool) else [])
             + ([{'name': deluge_container_name, 'ports': [deluge_port ~ ':8112']}] if (deluge_enabled | default(false) | bool) else [])
-            + ([{'name': radarr_container_name, 'ports': [radarr_port ~ ':7878']}] if (radarr_enabled | default(false) | bool) else [])
-            + ([{'name': sonarr_container_name, 'ports': [sonarr_port ~ ':8989']}] if (sonarr_enabled | default(false) | bool) else [])
+            + ([{'name': radarr_container_name, 'ports': [radarr_port ~ ':7878']}] if ((radarr_enabled | default(false) | bool) and (radarr_vpn_enabled | default(true) | bool)) else [])
+            + ([{'name': sonarr_container_name, 'ports': [sonarr_port ~ ':8989']}] if ((sonarr_enabled | default(false) | bool) and (sonarr_vpn_enabled | default(true) | bool)) else [])
             + ([{'name': nzbget_container_name, 'ports': [nzbget_port ~ ':6789']}] if (nzbget_enabled | default(false) | bool) else [])
             + ([{'name': readarr_container_name, 'ports': [readarr_port ~ ':8787']}] if (readarr_enabled | default(false) | bool) else [])
             + ([{'name': jackett_container_name, 'ports': [jackett_port ~ ':9117']}] if (jackett_enabled | default(false) | bool) else [])
