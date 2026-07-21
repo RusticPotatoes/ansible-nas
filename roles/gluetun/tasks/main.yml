@@ -89,6 +89,7 @@
           VPN_TYPE: "wireguard"
           DNS_UPSTREAM_RESOLVER_TYPE: "doh"      # was defaulting to dot (port 853, intermittently reset by VPN exit)
           DNS_UPSTREAM_RESOLVERS: "cloudflare"
+          FIREWALL_OUTBOUND_SUBNETS: "{{ gluetun_firewall_outbound_subnets | default('') }}"
           DNS_UPDATE_PERIOD: "30m"
           VPN_INTERFACE: "wg0"
           VPN_OUTPUT_INTERFACE: "eth0"
