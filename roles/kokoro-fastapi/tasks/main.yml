@@ -1,0 +1,33 @@
+---
+- name: Start Kokoro FastAPI
+  block:
+    - name: Kokoro FastAPI Docker Container
+      community.docker.docker_container:
+        name: "{{ kokoro_fastapi_container_name }}"
+        image: "{{ kokoro_fastapi_image_name }}:{{ kokoro_fastapi_image_version }}"
+        pull: "{{ docker_container_pull | default(true) }}"
+        ports:
+          - "{{ kokoro_fastapi_port }}:8880"
+        device_requests:
+          - driver: nvidia
+            count: -1
+            capabilities:
+              - - gpu
+        restart_policy: unless-stopped
+        memory: "{{ kokoro_fastapi_memory }}"
+        labels:
+          homepage.group: AI
+          homepage.name: Kokoro FastAPI
+          homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ kokoro_fastapi_port }}"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
+  when: kokoro_fastapi_enabled is true
+- name: Stop Kokoro FastAPI
+  block:
+    - name: Stop Kokoro FastAPI
+      community.docker.docker_container:
+        name: "{{ kokoro_fastapi_container_name }}"
+        state: absent
+  when: kokoro_fastapi_enabled is false

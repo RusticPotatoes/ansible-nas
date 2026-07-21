@@ -1,0 +1,10 @@
+---
+faster_whisper_enabled: false
+faster_whisper_config_directory: "{{ docker_home }}/whisper"
+faster_whisper_port: "10300"
+faster_whisper_container_name: "wyoming-faster-whisper"
+faster_whisper_image_name: "lscr.io/linuxserver/faster-whisper"
+faster_whisper_image_version: "latest"
+faster_whisper_model: "small"
+faster_whisper_language: "en"
+faster_whisper_memory: 4g

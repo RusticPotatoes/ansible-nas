@@ -1,0 +1,45 @@
+---
+- name: Start Faster-Whisper
+  block:
+    - name: Create Faster-Whisper config directory
+      ansible.builtin.file:
+        path: "{{ faster_whisper_config_directory }}"
+        state: directory
+    - name: Faster-Whisper Docker Container
+      community.docker.docker_container:
+        name: "{{ faster_whisper_container_name }}"
+        image: "{{ faster_whisper_image_name }}:{{ faster_whisper_image_version }}"
+        pull: "{{ docker_container_pull | default(true) }}"
+        volumes:
+          - "{{ faster_whisper_config_directory }}:/config:rw"
+        ports:
+          - "{{ faster_whisper_port }}:10300"
+        env:
+          TZ: "{{ ansible_nas_timezone }}"
+          PUID: "1000"
+          PGID: "1000"
+          WHISPER_MODEL: "{{ faster_whisper_model }}"
+          WHISPER_LANG: "{{ faster_whisper_language }}"
+        device_requests:
+          - driver: nvidia
+            count: -1
+            capabilities:
+              - - gpu
+        restart_policy: unless-stopped
+        memory: "{{ faster_whisper_memory }}"
+        labels:
+          homepage.group: AI
+          homepage.name: Faster-Whisper
+          homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ faster_whisper_port }}"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
+  when: faster_whisper_enabled is true
+- name: Stop Faster-Whisper
+  block:
+    - name: Stop Faster-Whisper
+      community.docker.docker_container:
+        name: "{{ faster_whisper_container_name }}"
+        state: absent
+  when: faster_whisper_enabled is false

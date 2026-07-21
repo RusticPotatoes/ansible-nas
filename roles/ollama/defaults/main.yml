@@ -1,0 +1,8 @@
+---
+ollama_enabled: false
+ollama_data_directory: "{{ docker_home }}/ollama"
+ollama_port: "11434"
+ollama_container_name: "ollama"
+ollama_image_name: "ollama/ollama"
+ollama_image_version: "latest"
+ollama_memory: 12g

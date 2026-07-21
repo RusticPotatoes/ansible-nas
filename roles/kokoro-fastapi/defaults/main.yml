@@ -1,0 +1,7 @@
+---
+kokoro_fastapi_enabled: false
+kokoro_fastapi_port: "8881"
+kokoro_fastapi_container_name: "kokoro-fastapi"
+kokoro_fastapi_image_name: "ghcr.io/remsky/kokoro-fastapi-gpu"
+kokoro_fastapi_image_version: "latest"
+kokoro_fastapi_memory: 4g
