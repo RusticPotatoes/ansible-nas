@@ -1,0 +1,43 @@
+---
+- name: Start WhisperLive
+  block:
+    - name: Create WhisperLive data directory
+      ansible.builtin.file:
+        path: "{{ whisperlive_data_directory }}"
+        state: directory
+    - name: WhisperLive Docker Container
+      community.docker.docker_container:
+        name: "{{ whisperlive_container_name }}"
+        image: "{{ whisperlive_image_name }}:{{ whisperlive_image_version }}"
+        pull: "{{ docker_container_pull | default(true) }}"
+        volumes:
+          - "{{ whisperlive_data_directory }}:/var/lib/whisper-live:rw"
+        ports:
+          - "{{ whisperlive_ws_port }}:9090"
+          - "{{ whisperlive_rest_port }}:8000"
+        env:
+          WHISPERLIVE_MODEL: "{{ whisperlive_model }}"
+        device_requests:
+          - driver: nvidia
+            count: -1
+            capabilities:
+              - - gpu
+        restart_policy: unless-stopped
+        memory: "{{ whisperlive_memory }}"
+        labels:
+          homepage.group: AI
+          homepage.name: WhisperLive
+          homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ whisperlive_rest_port }}/docs"
+          homepage.description: Real-time speech-to-text (large-v3)
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
+  when: whisperlive_enabled is true
+- name: Stop WhisperLive
+  block:
+    - name: Stop WhisperLive
+      community.docker.docker_container:
+        name: "{{ whisperlive_container_name }}"
+        state: absent
+  when: whisperlive_enabled is false

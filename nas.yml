@@ -230,6 +230,11 @@
         - faster-whisper
         - ai
 
+    - role: whisperlive
+      tags:
+        - whisperlive
+        - ai
+
     - role: freshrss
       tags:
         - freshrss
