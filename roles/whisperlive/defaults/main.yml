@@ -7,4 +7,5 @@ whisperlive_container_name: "whisper-live"
 whisperlive_image_name: "hwdsl2/whisper-live-server"
 whisperlive_image_version: "cuda"
 whisperlive_model: "large-v3"
+whisperlive_api_key: ""   # empty = auth disabled (LAN-only)
 whisperlive_memory: 6g

@@ -17,6 +17,7 @@
           - "{{ whisperlive_rest_port }}:8000"
         env:
           WHISPERLIVE_MODEL: "{{ whisperlive_model }}"
+          WHISPERLIVE_API_KEY: "{{ whisperlive_api_key }}"
         device_requests:
           - driver: nvidia
             count: -1
