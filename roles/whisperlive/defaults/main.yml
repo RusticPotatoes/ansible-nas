@@ -1,0 +1,10 @@
+---
+whisperlive_enabled: false
+whisperlive_data_directory: "{{ docker_home }}/whisper-live"
+whisperlive_ws_port: "9091"     # host -> container 9090 (WebSocket streaming)
+whisperlive_rest_port: "8001"   # host -> container 8000 (Swagger UI /docs)
+whisperlive_container_name: "whisper-live"
+whisperlive_image_name: "hwdsl2/whisper-live-server"
+whisperlive_image_version: "cuda"
+whisperlive_model: "large-v3"
+whisperlive_memory: 6g

@@ -205,3 +205,4 @@ ollama_enabled: true
 open_webui_enabled: true
 kokoro_fastapi_enabled: true
 faster_whisper_enabled: true
+whisperlive_enabled: true
