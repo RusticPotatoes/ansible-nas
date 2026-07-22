@@ -94,7 +94,7 @@ radarr_vpn_enabled: false
 sonarr_vpn_enabled: false
 # Let gluetun's killswitch permit the LAN (not the internet) so prowlarr, still
 # inside the VPN, can reach radarr/sonarr (now outside) for indexer sync.
-gluetun_firewall_outbound_subnets: "192.168.3.0/24"
+gluetun_firewall_outbound_subnets: "192.168.1.0/24"
 
 # FlareSolverr solves Cloudflare challenges for Prowlarr indexers (e.g. EZTV).
 # Routed through gluetun so it shares Prowlarr's VPN exit IP (cf_clearance is IP-bound).
