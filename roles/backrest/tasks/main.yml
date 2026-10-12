@@ -1,0 +1,91 @@
+---
+- name: Start Backrest
+  block:
+    - name: Check Backrest credentials are set
+      ansible.builtin.assert:
+        that:
+          - backrest_repo_password | length > 0
+          - backrest_ui_password | length > 0
+        fail_msg: "Set backrest_repo_password and backrest_ui_password (e.g. in your vault)."
+        quiet: true
+
+    - name: Create Backrest directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0750"
+      with_items:
+        - "{{ backrest_data_directory }}/config"
+        - "{{ backrest_data_directory }}/data"
+        - "{{ backrest_data_directory }}/cache"
+        - "{{ backrest_repo_directory }}"
+
+    - name: Create status directory
+      ansible.builtin.file:
+        path: "{{ backrest_status_directory }}"
+        state: directory
+        mode: "0755"
+
+    - name: Seed Backrest config (only if none exists)
+      ansible.builtin.template:
+        src: config.json.j2
+        dest: "{{ backrest_data_directory }}/config/config.json"
+        mode: "0600"
+        force: false
+      register: backrest_config
+
+    - name: Build read-only source mounts
+      ansible.builtin.set_fact:
+        backrest_source_mounts: "{{ backrest_source_mounts | default([]) + [item.host ~ ':' ~ item.container ~ ':ro'] }}"
+      loop: "{{ backrest_sources }}"
+
+    - name: Create Backrest Docker Container
+      community.docker.docker_container:
+        name: "{{ backrest_container_name }}"
+        image: "{{ backrest_image_name }}:{{ backrest_image_version }}"
+        pull: true
+        volumes: >-
+          {{ [backrest_data_directory ~ '/config:/config',
+              backrest_data_directory ~ '/data:/data',
+              backrest_data_directory ~ '/cache:/cache',
+              backrest_repo_directory ~ ':/repos',
+              backrest_status_directory ~ ':/status'] + backrest_source_mounts }}
+        env:
+          TZ: "{{ ansible_nas_timezone }}"
+          BACKREST_DATA: "/data"
+          BACKREST_CONFIG: "/config/config.json"
+          XDG_CACHE_HOME: "/cache"
+        ports:
+          - "{{ backrest_port }}:9898"
+        restart_policy: unless-stopped
+        restart: "{{ backrest_config is changed }}"
+        memory: "{{ backrest_memory }}"
+        labels:
+          traefik.enable: "{{ backrest_available_externally | string }}"
+          traefik.http.routers.backrest.rule: "Host(`{{ backrest_hostname }}.{{ ansible_nas_domain }}`)"
+          traefik.http.routers.backrest.tls.certresolver: "letsencrypt"
+          traefik.http.routers.backrest.tls.domains[0].main: "{{ ansible_nas_domain }}"
+          traefik.http.routers.backrest.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
+          traefik.http.services.backrest.loadbalancer.server.port: "9898"
+          homepage.group: Storage
+          homepage.name: Backrest
+          homepage.icon: backrest
+          homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ backrest_port }}"
+          homepage.description: Restic backups
+          homepage.widget.type: backrest
+          homepage.widget.url: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ backrest_port }}"
+          homepage.widget.username: "{{ backrest_ui_username }}"
+          homepage.widget.password: "{{ backrest_ui_password }}"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
+  when: backrest_enabled is true
+
+- name: Stop Backrest
+  block:
+    - name: Stop Backrest
+      community.docker.docker_container:
+        name: "{{ backrest_container_name }}"
+        state: absent
+  when: backrest_enabled is false

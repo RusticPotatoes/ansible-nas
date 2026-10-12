@@ -1,0 +1,26 @@
+---
+# Host-level upkeep that keeps the NAS healthy without manual intervention.
+
+# btrfs scrub: btrfsmaintenance runs monthly but scrubs "/" by default, which
+# does nothing on an ext4 root. List the btrfs arrays to scrub here.
+nas_btrfs_scrub_mountpoints: []
+nas_btrfs_scrub_period: monthly
+
+# Keep unattended-upgrades from updating the NVIDIA driver stack. Upgrading the
+# userspace libraries without reloading the kernel module breaks the GPU until
+# a reboot; update deliberately with nvidia.yml instead (it reboots).
+nas_hold_nvidia_driver: false
+nas_nvidia_hold_patterns:
+  - "^nvidia-(driver|dkms|kernel|utils|compute-utils|firmware)-"
+  - "^libnvidia-(cfg|common|compute|decode|encode|extra|fbc|gl)"
+  - "^xserver-xorg-video-nvidia-"
+
+# Nightly logical database dumps, so backups contain a consistent copy.
+nas_db_dumps_enabled: false
+nas_db_dump_directory: "{{ docker_home }}/db-dumps"
+nas_db_dump_time: "*-*-* 01:30:00"
+nas_db_dump_postgres_container: ""   # e.g. postgres; empty = skip
+nas_db_dump_mongodb_container: ""    # e.g. mongodb; empty = skip
+
+# A successful dump writes "<name>.influx" here (Telegraf picks it up for alerts)
+nas_status_directory: "{{ docker_home }}/nas-status"

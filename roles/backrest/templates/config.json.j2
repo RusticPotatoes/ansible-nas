@@ -1,0 +1,35 @@
+{#- Initial Backrest config. Written only when no config exists yet; after that
+    Backrest owns the file (UI changes are kept). Delete it to re-seed from Ansible. -#}
+{%- set plans = [] -%}
+{%- for p in backrest_plans -%}
+{%-   set _ = plans.append({
+        "id": p.id,
+        "repo": "archive",
+        "paths": p.paths,
+        "excludes": p.excludes | default([]),
+        "schedule": {"cron": p.cron, "clock": "CLOCK_LOCAL"},
+        "retention": {"policyTimeBucketed": p.retention},
+        "hooks": [{
+          "conditions": ["CONDITION_SNAPSHOT_SUCCESS"],
+          "actionCommand": {"command": "echo \"backrest_snapshot,plan=" ~ p.id ~ " last_success=$(date +%s)i\" > /status/backrest_" ~ p.id ~ ".influx"}
+        }]
+      }) -%}
+{%- endfor -%}
+{{ {
+  "modno": 1,
+  "version": 6,
+  "instance": ansible_nas_hostname | default("ansible-nas") | regex_replace('[^A-Za-z0-9_-]', '-'),
+  "repos": [{
+    "id": "archive",
+    "uri": "/repos",
+    "password": backrest_repo_password,
+    "autoInitialize": true,
+    "prunePolicy": {"schedule": {"cron": backrest_prune_cron, "clock": "CLOCK_LOCAL"}, "maxUnusedPercent": 10},
+    "checkPolicy": {"schedule": {"cron": backrest_check_cron, "clock": "CLOCK_LOCAL"}, "readDataSubsetPercent": backrest_check_read_percent}
+  }],
+  "plans": plans,
+  "auth": {
+    "disabled": false,
+    "users": [{"name": backrest_ui_username, "passwordBcrypt": backrest_ui_password | password_hash('bcrypt') | b64encode}]
+  }
+} | to_nice_json }}

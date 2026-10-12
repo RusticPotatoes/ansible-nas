@@ -355,3 +355,10 @@
   ## Address and port to host InfluxDB listener on
   ## (Double check the port. Could be 9999 if using OSS Beta)
   service_address = ":8086"
+
+{% if nas_status_directory is defined %}
+# Backup / database dump success timestamps written by backrest and nas_maintenance
+[[inputs.file]]
+  files = ["/hostfs{{ nas_status_directory }}/*.influx"]
+  data_format = "influx"
+{% endif %}
