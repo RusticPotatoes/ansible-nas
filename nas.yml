@@ -544,6 +544,14 @@
       tags:
         - watchtower
 
+    - role: backrest
+      tags:
+        - backrest
+
+    - role: nas_maintenance
+      tags:
+        - nas_maintenance
+
     - role: wireshark
       tags:
         - wireshark

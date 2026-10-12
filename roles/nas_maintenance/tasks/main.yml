@@ -1,0 +1,88 @@
+---
+- name: Scrub btrfs arrays
+  ansible.builtin.lineinfile:
+    path: /etc/default/btrfsmaintenance
+    regexp: "^{{ item.key }}="
+    line: '{{ item.key }}="{{ item.value }}"'
+  loop:
+    - { key: BTRFS_SCRUB_MOUNTPOINTS, value: "{{ nas_btrfs_scrub_mountpoints | join(':') }}" }
+    - { key: BTRFS_SCRUB_PERIOD, value: "{{ nas_btrfs_scrub_period }}" }
+  when: nas_btrfs_scrub_mountpoints | length > 0
+  become: true
+  notify: Refresh btrfsmaintenance timers
+
+- name: Hold NVIDIA driver back from unattended-upgrades
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/51nas-hold-nvidia
+    mode: "0644"
+    content: |
+      // Managed by Ansible (nas_maintenance). Update the driver with nvidia.yml, which reboots.
+      Unattended-Upgrade::Package-Blacklist {
+      {% for p in nas_nvidia_hold_patterns %}
+          "{{ p }}";
+      {% endfor %}
+      };
+  become: true
+  when: nas_hold_nvidia_driver | bool
+
+- name: Remove NVIDIA hold
+  ansible.builtin.file:
+    path: /etc/apt/apt.conf.d/51nas-hold-nvidia
+    state: absent
+  become: true
+  when: not nas_hold_nvidia_driver | bool
+
+- name: Database dumps
+  when: nas_db_dumps_enabled | bool
+  become: true
+  block:
+    - name: Create dump and status directories
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: directory
+        mode: "{{ item.mode }}"
+      loop:
+        - { path: "{{ nas_db_dump_directory }}", mode: "0700" }
+        - { path: "{{ nas_status_directory }}", mode: "0755" }
+
+    - name: Install dump script
+      ansible.builtin.template:
+        src: nas-db-dump.sh.j2
+        dest: /usr/local/sbin/nas-db-dump
+        mode: "0750"
+
+    - name: Install dump service and timer
+      ansible.builtin.copy:
+        dest: "/etc/systemd/system/{{ item.name }}"
+        mode: "0644"
+        content: "{{ item.content }}"
+      loop:
+        - name: nas-db-dump.service
+          content: |
+            [Unit]
+            Description=Dump container databases for backup
+            After=docker.service
+            Requires=docker.service
+
+            [Service]
+            Type=oneshot
+            ExecStart=/usr/local/sbin/nas-db-dump
+        - name: nas-db-dump.timer
+          content: |
+            [Unit]
+            Description=Nightly container database dumps
+
+            [Timer]
+            OnCalendar={{ nas_db_dump_time }}
+            Persistent=true
+
+            [Install]
+            WantedBy=timers.target
+      register: nas_db_dump_units
+
+    - name: Enable dump timer
+      ansible.builtin.systemd:
+        name: nas-db-dump.timer
+        enabled: true
+        state: started
+        daemon_reload: "{{ nas_db_dump_units is changed }}"

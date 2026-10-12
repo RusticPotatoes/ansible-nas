@@ -1,0 +1,50 @@
+---
+# enable or disable the application
+backrest_enabled: false
+backrest_available_externally: false
+
+# directories
+backrest_data_directory: "{{ docker_home }}/backrest"
+# where the restic repository lives (ideally a different disk/array from the sources)
+backrest_repo_directory: "/mnt/archive/backups/restic"
+# a successful snapshot writes "<plan>.influx" here (Telegraf picks it up for staleness alerts)
+backrest_status_directory: "{{ docker_home }}/nas-status"
+
+# what to back up: host paths, mounted read-only into the container
+backrest_sources:
+  - host: "{{ docker_home }}"
+    container: /sources/docker
+
+# backup plans (paths are container paths under /sources); retention uses restic time buckets
+backrest_plans:
+  - id: docker
+    paths:
+      - /sources/docker
+    excludes: []
+    cron: "0 2 * * *"
+    retention:
+      daily: 14
+      weekly: 8
+      monthly: 12
+
+# repository maintenance
+backrest_prune_cron: "0 5 * * 0"
+backrest_check_cron: "0 6 1 * *"
+backrest_check_read_percent: 5
+
+# credentials - set these in your vault
+backrest_repo_password: ""
+backrest_ui_username: "admin"
+backrest_ui_password: ""
+
+# network
+backrest_hostname: "backrest"
+backrest_port: "9898"
+
+# docker
+backrest_container_name: "backrest"
+backrest_image_name: "garethgeorge/backrest"
+backrest_image_version: "latest"
+
+# specs
+backrest_memory: "2g"

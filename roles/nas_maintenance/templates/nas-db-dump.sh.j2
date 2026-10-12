@@ -1,0 +1,35 @@
+#!/bin/bash
+# Managed by Ansible (nas_maintenance). Nightly logical dumps of container
+# databases into {{ nas_db_dump_directory }} so file-level backups get a
+# consistent copy. Credentials are read from each container's own environment.
+set -uo pipefail
+
+out="{{ nas_db_dump_directory }}"
+status="{{ nas_status_directory }}"
+rc=0
+
+# dump NAME CONTAINER FILE COMMAND...: write atomically, record success for Telegraf
+dump() {
+  local name=$1 container=$2 file=$3; shift 3
+  if ! docker inspect -f '{{ '{{' }}.State.Running{{ '}}' }}' "$container" 2>/dev/null | grep -q true; then
+    echo "$name: container $container not running" >&2; rc=1; return
+  fi
+  if docker exec "$container" sh -c "$*" > "$out/$file.tmp"; then
+    mv "$out/$file.tmp" "$out/$file"
+    echo "nas_db_dump,db=$name last_success=$(date +%s)i" > "$status/db_$name.influx"
+    echo "$name: ok ($(du -h "$out/$file" | cut -f1))"
+  else
+    rm -f "$out/$file.tmp"; echo "$name: dump failed" >&2; rc=1
+  fi
+}
+
+{% if nas_db_dump_postgres_container %}
+dump postgres {{ nas_db_dump_postgres_container }} postgres.sql.gz \
+  'pg_dumpall -U "$POSTGRES_USER" | gzip'
+{% endif %}
+{% if nas_db_dump_mongodb_container %}
+dump mongodb {{ nas_db_dump_mongodb_container }} mongodb.archive.gz \
+  'mongodump --quiet --archive --gzip --authenticationDatabase admin -u "$MONGODB_INITDB_ROOT_USERNAME" -p "$MONGODB_INITDB_ROOT_PASSWORD"'
+{% endif %}
+
+exit $rc

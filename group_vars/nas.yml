@@ -241,6 +241,51 @@ mongodb_enabled: true
 pihole_enabled: true
 wireguard_enabled: true
 watchtower_enabled: true
+
+# Backups: Backrest (restic) to the archive array, everything that matters
+backrest_enabled: true
+backrest_sources:
+  - { host: "{{ docker_home }}", container: /sources/docker }
+  - { host: /mnt/media, container: /sources/media }
+  - { host: "{{ lookup('env', 'HOME') }}", container: /sources/home }
+  - { host: /etc, container: /sources/etc }
+backrest_plans:
+  - id: system   # app configs/databases, home (incl. this repo + vault), /etc
+    paths: [/sources/docker, /sources/home, /sources/etc]
+    excludes:
+      - /sources/docker/docker-data/overlay2
+      - /sources/docker/docker-data/image
+      - /sources/docker/docker-data/containers
+      - /sources/docker/docker-data/buildkit
+      - /sources/docker/docker-data/tmp
+      - /sources/docker/backrest/cache
+      - /sources/docker/ollama/models
+      - /sources/docker/stats/prometheus/data
+      - /sources/docker/nzbget/tmp
+      - "**/Plex Media Server/Cache"
+      - "**/Plex Media Server/Codecs"
+      - "**/Plex Media Server/Crash Reports"
+      - "**/Transcode"
+      - /sources/home/backups
+      - /sources/home/.cache
+    cron: "0 2 * * *"
+    retention: { daily: 14, weekly: 8, monthly: 12 }
+  - id: media
+    paths: [/sources/media]
+    excludes:
+      - /sources/media/downloads/intermediate
+      - "*.part"
+      - "*.!qB"
+    cron: "30 3 * * *"
+    retention: { daily: 7, weekly: 4, monthly: 6 }
+
+# Host upkeep
+nas_status_directory: "{{ docker_home }}/nas-status"
+nas_btrfs_scrub_mountpoints: [/mnt/media, /mnt/archive]
+nas_hold_nvidia_driver: true
+nas_db_dumps_enabled: true
+nas_db_dump_postgres_container: postgres
+nas_db_dump_mongodb_container: mongodb
 newspaper_enabled: true
 ebook2audiobook_enabled: true
 ebook2audiobook_auto_convert_enabled: false   # disabled: slow XTTS churn; revisit with Kokoro-FastAPI engine

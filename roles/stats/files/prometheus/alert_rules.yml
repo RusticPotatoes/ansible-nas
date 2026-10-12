@@ -134,3 +134,30 @@ groups:
           subject: "loki"
         annotations:
           summary: "Loki is dropping log messages"
+
+  - name: backups
+    rules:
+      - alert: BackupStale
+        expr: time() - backrest_snapshot_last_success > 36 * 3600
+        labels:
+          severity: warning
+          subject: "{{ $labels.plan }}"
+        annotations:
+          summary: "Backup plan {{ $labels.plan }} last succeeded {{ $value | humanizeDuration }} ago"
+
+      - alert: BackupNeverSucceeded
+        expr: absent(backrest_snapshot_last_success{plan="system"})
+        for: 36h
+        labels:
+          severity: warning
+          subject: "system"
+        annotations:
+          summary: "The system backup plan has not completed a snapshot yet"
+
+      - alert: DatabaseDumpStale
+        expr: time() - nas_db_dump_last_success > 36 * 3600
+        labels:
+          severity: warning
+          subject: "{{ $labels.db }}"
+        annotations:
+          summary: "{{ $labels.db }} dump last succeeded {{ $value | humanizeDuration }} ago"

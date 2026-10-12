@@ -8,6 +8,10 @@
 #
 # No secrets in this file — safe to track in the public repo.
 #
+# The driver is held back from unattended-upgrades (nas_maintenance role), because
+# upgrading the libraries without reloading the kernel module breaks the GPU until
+# a reboot. Run this playbook to update it deliberately; it reboots when needed.
+#
 # Run:  ansible-playbook -i inventories/inventory.ini nvidia.yml
 #       (reboots the NAS ONLY if the driver actually changed)
 - name: Update the NVIDIA GPU driver
@@ -15,14 +19,14 @@
   become: true
   become_method: sudo
   vars:
-    nvidia_driver_package: nvidia-driver-570   # 550+; matches the existing proprietary line
+    nvidia_driver_package: nvidia-driver-580   # current branch; unattended-upgrades holds it (nas_maintenance)
     nvidia_driver_reboot: true                 # set false to stage the install and reboot later
     apt_lock_timeout: 600                       # wait up to 10 min for unattended-upgrades to release the dpkg lock
   tasks:
-    - name: "Install {{ nvidia_driver_package }} (replaces the older branch)"
+    - name: "Install/upgrade {{ nvidia_driver_package }} (replaces the older branch)"
       ansible.builtin.apt:
         name: "{{ nvidia_driver_package }}"
-        state: present
+        state: latest
         update_cache: true
         lock_timeout: "{{ apt_lock_timeout }}"
       register: nvidia_driver_apt
