@@ -113,6 +113,8 @@
           homepage.name: Gluetun
           homepage.icon: gluetun
           homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:8000"
+          homepage.widget.type: gluetun
+          homepage.widget.url: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:8000"
           homepage.description: VPN gateway
         healthcheck:
           test: ["CMD", "wget", "-qO-", "http://localhost:8000/v1/dns/status"]

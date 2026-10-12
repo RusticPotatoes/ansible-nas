@@ -99,7 +99,7 @@
           traefik.http.services.ebook2audiobook.loadbalancer.server.port: "7860"
           homepage.group: AI
           homepage.name: eBook2AudioBook
-          homepage.icon: audiobook
+          homepage.icon: "mdi-book-music-outline"
           homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ ebook2audiobook_port }}"
           homepage.description: Convert ebooks into audiobooks
 

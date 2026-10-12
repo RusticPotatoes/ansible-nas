@@ -49,6 +49,10 @@
           homepage.name: Pi-hole
           homepage.icon: pi-hole
           homepage.href: "http://192.168.1.2/admin"
+          homepage.widget.type: pihole
+          homepage.widget.url: "http://192.168.1.2"
+          homepage.widget.version: "6"
+          homepage.widget.key: "{{ pihole_web_password | default('') }}"
           homepage.description: DNS filtering
       when: pihole_enabled is true
       register: docker_container_result

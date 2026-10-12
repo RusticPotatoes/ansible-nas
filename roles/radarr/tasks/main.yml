@@ -49,6 +49,9 @@
           homepage.name: "Radarr"
           homepage.icon: "radarr"
           homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ radarr_port }}"
+          homepage.widget.type: radarr
+          homepage.widget.url: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ radarr_port }}"
+          homepage.widget.key: "{{ radarr_api_key | default('') }}"
 
       register: docker_container_result
       until: docker_container_result is succeeded
