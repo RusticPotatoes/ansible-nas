@@ -18,8 +18,10 @@ minio_console_port: "9009"
 
 # docker
 minio_container_name: "minio"
-minio_image_name: "minio/minio"
-minio_image_version: "latest"
+# MinIO stopped publishing images and removed minio/minio from Docker Hub.
+# Silo is a maintained fork with the same S3 API, env vars and on-disk format.
+minio_image_name: "pgsty/silo"
+minio_image_version: "RELEASE.2026-09-16T00-00-00Z"
 
 # specs
 minio_memory: "1g"
