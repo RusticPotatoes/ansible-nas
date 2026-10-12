@@ -34,7 +34,10 @@ plex_image_name: "linuxserver/plex"
 plex_image_version: "latest"
 
 # specs
-plex_memory: "2g"
+plex_memory: "4g"
+
+# Pass NVIDIA GPUs to the container for hardware transcoding (requires nvidia-container-toolkit)
+plex_nvidia_gpu: false
 
 # Device mappings for the docker container. E.g. To enable hardware transcoding:
 # plex_devices:

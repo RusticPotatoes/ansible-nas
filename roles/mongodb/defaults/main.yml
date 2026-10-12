@@ -26,3 +26,9 @@ mongodb_timezone: "{{ ansible_nas_timezone }}"
 mongodb_memory: 1g
 
 mongodb_container_name: mongodb
+
+# docker
+# Pin the major/minor version: on-disk data (featureCompatibilityVersion) can't jump
+# major versions, so an unpinned :latest pulled by watchtower breaks startup.
+mongodb_image_name: "mongodb/mongodb-community-server"
+mongodb_image_version: "8.2-ubuntu2204"
