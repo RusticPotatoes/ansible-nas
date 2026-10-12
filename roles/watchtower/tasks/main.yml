@@ -11,7 +11,18 @@
         env:
           TZ: "{{ ansible_nas_timezone }}"
           DOCKER_API_VERSION: "{{ watchtower_docker_api_version }}"
+          WATCHTOWER_HTTP_API_METRICS: "{{ (watchtower_api_token | length > 0) | string | lower }}"
+          WATCHTOWER_HTTP_API_TOKEN: "{{ watchtower_api_token }}"
+        ports: "{{ [watchtower_metrics_port ~ ':8080'] if watchtower_api_token else [] }}"
         command: "{{ watchtower_command }}"
+        labels:
+          homepage.group: System Tools
+          homepage.name: Watchtower
+          homepage.icon: watchtower
+          homepage.description: Nightly container updates
+          homepage.widget.type: watchtower
+          homepage.widget.url: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ watchtower_metrics_port }}"
+          homepage.widget.key: "{{ watchtower_api_token }}"
         restart_policy: unless-stopped
         memory: "{{ watchtower_memory }}"
       register: docker_container_result

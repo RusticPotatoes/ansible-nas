@@ -1,110 +1,136 @@
+---
+# Alert rules evaluated by Prometheus. Firing alerts are shown on the Homepage
+# "Alerts" card (Prometheus ALERTS series). The `subject` label is what the card
+# displays next to the alert name.
 groups:
-  - name: docker_alerts
+  - name: storage
     rules:
-      # Alert if a container is down (not running)
-      - alert: ContainerDown
-        expr: docker_container_running{host="$server"} == 0
-        for: 5m  # Wait 5 minutes to avoid false positives
+      - alert: DiskFailingSmart
+        expr: smartprom_smart_passed == 0
+        for: 10m
         labels:
           severity: critical
+          subject: "{{ $labels.drive }} {{ $labels.model_name }}"
         annotations:
-          summary: "Container {{ $labels.container_name }} is down"
-          description: "Container {{ $labels.container_name }} on {{ $labels.host }} has been down for more than 5 minutes."
+          summary: "{{ $labels.drive }} ({{ $labels.model_name }}) is failing its SMART health check"
 
-      # Alert if container CPU usage is high (>80%)
-      - alert: HighContainerCPU
-        expr: docker_container_cpu_usage_percent{host="$server"} > 80
+      - alert: SsdWearHigh
+        expr: smartprom_percentage_used >= 90
+        for: 1h
+        labels:
+          severity: warning
+          subject: "{{ $labels.drive }} {{ $value }}% used"
+        annotations:
+          summary: "{{ $labels.drive }} ({{ $labels.model_name }}) has used {{ $value }}% of its rated write endurance"
+
+      - alert: DiskBadSectors
+        expr: smartprom_reallocated_sector_ct_raw > 0 or smartprom_current_pending_sector_raw > 0 or smartprom_offline_uncorrectable_raw > 0
         for: 10m
         labels:
           severity: warning
+          subject: "{{ $labels.drive }}"
         annotations:
-          summary: "High CPU usage on container {{ $labels.container_name }}"
-          description: "Container {{ $labels.container_name }} CPU usage is {{ $value }}% (threshold: 80%)."
+          summary: "{{ $labels.drive }} ({{ $labels.model_name }}) reports reallocated, pending or uncorrectable sectors"
 
-      # Alert if container memory usage is high (>90%)
-      - alert: HighContainerMemory
-        expr: docker_container_mem_usage_percent{host="$server"} > 90
-        for: 10m
+      - alert: SataCrcErrorsRising
+        expr: increase(smartprom_udma_crc_error_count_raw[24h]) > 0
         labels:
           severity: warning
+          subject: "{{ $labels.drive }}"
         annotations:
-          summary: "High memory usage on container {{ $labels.container_name }}"
-          description: "Container {{ $labels.container_name }} memory usage is {{ $value }}% (threshold: 90%)."
+          summary: "{{ $labels.drive }} UDMA CRC errors increased in the last 24h (check SATA cable/port)"
 
-  - name: disk_alerts
-    rules:
-      # Alert if disk space is low (<10% free)
-      - alert: LowDiskSpace
-        expr: (1 - disk_used_percent{host="$server", path="/"} / 100) < 0.1
+      - alert: DiskTemperatureHigh
+        expr: smartprom_temperature_celsius_raw > 50
+        for: 15m
+        labels:
+          severity: warning
+          subject: "{{ $labels.drive }} {{ $value }}°C"
+        annotations:
+          summary: "{{ $labels.drive }} is at {{ $value }}°C"
+
+      - alert: FilesystemAlmostFull
+        expr: disk_used_percent{fstype=~"ext4|btrfs|xfs|vfat"} > 90
+        for: 15m
+        labels:
+          severity: warning
+          subject: "{{ $labels.path }} {{ printf \"%.0f\" $value }}%"
+        annotations:
+          summary: "{{ $labels.path }} is {{ printf \"%.0f\" $value }}% full"
+
+      - alert: FilesystemFull
+        expr: disk_used_percent{fstype=~"ext4|btrfs|xfs|vfat"} > 97
         for: 5m
         labels:
           severity: critical
+          subject: "{{ $labels.path }} {{ printf \"%.0f\" $value }}%"
         annotations:
-          summary: "Low disk space on {{ $labels.path }}"
-          description: "Disk space on {{ $labels.path }} is below 10% free ({{ $value }}% free)."
+          summary: "{{ $labels.path }} is {{ printf \"%.0f\" $value }}% full"
 
-      # Alert if disk I/O is high (read/write rates > threshold)
-      - alert: HighDiskIO
-        expr: rate(diskio_read_bytes{host="$server"}[5m]) + rate(diskio_write_bytes{host="$server"}[5m]) > 100000000  # ~100MB/s
-        for: 10m
+  - name: system
+    rules:
+      - alert: LowMemory
+        expr: mem_available_percent < 10
+        for: 15m
         labels:
           severity: warning
+          subject: "{{ printf \"%.0f\" $value }}% available"
         annotations:
-          summary: "High disk I/O on {{ $labels.name }}"
-          description: "Disk {{ $labels.name }} I/O rate is {{ $value }} bytes/sec (threshold: 100MB/s)."
+          summary: "Only {{ printf \"%.0f\" $value }}% of memory is available"
 
-  - name: memory_alerts
-    rules:
-      # Alert if memory usage is high (>90%)
-      - alert: HighMemoryUsage
-        expr: mem_used_percent{host="$server"} > 90
-        for: 5m
-        labels:
-          severity: critical
-        annotations:
-          summary: "High memory usage on {{ $labels.host }}"
-          description: "Memory usage is {{ $value }}% (threshold: 90%). Consider freeing memory or scaling resources."
-
-      # Alert if swap usage is high (>50%)
       - alert: HighSwapUsage
-        expr: swap_used_percent{host="$server"} > 50
-        for: 10m
+        expr: swap_used_percent > 80
+        for: 30m
         labels:
           severity: warning
+          subject: "{{ printf \"%.0f\" $value }}% used"
         annotations:
-          summary: "High swap usage on {{ $labels.host }}"
-          description: "Swap usage is {{ $value }}% (threshold: 50%). Memory may be insufficient."
+          summary: "Swap is {{ printf \"%.0f\" $value }}% used"
 
-  - name: network_alerts
+  - name: containers
     rules:
-      # Alert if network errors are high
-      - alert: HighNetworkErrors
-        expr: rate(node_network_receive_errs_total{host="$server"}[5m]) + rate(node_network_transmit_errs_total{host="$server"}[5m]) > 10
+      - alert: ContainerRestartLoop
+        expr: increase(docker_container_status_restart_count[15m]) > 3
+        labels:
+          severity: critical
+          subject: "{{ $labels.container_name }}"
+        annotations:
+          summary: "{{ $labels.container_name }} restarted {{ printf \"%.0f\" $value }} times in 15 minutes"
+
+      - alert: ContainerUnhealthy
+        expr: docker_container_health_failing_streak > 3
         for: 5m
         labels:
           severity: warning
+          subject: "{{ $labels.container_name }}"
         annotations:
-          summary: "High network errors on {{ $labels.device }}"
-          description: "Network device {{ $labels.device }} has {{ $value }} errors/sec. Check network connectivity."
+          summary: "{{ $labels.container_name }} is failing its health check"
 
-      # Alert if network traffic is unusually high (e.g., >1GB/s combined)
-      - alert: HighNetworkTraffic
-        expr: rate(node_network_receive_bytes_total{host="$server"}[5m]) + rate(node_network_transmit_bytes_total{host="$server"}[5m]) > 1000000000
+      - alert: ContainerMemoryNearLimit
+        expr: docker_container_mem_usage_percent > 95
         for: 10m
         labels:
-          severity: info  # Or warning if you want notifications
+          severity: warning
+          subject: "{{ $labels.container_name }} {{ printf \"%.0f\" $value }}%"
         annotations:
-          summary: "High network traffic on {{ $labels.device }}"
-          description: "Network device {{ $labels.device }} traffic is {{ $value }} bytes/sec. Monitor for anomalies."
+          summary: "{{ $labels.container_name }} is at {{ printf \"%.0f\" $value }}% of its memory limit"
 
-  - name: loki_alerts
+  - name: monitoring
     rules:
-      # Alert if Loki is dropping log messages
+      - alert: ScrapeTargetDown
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: warning
+          subject: "{{ $labels.job }}"
+        annotations:
+          summary: "Prometheus cannot scrape {{ $labels.job }} ({{ $labels.instance }})"
+
       - alert: LokiLogMessagesDropped
         expr: rate(loki_log_messages_dropped_total[5m]) > 0
         for: 5m
         labels:
           severity: warning
+          subject: "loki"
         annotations:
           summary: "Loki is dropping log messages"
-          description: "Loki has dropped {{ $value }} log messages in the last 5 minutes. Check Loki configuration and capacity."
