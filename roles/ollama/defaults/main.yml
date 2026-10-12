@@ -6,3 +6,16 @@ ollama_container_name: "ollama"
 ollama_image_name: "ollama/ollama"
 ollama_image_version: "latest"
 ollama_memory: 12g
+
+# Context window, in tokens, available to EACH request. Ollama's default is 4096, and with
+# two request slots it is split so a single request only gets about 2,050: anything longer
+# is silently truncated from the front, which drops the system prompt and most of a tool
+# list. A butler turn that offers tools is routinely 5,000-12,000 tokens, so this needs to
+# be well above that. The cost is KV-cache memory per loaded model (roughly 1 GB for a 7B
+# at 16k, about 3 GB for a 14B), which on a 12 GB GPU means a 14B model will spill a few
+# layers to the CPU.
+ollama_context_length: 16384
+
+# One request at a time, so a request gets the whole window above rather than a share of it.
+# Requests from several clients queue rather than run side by side.
+ollama_num_parallel: 1
