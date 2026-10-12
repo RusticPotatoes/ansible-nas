@@ -15,6 +15,9 @@ homepage_container_name: "homepage"
 homepage_image_name: "ghcr.io/gethomepage/homepage"
 homepage_image_tag: "latest"
 
+# extra volumes, e.g. read-only mounts so the resources widget can show disk usage
+homepage_extra_volumes: []
+
 # specs
 homepage_memory: "1g"
 

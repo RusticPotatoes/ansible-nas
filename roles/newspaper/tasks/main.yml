@@ -32,7 +32,7 @@
           traefik.http.services.newspaper.loadbalancer.server.port: "8787"
           homepage.group: "Download Tools"
           homepage.name: "newspaper"
-          homepage.icon: "newspaper"
+          homepage.icon: "mdi-newspaper-variant-outline"
           homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ newspaper_port }}"
 
       register: docker_container_result

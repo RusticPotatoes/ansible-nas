@@ -25,9 +25,7 @@
         name: "{{ homepage_container_name }}"
         image: "{{ homepage_image_name }}:{{ homepage_image_tag }}"
         pull: true
-        volumes:
-          - "{{ homepage_data_directory }}:/app/config"
-          - "/var/run/docker.sock:/var/run/docker.sock"
+        volumes: "{{ [homepage_data_directory ~ ':/app/config', '/var/run/docker.sock:/var/run/docker.sock'] + homepage_extra_volumes }}"
         env:
           TZ: "{{ ansible_nas_timezone }}"
           HOMEPAGE_ALLOWED_HOSTS: "{{ homepage_allowed_hosts }}"

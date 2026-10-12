@@ -45,6 +45,8 @@
           homepage.name: "Gatus"
           homepage.icon: "gatus"
           homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ gatus_port }}"
+          homepage.widget.type: gatus
+          homepage.widget.url: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ gatus_port }}"
           homepage.description: "Synthetic monitoring dashboard"
 
       register: docker_container_result

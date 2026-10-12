@@ -72,6 +72,92 @@ ansible_nas_user_password: "{{ ansible_become_password }}"
 
 ## Enable some applications
 homepage_enabled: true
+
+# Homepage dashboard
+# Disk usage: mount the arrays read-only; /app/config already sits on /mnt/docker
+homepage_extra_volumes:
+  - /mnt/media:/mnt/media:ro
+  - /mnt/archive:/mnt/archive:ro
+
+homepage_settings_yaml:
+  title: Ansible-NAS
+  language: "{{ homepage_locale }}"
+  theme: dark
+  color: slate
+  headerStyle: clean
+  statusStyle: dot
+  showStats: false
+  hideVersion: true
+  useEqualHeights: true
+  layout:
+    Media:
+      style: row
+      columns: 2
+    Download Tools:
+      style: row
+      columns: 4
+    Networking:
+      style: row
+      columns: 4
+    Monitoring:
+      style: row
+      columns: 4
+    AI:
+      style: row
+      columns: 3
+    Home:
+    Storage:
+    System Tools:
+
+homepage_widgets_yaml:
+  - resources:
+      label: System
+      cpu: true
+      memory: true
+      cputemp: true
+      uptime: true
+      units: metric
+      refresh: 10000
+  - resources:
+      label: Media
+      disk: /mnt/media
+  - resources:
+      label: Archive
+      disk: /mnt/archive
+  - resources:
+      label: Docker
+      disk: /app/config
+  - search:
+      provider: google
+      focus: true
+      target: _blank
+  - datetime:
+      text_size: l
+      format:
+        dateStyle: medium
+        timeStyle: short
+
+homepage_bookmarks_yaml:
+  - NAS:
+      - Ansible-NAS repo:
+          - icon: github
+            href: https://github.com/RusticPotatoes/ansible-nas
+      - Ansible-NAS docs:
+          - abbr: AN
+            href: https://ansible-nas.io/
+      - Homepage docs:
+          - icon: homepage
+            href: https://gethomepage.dev/
+  - Network:
+      - Router:
+          - icon: asus-router
+            href: "http://{{ ansible_nas_gateway }}/"
+      - Cloudflare:
+          - icon: cloudflare
+            href: https://dash.cloudflare.com/
+      - Docker Hub:
+          - icon: docker
+            href: https://hub.docker.com/
 portainer_enabled: true
 homeassistant_enabled: true
 plex_enabled: true
