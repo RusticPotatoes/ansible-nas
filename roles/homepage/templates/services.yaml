@@ -1,2 +1,2 @@
 ---
-{{ homepage_services_yaml | to_nice_yaml }}
+{{ homepage_services_yaml | to_nice_yaml(sort_keys=False) }}
