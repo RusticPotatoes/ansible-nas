@@ -79,6 +79,28 @@ homepage_extra_volumes:
   - /mnt/media:/mnt/media:ro
   - /mnt/archive:/mnt/archive:ro
 
+homepage_services_yaml:
+  - Alerts:
+      - Firing alerts:
+          icon: mdi-bell-alert-outline
+          href: "http://{{ ansible_default_ipv4.address }}:{{ stats_prometheus_port }}/alerts"
+          description: Prometheus alert rules (storage, system, containers)
+          widget:
+            type: customapi
+            url: "http://{{ ansible_default_ipv4.address }}:{{ stats_prometheus_port }}/api/v1/query?query=ALERTS%7Balertstate%3D%22firing%22%7D"
+            refreshInterval: 60000
+            display: dynamic-list
+            mappings:
+              items: data.result
+              name: metric.alertname
+              label: metric.subject
+              limit: 10
+  - Networking:
+      - Router:
+          icon: asus-router
+          href: "http://{{ ansible_nas_gateway }}/"
+          description: Asus Router
+
 homepage_settings_yaml:
   title: Ansible-NAS
   language: "{{ homepage_locale }}"
@@ -90,6 +112,9 @@ homepage_settings_yaml:
   hideVersion: true
   useEqualHeights: true
   layout:
+    Alerts:
+      style: row
+      columns: 1
     Media:
       style: row
       columns: 2

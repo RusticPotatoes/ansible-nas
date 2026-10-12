@@ -16,10 +16,15 @@ watchtower_command: "--schedule '{{ watchtower_cron_schedule }}' --cleanup"
 # Slack notifications
 # watchtower_command: "--schedule '{{ watchtower_cron_schedule }}' --notifications 'slack' --notification-slack-hook-url 'https://hooks.slack.com/services/xxx/yyyyyyyyyyyyyyy' --notification-slack-identifier 'ansible-nas'"
 
+# metrics API (used by the Homepage widget); token comes from the vault
+watchtower_metrics_port: "8094"
+watchtower_api_token: ""
+
 # specs
 watchtower_memory: 1g
 
 watchtower_container_name: "watchtower"
-watchtower_image_name: "containrrr/watchtower"
+# containrrr/watchtower was archived in Dec 2025; nickfedor/watchtower is the maintained drop-in fork
+watchtower_image_name: "nickfedor/watchtower"
 watchtower_image_version: "latest"
 watchtower_docker_api_version: "1.40"
