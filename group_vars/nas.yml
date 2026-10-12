@@ -75,6 +75,7 @@ homepage_enabled: true
 portainer_enabled: true
 homeassistant_enabled: true
 plex_enabled: true
+plex_nvidia_gpu: true
 gluetun_enabled: true
 gluetun_periodic_restart_enabled: true
 gluetun_periodic_restart_interval: "2h"

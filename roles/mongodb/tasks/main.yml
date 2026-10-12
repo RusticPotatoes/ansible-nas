@@ -11,7 +11,7 @@
     - name: MongoDB Docker Container
       community.docker.docker_container:
         name: mongodb
-        image: mongodb/mongodb-community-server:latest
+        image: "{{ mongodb_image_name }}:{{ mongodb_image_version }}"
         pull: true
         user: "{{ mongodb_user_id }}:{{ mongodb_group_id }}"
         volumes:
