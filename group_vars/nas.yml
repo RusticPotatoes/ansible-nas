@@ -106,8 +106,11 @@ homepage_settings_yaml:
       style: row
       columns: 3
     Home:
+      style: column
     Storage:
+      style: column
     System Tools:
+      style: column
 
 homepage_widgets_yaml:
   - resources:
