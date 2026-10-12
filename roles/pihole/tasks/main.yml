@@ -40,6 +40,7 @@
         env:
           TZ: "{{ pihole_timezone }}"
           WEBPASSWORD: "{{ pihole_web_password }}"
+          FTLCONF_webserver_api_password: "{{ pihole_web_password }}"  # Pi-hole v6 ignores WEBPASSWORD
         capabilities:
           - "NET_ADMIN"
         restart_policy: unless-stopped
