@@ -404,6 +404,10 @@
       tags:
         - organizr
 
+    - role: owntone
+      tags:
+        - owntone
+
     - role: overseerr
       tags:
         - overseerr

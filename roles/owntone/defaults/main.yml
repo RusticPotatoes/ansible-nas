@@ -1,0 +1,43 @@
+---
+# enable or disable the application
+owntone_enabled: false
+owntone_available_externally: false
+
+# directories
+owntone_data_directory: "{{ docker_home }}/owntone"
+owntone_config_directory: "{{ owntone_data_directory }}/config"
+owntone_cache_directory: "{{ owntone_data_directory }}/cache"
+# holds only the FIFO librespot writes to; OwnTone treats it as its library
+owntone_pipe_directory: "{{ owntone_data_directory }}/pipes"
+owntone_pipe_name: "spotify"
+owntone_spotify_credentials_directory: "{{ owntone_data_directory }}/librespot"
+
+# uid / gid
+owntone_user_id: "1000"
+owntone_group_id: "1000"
+
+# network
+owntone_hostname: "owntone"
+owntone_port: "3689"
+
+# docker
+owntone_container_name: "owntone"
+owntone_image_name: "owntone/owntone"
+owntone_image_version: "latest"
+
+# specs
+owntone_memory: "512m"
+
+# spotify connect receiver (librespot)
+owntone_spotify_container_name: "owntone-spotify"
+owntone_spotify_image_name: "giof71/librespot"
+owntone_spotify_image_version: "latest"
+owntone_spotify_device_name: "HomePods"
+owntone_spotify_bitrate: "320"
+# OwnTone and the HomePods own the volume; start the Spotify slider at full
+owntone_spotify_initial_volume: "100"
+owntone_spotify_memory: "256m"
+# false hides the receiver from the LAN so only the Spotify account that
+# completed the one-time login can use it; true lets any Spotify Premium user
+# on the network discover and play to it
+owntone_spotify_discovery: false

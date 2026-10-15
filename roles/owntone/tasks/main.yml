@@ -1,0 +1,107 @@
+---
+- name: Start OwnTone
+  block:
+    - name: Create OwnTone Directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ owntone_user_id }}"
+        group: "{{ owntone_group_id }}"
+      with_items:
+        - "{{ owntone_data_directory }}"
+        - "{{ owntone_config_directory }}"
+        - "{{ owntone_cache_directory }}"
+        - "{{ owntone_pipe_directory }}"
+        - "{{ owntone_spotify_credentials_directory }}"
+
+    - name: Create Spotify Pipe
+      ansible.builtin.command:
+        cmd: "mkfifo -m 0666 {{ owntone_pipe_directory }}/{{ owntone_pipe_name }}"
+        creates: "{{ owntone_pipe_directory }}/{{ owntone_pipe_name }}"
+
+    - name: Set Spotify Pipe Permissions
+      ansible.builtin.file:
+        path: "{{ owntone_pipe_directory }}/{{ owntone_pipe_name }}"
+        owner: "{{ owntone_user_id }}"
+        group: "{{ owntone_group_id }}"
+        mode: "0666"
+
+    - name: Create OwnTone Docker Container
+      community.docker.docker_container:
+        name: "{{ owntone_container_name }}"
+        image: "{{ owntone_image_name }}:{{ owntone_image_version }}"
+        pull: true
+        volumes:
+          - "{{ owntone_config_directory }}:/etc/owntone"
+          - "{{ owntone_cache_directory }}:/var/cache/owntone"
+          - "{{ owntone_pipe_directory }}:/srv/media"
+        network_mode: "host"
+        env:
+          TZ: "{{ ansible_nas_timezone }}"
+          UID: "{{ owntone_user_id }}"
+          GID: "{{ owntone_group_id }}"
+        restart_policy: unless-stopped
+        memory: "{{ owntone_memory }}"
+        labels:
+          traefik.enable: "{{ owntone_available_externally | string }}"
+          traefik.http.routers.owntone.rule: "Host(`{{ owntone_hostname }}.{{ ansible_nas_domain }}`)"
+          traefik.http.routers.owntone.tls.certresolver: "letsencrypt"
+          traefik.http.routers.owntone.tls.domains[0].main: "{{ ansible_nas_domain }}"
+          traefik.http.routers.owntone.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
+          traefik.http.services.owntone.loadbalancer.server.port: "{{ owntone_port }}"
+
+    - name: Check For Saved Spotify Login
+      ansible.builtin.stat:
+        path: "{{ owntone_spotify_credentials_directory }}/credentials.json"
+      register: owntone_spotify_credentials
+
+    # Without discovery librespot can only start from a saved login, so wait
+    # for the one-time login described in the docs instead of restart-looping.
+    - name: Create Spotify Connect Docker Container
+      community.docker.docker_container:
+        name: "{{ owntone_spotify_container_name }}"
+        image: "{{ owntone_spotify_image_name }}:{{ owntone_spotify_image_version }}"
+        pull: true
+        volumes:
+          - "{{ owntone_pipe_directory }}:/pipes"
+          - "{{ owntone_spotify_credentials_directory }}:/data/system-cache"
+        network_mode: "host"
+        env:
+          TZ: "{{ ansible_nas_timezone }}"
+          DEVICE_NAME: "{{ owntone_spotify_device_name }}"
+          BACKEND: "pipe"
+          DEVICE: "/pipes/{{ owntone_pipe_name }}"
+          FORMAT: "S16"
+          BITRATE: "{{ owntone_spotify_bitrate }}"
+          INITIAL_VOLUME: "{{ owntone_spotify_initial_volume }}"
+          ENABLE_SYSTEM_CACHE: "Y"
+          DISABLE_AUDIO_CACHE: "Y"
+          DISABLE_DISCOVERY: "{{ 'N' if owntone_spotify_discovery else 'Y' }}"
+        restart_policy: unless-stopped
+        memory: "{{ owntone_spotify_memory }}"
+      when: owntone_spotify_discovery or owntone_spotify_credentials.stat.exists
+
+    - name: Remove Spotify Connect Docker Container Until Logged In
+      community.docker.docker_container:
+        name: "{{ owntone_spotify_container_name }}"
+        state: absent
+      when: not (owntone_spotify_discovery or owntone_spotify_credentials.stat.exists)
+
+    - name: Explain Spotify Login
+      ansible.builtin.debug:
+        msg: >-
+          The Spotify Connect receiver is not running yet because no Spotify login is saved in
+          {{ owntone_spotify_credentials_directory }}. Run the one-time login from the OwnTone docs, then re-run the playbook.
+      when: not (owntone_spotify_discovery or owntone_spotify_credentials.stat.exists)
+  when: owntone_enabled is true
+
+- name: Stop OwnTone
+  block:
+    - name: Stop OwnTone
+      community.docker.docker_container:
+        name: "{{ item }}"
+        state: absent
+      with_items:
+        - "{{ owntone_spotify_container_name }}"
+        - "{{ owntone_container_name }}"
+  when: owntone_enabled is false
