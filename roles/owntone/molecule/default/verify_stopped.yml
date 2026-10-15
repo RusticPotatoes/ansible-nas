@@ -1,0 +1,25 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    - ansible.builtin.include_vars:
+        file: ../../defaults/main.yml
+
+    - name: Try and stop and remove owntone
+      community.docker.docker_container:
+        name: "{{ owntone_container_name }}"
+        state: absent
+      register: owntone_result
+
+    - name: Try and stop and remove the spotify receiver
+      community.docker.docker_container:
+        name: "{{ owntone_spotify_container_name }}"
+        state: absent
+      register: spotify_result
+
+    - name: Check if owntone is stopped
+      ansible.builtin.assert:
+        that:
+          - not owntone_result.changed
+          - not spotify_result.changed

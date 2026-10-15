@@ -1,0 +1,9 @@
+---
+provisioner:
+  inventory:
+    group_vars:
+      all:
+        owntone_enabled: true
+        # No Spotify credentials exist in CI, so advertise over zeroconf to let
+        # the receiver start without the one-time login.
+        owntone_spotify_discovery: true

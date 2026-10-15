@@ -1,0 +1,35 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    - ansible.builtin.include_vars:
+        file: ../../defaults/main.yml
+
+    - name: Get owntone container state
+      community.docker.docker_container_info:
+        name: "{{ owntone_container_name }}"
+      register: owntone_result
+
+    - name: Get spotify receiver container state
+      community.docker.docker_container_info:
+        name: "{{ owntone_spotify_container_name }}"
+      register: spotify_result
+
+    - name: Get spotify pipe state
+      ansible.builtin.stat:
+        path: "{{ owntone_pipe_directory }}/{{ owntone_pipe_name }}"
+      register: pipe_result
+
+    - name: Check if owntone containers are running and share the pipe
+      ansible.builtin.assert:
+        that:
+          - owntone_result.container['State']['Status'] == "running"
+          - owntone_result.container['State']['Restarting'] == false
+          - owntone_result.container['HostConfig']['NetworkMode'] == "host"
+          - spotify_result.container['State']['Status'] == "running"
+          - spotify_result.container['State']['Restarting'] == false
+          - "'DEVICE_NAME=HomePods' in spotify_result.container['Config']['Env']"
+          - "'BACKEND=pipe' in spotify_result.container['Config']['Env']"
+          - pipe_result.stat.exists
+          - pipe_result.stat.isfifo
