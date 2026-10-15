@@ -10,6 +10,7 @@ import re
 import sys
 import tempfile
 import unittest
+import urllib.error
 import urllib.parse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -177,6 +178,44 @@ class Gmail(Paths):
         maildir = mm.Maildir(self.maildir, "personal")
         self.assertEqual(mm.sync_gmail(GMAIL, maildir, 0, google, limit=17), 17)
         self.assertEqual(mm.sync_gmail(GMAIL, maildir, 0, google, limit=17), 8)
+
+
+class GoogleHiccups(Paths):
+    """Found on the first live run: 104 messages copied, then one HTTPError, then the same pass
+    by hand went through clean. Google's limits and servers say "try again" now and then."""
+
+    def flaky(self, failures, code):
+        google = FakeGoogle({"a1": raw_message("one"), "b2": raw_message("two")})
+        left = {"n": failures}
+
+        def opener(request, timeout=None):
+            if "format=raw" in request.full_url and left["n"] > 0:
+                left["n"] -= 1
+                raise urllib.error.HTTPError(request.full_url, code, "busy", {}, io.BytesIO(b"{}"))
+            return google(request, timeout)
+
+        return opener
+
+    def test_a_brief_rate_limit_or_server_error_is_waited_out(self):
+        waits = []
+        for code in (429, 500, 503):
+            maildir = mm.Maildir(self.maildir, "personal-%d" % code)
+            added = mm.sync_gmail(GMAIL, maildir, 0, self.flaky(2, code), sleep=waits.append)
+            self.assertEqual(added, 2, code)
+        self.assertTrue(waits and all(w > 0 for w in waits), waits)
+
+    def test_it_gives_up_after_a_few_tries_and_says_which_status(self):
+        self.accounts(GMAIL)
+        report = mm.run_once(self.config, self.maildir, self.state, now=NOW,
+                             opener=self.flaky(99, 429), sleep=lambda _: None)
+        self.assertEqual(report["personal"], "failed (HTTPError 429)")
+
+    def test_a_refusal_is_not_retried(self):
+        waits = []
+        maildir = mm.Maildir(self.maildir, "personal")
+        with self.assertRaises(urllib.error.HTTPError):
+            mm.sync_gmail(GMAIL, maildir, 0, self.flaky(1, 403), sleep=waits.append)
+        self.assertEqual(waits, [], "a 403 will not change by waiting")
 
 
 class ICloud(Paths):
