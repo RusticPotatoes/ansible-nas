@@ -51,6 +51,8 @@ If you would rather let anyone on your network use the receiver and skip the log
 
 Open the OwnTone web interface at [http://ansible_nas_host_or_ip:3689](http://ansible_nas_host_or_ip:3689). Then open the speaker menu (the speaker icon at the bottom) and switch on the HomePods that should play, for example `Office` or `Living Room`. You can switch on several at once, and each has its own volume. OwnTone remembers your selection.
 
+An Apple TV needs pairing once. When you switch it on in the speaker menu, the TV shows a 4-digit code and the switch fails with `400 Bad Request`, because the speaker menu doesn't ask for the code. Open **Settings → Remotes & Outputs**, type the code under the Apple TV and press **Verify**. OwnTone saves the pairing in its cache directory, so you only do this once. After that, the Apple TV switches on like any other speaker.
+
 If a HomePod is listed but won't play, open the Home app and go to Home Settings → Speakers & TV. Set *Allow Speaker & TV Access* to *Anyone on the Same Network* or *Everyone*, or enter the PIN that OwnTone asks for.
 
 ### Playing Spotify
