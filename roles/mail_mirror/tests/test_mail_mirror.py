@@ -10,6 +10,7 @@ import re
 import sys
 import tempfile
 import unittest
+import urllib.error
 import urllib.parse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -72,13 +73,16 @@ class FakeGoogle:
 class FakeImap:
     """An IMAP server that only knows the read-only commands. Anything else is a failure."""
 
-    def __init__(self, folders):
+    def __init__(self, folders, gm_ids=None, user="john@example.com"):
         self.folders = folders  # name -> {uid: raw}
+        self.gm_ids = gm_ids or {}  # uid -> Gmail's own message id, as Gmail's IMAP reports it
+        self.user = user
         self.selected = None
         self.logged_out = False
+        self.bodies_fetched = 0
 
     def login(self, user, password):
-        assert (user, password) == ("john@example.com", "app-password")
+        assert (user, password) == (self.user, "app-password")
         return "OK", [b""]
 
     def select(self, mailbox, readonly=False):
@@ -97,9 +101,17 @@ class FakeImap:
         if command == "SEARCH":
             return "OK", [b" ".join(str(u).encode() for u in sorted(self.folders[self.selected]))]
         assert command == "FETCH", command
-        uid, what = args
+        uids, what = args
+        if what == "(X-GM-MSGID)":
+            # Just the ids, for a whole set of messages in one reply.
+            return "OK", [
+                b"%d (X-GM-MSGID %d UID %d)" % (n, self.gm_ids[int(u)], int(u))
+                for n, u in enumerate(uids.split(","), 1)
+            ]
         assert what == "(BODY.PEEK[])", "a fetch must not mark mail as read: %s" % what
-        return "OK", [(b"%s (UID %s BODY[] {n}" % (uid.encode(), uid.encode()), self.folders[self.selected][int(uid)]), b")"]
+        self.bodies_fetched += 1
+        head = b"%s (UID %s BODY[] {n}" % (uids.encode(), uids.encode())
+        return "OK", [(head, self.folders[self.selected][int(uids)]), b")"]
 
     def logout(self):
         self.logged_out = True
@@ -179,6 +191,107 @@ class Gmail(Paths):
         self.assertEqual(mm.sync_gmail(GMAIL, maildir, 0, google, limit=17), 8)
 
 
+class GoogleHiccups(Paths):
+    """Found on the first live run: 104 messages copied, then one HTTPError, then the same pass
+    by hand went through clean. Google's limits and servers say "try again" now and then."""
+
+    def flaky(self, failures, code):
+        google = FakeGoogle({"a1": raw_message("one"), "b2": raw_message("two")})
+        left = {"n": failures}
+
+        def opener(request, timeout=None):
+            if "format=raw" in request.full_url and left["n"] > 0:
+                left["n"] -= 1
+                raise urllib.error.HTTPError(request.full_url, code, "busy", {}, io.BytesIO(b"{}"))
+            return google(request, timeout)
+
+        return opener
+
+    def test_a_brief_rate_limit_or_server_error_is_waited_out(self):
+        waits = []
+        for code in (429, 500, 503):
+            maildir = mm.Maildir(self.maildir, "personal-%d" % code)
+            added = mm.sync_gmail(GMAIL, maildir, 0, self.flaky(2, code), sleep=waits.append)
+            self.assertEqual(added, 2, code)
+        self.assertTrue(waits and all(w > 0 for w in waits), waits)
+
+    def test_it_gives_up_after_a_few_tries_and_says_which_status(self):
+        self.accounts(GMAIL)
+        report = mm.run_once(self.config, self.maildir, self.state, now=NOW,
+                             opener=self.flaky(99, 429), sleep=lambda _: None)
+        self.assertEqual(report["personal"], "failed (HTTPError 429)")
+
+    def test_a_refusal_is_not_retried(self):
+        waits = []
+        maildir = mm.Maildir(self.maildir, "personal")
+        with self.assertRaises(urllib.error.HTTPError):
+            mm.sync_gmail(GMAIL, maildir, 0, self.flaky(1, 403), sleep=waits.append)
+        self.assertEqual(waits, [], "a 403 will not change by waiting")
+
+
+GMAIL_IMAP = {"name": "work", "kind": "gmail_imap", "user": "jane@example.com",
+              "app_password": "app-password"}
+
+
+class GmailOverImap(Paths):
+    """Gmail with an app password, read-only over IMAP: the way Home Assistant already reads it."""
+
+    def server(self):
+        return FakeImap(
+            {"[Gmail]/All Mail": {11: raw_message("hello"), 12: raw_message("again")}},
+            gm_ids={11: 0x18F2A3B4C5D6E7F8, 12: 0x18F2A3B4C5D6E7F9},
+            user="jane@example.com",
+        )
+
+    def test_it_reads_all_mail_read_only_from_gmails_own_server(self):
+        hosts = []
+        server = self.server()
+
+        def connect(host):
+            hosts.append(host)
+            return server
+
+        maildir = mm.Maildir(self.maildir, "work")
+        self.assertEqual(mm.sync_imap(GMAIL_IMAP, maildir, 0, connect, gmail=True), 2)
+        self.assertEqual(hosts, ["imap.gmail.com"])
+
+    def test_a_message_is_named_as_the_gmail_api_names_it_so_nothing_is_copied_twice(self):
+        # Gmail's API id is Gmail's IMAP X-GM-MSGID in hex. Mail the API already copied must
+        # not come back under a second name when the account moves to IMAP.
+        maildir = mm.Maildir(self.maildir, "work")
+        maildir.add("gmail-18f2a3b4c5d6e7f8", raw_message("hello"))
+        server = self.server()
+        added = mm.sync_imap(GMAIL_IMAP, maildir, 0, lambda host: server, gmail=True)
+        self.assertEqual(added, 1, "the message the API copied was copied again")
+        self.assertEqual(server.bodies_fetched, 1, "a message already here was downloaded again")
+        self.assertEqual(self.files("work"), ["gmail-18f2a3b4c5d6e7f8", "gmail-18f2a3b4c5d6e7f9"])
+
+    def test_a_pass_through_run_once_uses_gmails_server_for_gmail_and_apples_for_icloud(self):
+        self.accounts(GMAIL_IMAP, ICLOUD)
+        hosts = []
+
+        def connect(host):
+            hosts.append(host)
+            return self.server() if host == "imap.gmail.com" else ICloud.server(self)
+
+        report = mm.run_once(self.config, self.maildir, self.state, now=NOW, connect=connect)
+        self.assertTrue(report["work"].startswith("2 new"), report)
+        self.assertTrue(report["icloud"].startswith("3 new"), report)
+        self.assertEqual(sorted(hosts), ["imap.gmail.com", "imap.mail.me.com"])
+
+    def test_a_pass_with_nothing_new_downloads_no_mail(self):
+        maildir = mm.Maildir(self.maildir, "work")
+        mm.sync_imap(GMAIL_IMAP, maildir, 0, lambda host: self.server(), gmail=True)
+        server = self.server()
+        self.assertEqual(mm.sync_imap(GMAIL_IMAP, maildir, 0, lambda host: server, gmail=True), 0)
+        self.assertEqual(server.bodies_fetched, 0)
+
+    def test_it_needs_a_user_and_an_app_password(self):
+        self.accounts(dict(GMAIL_IMAP, app_password=""))
+        with self.assertRaises(mm.ConfigError):
+            mm.load_accounts(self.config)
+
+
 class ICloud(Paths):
     def server(self):
         return FakeImap(
@@ -191,19 +304,19 @@ class ICloud(Paths):
     def test_it_copies_read_only_from_the_inbox_and_sent(self):
         server = self.server()
         maildir = mm.Maildir(self.maildir, "icloud")
-        self.assertEqual(mm.sync_imap(ICLOUD, maildir, NOW - 7 * DAY, lambda: server), 3)
+        self.assertEqual(mm.sync_imap(ICLOUD, maildir, NOW - 7 * DAY, lambda host: server), 3)
         self.assertEqual(self.files("icloud"), ["inbox.42.1", "inbox.42.2", "sent-messages.42.7"])
         self.assertTrue(server.logged_out)
 
     def test_copying_again_adds_nothing(self):
         maildir = mm.Maildir(self.maildir, "icloud")
-        mm.sync_imap(ICLOUD, maildir, 0, lambda: self.server())
-        self.assertEqual(mm.sync_imap(ICLOUD, maildir, 0, lambda: self.server()), 0)
+        mm.sync_imap(ICLOUD, maildir, 0, lambda host: self.server())
+        self.assertEqual(mm.sync_imap(ICLOUD, maildir, 0, lambda host: self.server()), 0)
 
     def test_a_folder_that_is_not_there_is_skipped(self):
         account = dict(ICLOUD, folders=["Nope", "INBOX"])
         maildir = mm.Maildir(self.maildir, "icloud")
-        self.assertEqual(mm.sync_imap(account, maildir, 0, lambda: self.server()), 2)
+        self.assertEqual(mm.sync_imap(account, maildir, 0, lambda host: self.server()), 2)
 
 
 class OnePass(Paths):
@@ -215,7 +328,7 @@ class OnePass(Paths):
 
         report = mm.run_once(
             self.config, self.maildir, self.state, now=NOW, opener=broken,
-            connect=lambda: ICloud.server(self),
+            connect=lambda host: ICloud.server(self),
         )
         self.assertEqual(report["personal"], "failed (OSError)")
         self.assertTrue(report["icloud"].startswith("3 new"), report)
