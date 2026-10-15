@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """A read-only copy of a mailbox, as a Maildir, for a local assistant to read.
 
-Gmail is read through the Gmail API with a `gmail.readonly` token, so Google itself refuses
-anything but reading. iCloud has no such API and is read over IMAP, but only ever with
-EXAMINE (a read-only select) and BODY.PEEK (which does not mark anything as read); no
-command that changes a mailbox is in this file.
+Gmail can be read two ways. Through the Gmail API with a `gmail.readonly` token, Google itself
+refuses anything but reading. Over IMAP with an app password (the way Home Assistant reads it),
+the credential could do more, so this file is what keeps it to reading. iCloud has no such API
+and is read over IMAP. Over IMAP it only ever uses EXAMINE (a read-only select) and BODY.PEEK
+(which does not mark anything as read); no command that changes a mailbox is in this file.
 
 The window of mail it copies widens one step a day, from a week to a year, so the first runs
 are small and the history arrives gradually. Nothing it logs names a sender or a subject:
@@ -27,7 +28,11 @@ import urllib.request
 GMAIL_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GMAIL_API = "https://gmail.googleapis.com/gmail/v1/users/me"
 ICLOUD_HOST = "imap.mail.me.com"
-ICLOUD_PORT = 993
+GMAIL_IMAP_HOST = "imap.gmail.com"
+IMAP_PORT = 993
+# Gmail's IMAP reports each message's own id (X-GM-MSGID). In hex it is the Gmail API's id, so
+# a message is named the same whichever way the account is read and is never copied twice.
+GM_MSGID = re.compile(rb"X-GM-MSGID (\d+)")
 
 # Days of mail to copy: a week first, then wider, one step a day.
 WINDOWS = [7, 14, 28, 56, 112, 224, 365]
@@ -63,10 +68,11 @@ def load_accounts(path):
         kind = account.get("kind")
         needs = {
             "gmail": ("client_id", "client_secret", "refresh_token"),
+            "gmail_imap": ("user", "app_password"),
             "icloud": ("user", "app_password"),
         }.get(kind)
         if needs is None:
-            raise ConfigError("an account kind is gmail or icloud")
+            raise ConfigError("an account kind is gmail, gmail_imap or icloud")
         for key in needs:
             if not str(account.get(key, "")).strip():
                 raise ConfigError("account %s is missing %s" % (name, key))
@@ -196,18 +202,39 @@ def sync_gmail(account, maildir, since_epoch, opener, limit=MAX_PER_RUN, sleep=t
     return added
 
 
-# ---- iCloud ---------------------------------------------------------------------------
+# ---- IMAP (iCloud, and Gmail with an app password) -------------------------------------
+
+
+def _gmail_ids(imap, uids, batch=500):
+    """Gmail's own id for each message, asked for in a few cheap requests rather than learned
+    by downloading every message: a pass with nothing new then downloads no mail at all."""
+    names = {}
+    for start in range(0, len(uids), batch):
+        status, lines = imap.uid("FETCH", ",".join(uids[start : start + batch]), "(X-GM-MSGID)")
+        if status != "OK":
+            continue
+        for line in lines:
+            line = line[0] if isinstance(line, tuple) else line
+            gm = GM_MSGID.search(line or b"")
+            uid = re.search(rb"UID (\d+)", line or b"")
+            if gm and uid:
+                names[uid.group(1).decode("ascii")] = "gmail-%x" % int(gm.group(1))
+    return names
 
 
 def _imap_date(since_epoch):
     return time.strftime("%d-%b-%Y", time.gmtime(since_epoch))
 
 
-def sync_imap(account, maildir, since_epoch, connect, limit=MAX_PER_RUN):
+def sync_imap(account, maildir, since_epoch, connect, limit=MAX_PER_RUN, gmail=False):
     """Copies messages since a day over IMAP, read-only: every folder is opened with
-    EXAMINE and every message fetched with BODY.PEEK. Returns how many were added."""
-    folders = account.get("folders") or ["INBOX", "Sent Messages"]
-    imap = connect()
+    EXAMINE and every message fetched with BODY.PEEK. Returns how many were added.
+
+    For Gmail, "All Mail" is read (everything but Spam and Trash, sent mail included), and each
+    message is named by Gmail's own id rather than by its place in a folder."""
+    default = ["[Gmail]/All Mail"] if gmail else ["INBOX", "Sent Messages"]
+    folders = account.get("folders") or default
+    imap = connect(GMAIL_IMAP_HOST if gmail else ICLOUD_HOST)
     added = 0
     try:
         imap.login(account["user"], account["app_password"])
@@ -223,19 +250,22 @@ def sync_imap(account, maildir, since_epoch, connect, limit=MAX_PER_RUN):
             if status != "OK" or not found or not found[0]:
                 continue
             slug = re.sub(r"[^a-z0-9]+", "-", folder.lower()).strip("-") or "folder"
-            for uid in found[0].split():
+            uids = [uid.decode("ascii") for uid in found[0].split()]
+            names = (
+                _gmail_ids(imap, uids)
+                if gmail
+                else {uid: "%s.%s.%s" % (slug, uid_validity, uid) for uid in uids}
+            )
+            for uid in uids:
                 if added >= limit:
                     break
-                uid = uid.decode("ascii")
-                message_id = "%s.%s.%s" % (slug, uid_validity, uid)
-                if maildir.has(message_id):
+                message_id = names.get(uid)
+                if message_id is None or maildir.has(message_id):
                     continue
                 status, parts = imap.uid("FETCH", uid, "(BODY.PEEK[])")
                 if status != "OK":
                     continue
-                raw = next(
-                    (p[1] for p in parts if isinstance(p, tuple) and len(p) == 2), None
-                )
+                raw = next((p[1] for p in parts if isinstance(p, tuple) and len(p) == 2), None)
                 if raw is None:
                     continue
                 maildir.add(message_id, raw)
@@ -257,7 +287,7 @@ def run_once(config_path, maildir_root, state_dir, now=None, opener=None, connec
     reported is a kind of failure, never a message's content."""
     now = time.time() if now is None else now
     opener = opener or urllib.request.urlopen
-    connect = connect or (lambda: imaplib.IMAP4_SSL(ICLOUD_HOST, ICLOUD_PORT))
+    connect = connect or (lambda host: imaplib.IMAP4_SSL(host, IMAP_PORT))
     report = {}
     for account in load_accounts(config_path):
         name = account["name"]
@@ -268,7 +298,9 @@ def run_once(config_path, maildir_root, state_dir, now=None, opener=None, connec
             if account["kind"] == "gmail":
                 added = sync_gmail(account, maildir, since, opener, sleep=sleep)
             else:
-                added = sync_imap(account, maildir, since, connect)
+                added = sync_imap(
+                    account, maildir, since, connect, gmail=account["kind"] == "gmail_imap"
+                )
             write_state(state_dir, name, state)
             report[name] = "%d new, window %d days" % (added, days)
         except Exception as error:  # noqa: BLE001 - one account must not stop the rest
