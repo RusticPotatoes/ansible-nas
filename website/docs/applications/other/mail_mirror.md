@@ -5,8 +5,13 @@ title: "Mail Mirror"
 A read-only copy of your mail on the NAS, as a Maildir, for a local assistant to read. It
 copies; it never sends, deletes, moves or marks anything.
 
-- **Gmail** is read through the Gmail API with a `gmail.readonly` token, so Google itself
-  refuses anything but reading, whatever the mirror asked for.
+- **Gmail** can be read two ways. Through the **Gmail API** with a `gmail.readonly` token
+  (`kind: gmail`), Google itself refuses anything but reading, whatever the mirror asked for;
+  this needs a published Google Cloud app (below). Or over **IMAP with an app password**
+  (`kind: gmail_imap`), the way Home Assistant reads Gmail: no Google Cloud project, no
+  expiry, but the password could do more than read, so the mirror's own code (below) is what
+  keeps it to reading. Either way a message gets the same name, so switching between them
+  copies nothing twice.
 - **iCloud** has no such API and is read over IMAP with an app-specific password. Every
   folder is opened read-only (`EXAMINE`) and every message fetched with `BODY.PEEK`, which
   does not mark it as read. No command that changes a mailbox is in the script, and its tests
@@ -22,7 +27,14 @@ copies; it never sends, deletes, moves or marks anything.
   `docker_home`, so it is not in your backups: the provider already has the mail, and a second
   copy in every snapshot is only risk. Owned by its own system user, not readable by others.
 
-## Gmail: a read-only token, once
+## Gmail with an app password (`kind: gmail_imap`)
+
+With 2-Step Verification on, create an app password at
+[myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords), named for the
+mirror. Make a new one rather than reusing another app's, so each can be revoked on its own.
+The mirror reads "All Mail" (everything but Spam and Trash, sent mail included).
+
+## Gmail through the API: a read-only token, once (`kind: gmail`)
 
 You do this yourself; nobody else needs to see your sign-in.
 
@@ -55,6 +67,8 @@ app-specific password for the mirror.
 In your vault (never in a tracked file; this repository may be public):
 
 ```yaml
+vault_mail_mirror_gmail_user: "..."
+vault_mail_mirror_gmail_app_password: "..."
 vault_mail_mirror_gmail_client_id: "..."
 vault_mail_mirror_gmail_client_secret: "..."
 vault_mail_mirror_personal_refresh_token: "..."
@@ -68,6 +82,10 @@ And in your `group_vars`:
 mail_mirror_enabled: true
 mail_mirror_accounts:
   - name: personal
+    kind: gmail_imap
+    user: "{{ vault_mail_mirror_gmail_user }}"
+    app_password: "{{ vault_mail_mirror_gmail_app_password }}"
+  - name: another
     kind: gmail
     client_id: "{{ vault_mail_mirror_gmail_client_id }}"
     client_secret: "{{ vault_mail_mirror_gmail_client_secret }}"
