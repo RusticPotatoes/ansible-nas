@@ -66,11 +66,13 @@ AirPlay 2 buffers audio. Expect about 2-3 seconds between pressing play, pause o
 ### Troubleshooting
 
 * HomePods don't show up in OwnTone. OwnTone runs its own Avahi daemon in the container. If the NAS also runs `avahi-daemon`, both share mDNS on port 5353 and discovery can be unreliable. Check the container logs with `docker logs owntone`.
+* A HomePod is listed but switching it on fails with `400 Bad Request`, and `docker logs owntone` shows `Response to GET /info (probe) ... (403 Forbidden)`. HomePod OS 27 rejects AirPlay clients whose User-Agent doesn't start with `AirPlay/`. The role sets `user_agent` in the `general` section of `owntone.conf` to `owntone_airplay_user_agent` to fix this. If you edited that line by hand, re-run the playbook.
 * Nothing plays. Check `docker logs owntone-spotify` and confirm that `pipes/spotify` is a FIFO (`ls -l` shows a leading `p`).
 
 ## Configuration
 
 * `owntone_spotify_device_name`: the name shown in Spotify. The default is `HomePods`.
 * `owntone_spotify_bitrate`: `96`, `160` or `320` (the default).
+* `owntone_airplay_user_agent`: the User-Agent OwnTone sends to AirPlay speakers. The default is `AirPlay/999.0.0`, which HomePod OS 27 accepts.
 * `owntone_spotify_discovery`: whether to advertise the receiver to everyone on the LAN. The default is `false`.
 * `owntone_available_externally`: whether to expose the OwnTone web interface through Traefik at `owntone.<your domain>`. The default is `false`. The interface has no password, so leave this off unless you add one in `owntone.conf`.

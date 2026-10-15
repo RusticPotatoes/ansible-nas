@@ -50,6 +50,27 @@
           traefik.http.routers.owntone.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
           traefik.http.services.owntone.loadbalancer.server.port: "{{ owntone_port }}"
 
+    # The container writes its default config on first start.
+    - name: Wait For OwnTone Config
+      ansible.builtin.wait_for:
+        path: "{{ owntone_config_directory }}/owntone.conf"
+        timeout: 60
+
+    - name: Set OwnTone AirPlay User Agent
+      ansible.builtin.lineinfile:
+        path: "{{ owntone_config_directory }}/owntone.conf"
+        regexp: '^\s*user_agent\s*='
+        line: "\tuser_agent = \"{{ owntone_airplay_user_agent }}\""
+        insertafter: '^general \{'
+      register: owntone_config
+
+    - name: Restart OwnTone For Config Change
+      community.docker.docker_container:
+        name: "{{ owntone_container_name }}"
+        state: started
+        restart: true
+      when: owntone_config.changed
+
     - name: Check For Saved Spotify Login
       ansible.builtin.stat:
         path: "{{ owntone_spotify_credentials_directory }}/credentials.json"

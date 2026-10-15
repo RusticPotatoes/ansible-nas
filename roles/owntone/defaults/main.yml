@@ -28,6 +28,10 @@ owntone_image_version: "latest"
 # specs
 owntone_memory: "512m"
 
+# HomePods on HomePod OS 27 answer 403 to AirPlay requests whose User-Agent
+# does not start with "AirPlay/", which OwnTone's default does not
+owntone_airplay_user_agent: "AirPlay/999.0.0"
+
 # spotify connect receiver (librespot)
 owntone_spotify_container_name: "owntone-spotify"
 owntone_spotify_image_name: "giof71/librespot"
