@@ -19,6 +19,7 @@ import os
 import re
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -34,6 +35,11 @@ WIDEN_AFTER_SECONDS = 20 * 60 * 60
 # Most messages copied per account per run, so a widening window is caught up gently.
 MAX_PER_RUN = 500
 NAME = re.compile(r"^[a-z0-9_-]{1,32}$")
+# Google answers "try again" now and then: a rate limit, or a server having a moment. Seen on
+# the first live run, 104 messages in. These are waited out, a few times, before the pass
+# gives up; anything else (a refusal, a missing message) will not change by waiting.
+TRY_AGAIN = {429, 500, 502, 503, 504}
+WAITS_SECONDS = [2, 8, 30]
 SAFE_ID = re.compile(r"[^A-Za-z0-9._-]")
 
 
@@ -129,12 +135,19 @@ class Maildir:
 # ---- Gmail ----------------------------------------------------------------------------
 
 
-def _json(opener, request):
-    with opener(request, timeout=60) as response:
-        return json.loads(response.read().decode("utf-8"))
+def _json(opener, request, sleep=time.sleep):
+    for wait in WAITS_SECONDS + [None]:
+        try:
+            with opener(request, timeout=60) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as error:
+            if error.code not in TRY_AGAIN or wait is None:
+                raise
+            sleep(wait)
+    raise AssertionError("unreachable")
 
 
-def gmail_access_token(account, opener):
+def gmail_access_token(account, opener, sleep=time.sleep):
     body = urllib.parse.urlencode(
         {
             "client_id": account["client_id"],
@@ -144,20 +157,20 @@ def gmail_access_token(account, opener):
         }
     ).encode("ascii")
     request = urllib.request.Request(GMAIL_TOKEN_URL, data=body, method="POST")
-    return _json(opener, request)["access_token"]
+    return _json(opener, request, sleep)["access_token"]
 
 
-def _gmail_get(path, token, opener):
+def _gmail_get(path, token, opener, sleep=time.sleep):
     request = urllib.request.Request(
         GMAIL_API + path, headers={"Authorization": "Bearer " + token}, method="GET"
     )
-    return _json(opener, request)
+    return _json(opener, request, sleep)
 
 
-def sync_gmail(account, maildir, since_epoch, opener, limit=MAX_PER_RUN):
+def sync_gmail(account, maildir, since_epoch, opener, limit=MAX_PER_RUN, sleep=time.sleep):
     """Copies Gmail messages since a moment. Spam and Trash are left out, which is what the
     API's list does unless asked otherwise. Returns how many were added."""
-    token = gmail_access_token(account, opener)
+    token = gmail_access_token(account, opener, sleep)
     query = urllib.parse.quote("after:%d" % int(since_epoch))
     added = 0
     page = ""
@@ -165,7 +178,7 @@ def sync_gmail(account, maildir, since_epoch, opener, limit=MAX_PER_RUN):
         path = "/messages?maxResults=500&q=" + query
         if page:
             path += "&pageToken=" + urllib.parse.quote(page)
-        listing = _gmail_get(path, token, opener)
+        listing = _gmail_get(path, token, opener, sleep)
         for item in listing.get("messages", []):
             if added >= limit:
                 break
@@ -173,7 +186,7 @@ def sync_gmail(account, maildir, since_epoch, opener, limit=MAX_PER_RUN):
             if maildir.has(message_id):
                 continue
             raw = _gmail_get(
-                "/messages/%s?format=raw" % urllib.parse.quote(item["id"]), token, opener
+                "/messages/%s?format=raw" % urllib.parse.quote(item["id"]), token, opener, sleep
             )["raw"]
             maildir.add(message_id, base64.urlsafe_b64decode(raw + "=" * (-len(raw) % 4)))
             added += 1
@@ -238,7 +251,8 @@ def sync_imap(account, maildir, since_epoch, connect, limit=MAX_PER_RUN):
 # ---- one pass -------------------------------------------------------------------------
 
 
-def run_once(config_path, maildir_root, state_dir, now=None, opener=None, connect=None):
+def run_once(config_path, maildir_root, state_dir, now=None, opener=None, connect=None,
+             sleep=time.sleep):
     """One pass over every account. One account failing never stops the others, and what is
     reported is a kind of failure, never a message's content."""
     now = time.time() if now is None else now
@@ -252,13 +266,18 @@ def run_once(config_path, maildir_root, state_dir, now=None, opener=None, connec
         maildir = Maildir(maildir_root, name)
         try:
             if account["kind"] == "gmail":
-                added = sync_gmail(account, maildir, since, opener)
+                added = sync_gmail(account, maildir, since, opener, sleep=sleep)
             else:
                 added = sync_imap(account, maildir, since, connect)
             write_state(state_dir, name, state)
             report[name] = "%d new, window %d days" % (added, days)
         except Exception as error:  # noqa: BLE001 - one account must not stop the rest
-            report[name] = "failed (%s)" % type(error).__name__
+            # The kind of failure and, for HTTP, its status: never the error's text, which
+            # can quote a request or a reply.
+            code = getattr(error, "code", None)
+            report[name] = "failed (%s%s)" % (
+                type(error).__name__, " %d" % code if isinstance(code, int) else ""
+            )
     return report
 
 
