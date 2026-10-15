@@ -21,6 +21,16 @@
         path: "{{ owntone_pipe_directory }}/{{ owntone_pipe_name }}"
       register: pipe_result
 
+    - name: Get spotify metadata pipe state
+      ansible.builtin.stat:
+        path: "{{ owntone_pipe_directory }}/{{ owntone_pipe_name }}.metadata"
+      register: metadata_pipe_result
+
+    - name: Get spotify metadata script state
+      ansible.builtin.stat:
+        path: "{{ owntone_spotify_scripts_directory }}/owntone-metadata.py"
+      register: metadata_script_result
+
     - name: Get owntone config
       ansible.builtin.slurp:
         src: "{{ owntone_config_directory }}/owntone.conf"
@@ -38,6 +48,16 @@
           - "'BACKEND=pipe' in spotify_result.container['Config']['Env']"
           - pipe_result.stat.exists
           - pipe_result.stat.isfifo
+
+    - name: Check if the spotify receiver sends track details to owntone
+      ansible.builtin.assert:
+        that:
+          - metadata_pipe_result.stat.exists
+          - metadata_pipe_result.stat.isfifo
+          - metadata_script_result.stat.exists
+          - metadata_script_result.stat.executable
+          - "'ONEVENT_COMMAND=owntone-metadata.py' in spotify_result.container['Config']['Env']"
+          - "'/userscripts' in (spotify_result.container['Mounts'] | map(attribute='Destination') | list)"
 
     - name: Check if owntone identifies as an AirPlay client
       ansible.builtin.assert:
