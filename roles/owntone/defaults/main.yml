@@ -11,6 +11,8 @@ owntone_cache_directory: "{{ owntone_data_directory }}/cache"
 owntone_pipe_directory: "{{ owntone_data_directory }}/pipes"
 owntone_pipe_name: "spotify"
 owntone_spotify_credentials_directory: "{{ owntone_data_directory }}/librespot"
+# librespot event hook that passes track details to OwnTone
+owntone_spotify_scripts_directory: "{{ owntone_data_directory }}/scripts"
 
 # uid / gid
 owntone_user_id: "1000"

@@ -13,18 +13,33 @@
         - "{{ owntone_cache_directory }}"
         - "{{ owntone_pipe_directory }}"
         - "{{ owntone_spotify_credentials_directory }}"
+        - "{{ owntone_spotify_scripts_directory }}"
 
-    - name: Create Spotify Pipe
+    # The .metadata pipe carries track details; OwnTone pairs it with the
+    # audio pipe of the same name.
+    - name: Create Spotify Pipes
       ansible.builtin.command:
-        cmd: "mkfifo -m 0666 {{ owntone_pipe_directory }}/{{ owntone_pipe_name }}"
-        creates: "{{ owntone_pipe_directory }}/{{ owntone_pipe_name }}"
+        cmd: "mkfifo -m 0666 {{ owntone_pipe_directory }}/{{ item }}"
+        creates: "{{ owntone_pipe_directory }}/{{ item }}"
+      with_items:
+        - "{{ owntone_pipe_name }}"
+        - "{{ owntone_pipe_name }}.metadata"
 
     - name: Set Spotify Pipe Permissions
       ansible.builtin.file:
-        path: "{{ owntone_pipe_directory }}/{{ owntone_pipe_name }}"
+        path: "{{ owntone_pipe_directory }}/{{ item }}"
         owner: "{{ owntone_user_id }}"
         group: "{{ owntone_group_id }}"
         mode: "0666"
+      with_items:
+        - "{{ owntone_pipe_name }}"
+        - "{{ owntone_pipe_name }}.metadata"
+
+    - name: Copy Spotify Track Details Script
+      ansible.builtin.copy:
+        src: owntone-metadata.py
+        dest: "{{ owntone_spotify_scripts_directory }}/owntone-metadata.py"
+        mode: "0755"
 
     - name: Create OwnTone Docker Container
       community.docker.docker_container:
@@ -86,6 +101,7 @@
         volumes:
           - "{{ owntone_pipe_directory }}:/pipes"
           - "{{ owntone_spotify_credentials_directory }}:/data/system-cache"
+          - "{{ owntone_spotify_scripts_directory }}:/userscripts:ro"
         network_mode: "host"
         env:
           TZ: "{{ ansible_nas_timezone }}"
@@ -98,6 +114,8 @@
           ENABLE_SYSTEM_CACHE: "Y"
           DISABLE_AUDIO_CACHE: "Y"
           DISABLE_DISCOVERY: "{{ 'N' if owntone_spotify_discovery else 'Y' }}"
+          ONEVENT_COMMAND: "owntone-metadata.py"
+          OWNTONE_METADATA_PIPE: "/pipes/{{ owntone_pipe_name }}.metadata"
         restart_policy: unless-stopped
         memory: "{{ owntone_spotify_memory }}"
       when: owntone_spotify_discovery or owntone_spotify_credentials.stat.exists
