@@ -21,6 +21,11 @@
         path: "{{ owntone_pipe_directory }}/{{ owntone_pipe_name }}"
       register: pipe_result
 
+    - name: Get owntone config
+      ansible.builtin.slurp:
+        src: "{{ owntone_config_directory }}/owntone.conf"
+      register: config_result
+
     - name: Check if owntone containers are running and share the pipe
       ansible.builtin.assert:
         that:
@@ -33,3 +38,8 @@
           - "'BACKEND=pipe' in spotify_result.container['Config']['Env']"
           - pipe_result.stat.exists
           - pipe_result.stat.isfifo
+
+    - name: Check if owntone identifies as an AirPlay client
+      ansible.builtin.assert:
+        that:
+          - "('user_agent = \"' ~ owntone_airplay_user_agent ~ '\"') in (config_result.content | b64decode)"
