@@ -215,6 +215,11 @@
         - ollama
         - ai
 
+    - role: mail_mirror
+      tags:
+        - mail_mirror
+        - ai
+
     - role: open-webui
       tags:
         - open-webui
