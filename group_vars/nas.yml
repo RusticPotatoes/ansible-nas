@@ -233,7 +233,8 @@ logging_stack_enabled: true
 homebridge_enabled: true
 grafana_enabled: true
 promtail_enabled: true
-semaphore_enabled: false
+semaphore_enabled: true
+owntone_enabled: true
 overseerr_enabled: true
 thelounge_enabled: true
 unifi_enabled: true
@@ -366,3 +367,7 @@ open_webui_enabled: true
 kokoro_fastapi_enabled: true
 faster_whisper_enabled: true
 whisperlive_enabled: true
+
+# Cloudflare Tunnel for remote access (replaces the exposed WireGuard port).
+# Deploys once vault_cloudflared_tunnel_token is set in vault.yml.
+cloudflared_enabled: true
