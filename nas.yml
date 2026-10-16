@@ -220,6 +220,11 @@
         - mail_mirror
         - ai
 
+    - role: endora
+      tags:
+        - endora
+        - ai
+
     - role: open-webui
       tags:
         - open-webui
