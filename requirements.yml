@@ -11,3 +11,8 @@ collections:
   - name: community.docker
   - name: community.general
   - name: vladgh.samba
+  # Endora's roles (mail_mirror, docker_egress, endora, endora_terminal_agent) ship with Endora
+  # and are pinned to a commit of it: https://github.com/RusticPotatos/Endora
+  - name: https://github.com/RusticPotatos/Endora.git#/deploy/ansible/collection/
+    type: git
+    version: 853c7eed4e99211c8553aad98229d297b5147ec7
