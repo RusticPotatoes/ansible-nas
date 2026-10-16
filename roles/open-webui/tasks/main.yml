@@ -13,6 +13,9 @@
         env:
           OLLAMA_BASE_URL: "{{ open_webui_ollama_url }}"
         restart_policy: unless-stopped
+        # Its health check pipes curl into jq every few seconds, and the server it runs as PID 1
+        # never reaps them: 165 zombies piled up in under two days. An init reaps them.
+        init: true
         memory: "{{ open_webui_memory }}"
         labels:
           homepage.group: AI
