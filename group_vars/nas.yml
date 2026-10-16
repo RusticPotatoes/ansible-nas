@@ -288,7 +288,7 @@ nas_db_dumps_enabled: true
 nas_db_dump_postgres_container: postgres
 nas_db_dump_mongodb_container: mongodb
 newspaper_enabled: true
-ebook2audiobook_enabled: true
+ebook2audiobook_enabled: false   # off for now: the NAS is short of memory (2026-10-16)
 ebook2audiobook_auto_convert_enabled: false   # disabled: slow XTTS churn; revisit with Kokoro-FastAPI engine
 ebook2audiobook_auto_convert_interval: "30m"
 postgres_enabled: true
