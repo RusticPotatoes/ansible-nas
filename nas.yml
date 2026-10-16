@@ -96,6 +96,10 @@
       tags:
         - gluetun
 
+    - role: cloudflared
+      tags:
+        - cloudflared
+
     - role: semaphore
       tags:
         - semaphore
@@ -215,9 +219,20 @@
         - ollama
         - ai
 
-    - role: mail_mirror
+    # Endora's roles, from the endora.homelab collection (requirements.yml).
+    - role: endora.homelab.mail_mirror
       tags:
         - mail_mirror
+        - ai
+
+    - role: endora.homelab.endora_terminal_agent
+      when: endora_terminal_agent_enabled | default(false) | bool
+      tags:
+        - endora_terminal_agent
+
+    - role: endora.homelab.endora
+      tags:
+        - endora
         - ai
 
     - role: open-webui
