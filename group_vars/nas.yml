@@ -365,8 +365,8 @@ samba_extra_shares:
 ollama_enabled: true
 open_webui_enabled: true
 kokoro_fastapi_enabled: true
-faster_whisper_enabled: true
-whisperlive_enabled: true
+faster_whisper_enabled: false   # off: nothing uses it, and it ran on the CPU (2026-10-16)
+whisperlive_enabled: false      # off: Endora no longer calls it since push-to-talk went (2026-10-16)
 
 # Cloudflare Tunnel for remote access (replaces the exposed WireGuard port).
 # Deploys once vault_cloudflared_tunnel_token is set in vault.yml.
