@@ -1,0 +1,10 @@
+---
+cloudflared_enabled: false
+cloudflared_container_name: "cloudflared"
+cloudflared_image_name: "cloudflare/cloudflared"
+cloudflared_image_version: "latest"
+cloudflared_memory: 256m
+# Remotely-managed tunnel token from the Cloudflare Zero Trust dashboard.
+# Put the REAL value in vault.yml as vault_cloudflared_tunnel_token (never here -
+# this repo is public). Empty token = role skips deploy with a reminder.
+cloudflared_tunnel_token: "{{ vault_cloudflared_tunnel_token | default('') }}"
