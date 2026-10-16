@@ -19,3 +19,9 @@ ollama_context_length: 16384
 # One request at a time, so a request gets the whole window above rather than a share of it.
 # Requests from several clients queue rather than run side by side.
 ollama_num_parallel: 1
+
+# How long a model stays loaded after its last request. Ollama's default is 5 minutes, and
+# any request that does not say otherwise resets it to that, so the first message after a
+# pause paid a 13-second reload on a 7B (measured on the A2000). "-1" keeps a loaded model
+# loaded until Ollama needs the memory for another one; a duration such as "1h" also works.
+ollama_keep_alive: "-1"
