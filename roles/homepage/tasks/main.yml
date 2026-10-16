@@ -33,6 +33,9 @@
           - "{{ homepage_port }}:3000"
         restart_policy: unless-stopped
         restart: "{{ homepage_config is changed }}"
+        # Its health check starts a wget every few seconds, and the Next.js server it runs as
+        # PID 1 never reaps them: hundreds of zombies piled up in four days. An init reaps them.
+        init: true
         memory: "{{ homepage_memory }}"
         labels:
           traefik.enable: "{{ homepage_available_externally | string }}"
