@@ -24,11 +24,10 @@
         dest: "{{ out }}/full.env"
         mode: "0600"
       vars:
-        endora_build: abc1234
         mail_mirror_enabled: true
         mail_mirror_root: /srv/mail-mirror
         endora_own_work: true
-        endora_utc_offset_minutes: -300
+        endora_time_zone: America/New_York
         endora_data_dir: /data/endora
 
     - name: Nothing switched on
@@ -37,7 +36,7 @@
         dest: "{{ out }}/bare.env"
         mode: "0600"
       vars:
-        endora_build: abc1234
+        endora_time_zone: ""
 
     - name: Override with an address
       ansible.builtin.template:
@@ -65,18 +64,36 @@
     - name: Check them
       ansible.builtin.assert:
         that:
-          - "'ENDORA_BUILD=abc1234' in full"
+          - "full | select('match', 'ENDORA_BUILD') | list | length == 0"
           - "'ENDORA_MAIL_DIR=/srv/mail-mirror/maildir' in full"
           - "'ENDORA_OWN_WORK=1' in full"
-          - "'ENDORA_UTC_OFFSET_MINUTES=-300' in full"
+          - "'ENDORA_TIME_ZONE=America/New_York' in full"
           - "'ENDORA_DATA_DIR=/data/endora' in full"
           - "'ENDORA_MODEL_URL=http://host.docker.internal:11434/v1' in full"
           # Off by default: no mail, no own work, and the data volume rather than a folder.
           - "'ENDORA_OWN_WORK=0' in bare"
+          - "'ENDORA_TIME_ZONE=' in bare"
           - "bare | select('match', 'ENDORA_MAIL_DIR') | list | length == 0"
           - "bare | select('match', 'ENDORA_DATA_DIR') | list | length == 0"
           - "san.services.node.environment.ENDORA_TLS_SAN == '192.168.1.10'"
           - "nosan.services == {}"
+
+    # The rule this role exists to keep: Endora is never built or pulled on the NAS.
+    - name: Every Compose call in the role neither builds nor pulls
+      ansible.builtin.assert:
+        that:
+          - compose | length == 2
+          - started | length == 1
+          - started | map(attribute='build') | list == ['never']
+          - started | map(attribute='pull') | list == ['never']
+      vars:
+        tasks: "{{ lookup('file', '../tasks/main.yml') | from_yaml }}"
+        # By key: a dotted module name would be read as nested attributes.
+        compose: >-
+          {{ tasks | map(attribute='block') | flatten | map('dict2items') | flatten
+             | selectattr('key', 'equalto', 'community.docker.docker_compose_v2')
+             | map(attribute='value') | list }}
+        started: "{{ compose | selectattr('state', 'equalto', 'present') | list }}"
 
     - name: Clean up
       ansible.builtin.file:

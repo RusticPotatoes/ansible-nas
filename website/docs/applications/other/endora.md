@@ -8,19 +8,24 @@ Endora is a self-hosted butler for the house: a chat console that reads your Hom
 your mail copy (see [Mail Mirror](mail_mirror.md)) and your containers, using a model that
 runs on your own hardware (see the `ollama` role).
 
-This role checks out a branch or tag of Endora on the NAS, builds the image there and starts
-it with Endora's own `docker-compose.yml`. Nothing is pulled from a registry. The Compose
-project is named `endora`, the name Endora's `make deploy` uses, so a node deployed either way
-is the same node with the same data. Deploying from a laptop with `make deploy` to try a
-change, then running this role to go back to a branch, moves no data.
+This role starts Endora on the NAS with Endora's own `docker-compose.yml` (checked out at a
+branch or tag) and this host's settings. **It never builds the image, and never pulls one.**
+A release build needs several GB of memory for minutes; on a NAS that shares its memory with
+Home Assistant, one ran the box out of memory and swap and the house stopped answering. Build
+on another machine with Endora's `make deploy`, which compiles there for the NAS's processor
+and copies the image here (set `ENDORA_BUILD_CONTEXT` in Endora's `local.mk`), then run this
+role. Without an image the role stops and says so.
+
+The Compose project is named `endora`, the name `make deploy` uses, so a node started either
+way is the same node with the same data. Both set the node's settings, so keep this role's in
+step with Endora's `local.mk`, or run this role after a deploy.
 
 ## Settings
 
 ```yaml
 endora_enabled: true
-endora_version: develop          # a branch, tag or commit
+endora_version: develop          # where the compose file comes from: a branch, tag or commit
 endora_own_work: true            # looks into things on its own when you are quiet
-endora_utc_offset_minutes: -300  # your distance from UTC, for the patterns it notices
 endora_docker_observer: true     # a read-only view of this host's containers
 ```
 
@@ -28,11 +33,12 @@ endora_docker_observer: true     # a read-only view of this host's containers
   enabled; set `endora_mail_dir: ""` to keep it from Endora.
 - **The model** defaults to the `ollama` role on this host (`endora_model_url`,
   `endora_model`).
+- **The time zone** is the NAS's own (`ansible_nas_timezone`) unless `endora_time_zone`
+  names another, so patterns are on your clock and the daily brief keeps its hour when the
+  clocks change.
 - **The certificate.** The node serves HTTPS with a self-signed certificate issued for the
   NAS's own address (`endora_tls_san`, by default the address Ansible sees). Accept the
   browser's warning once.
-- **Rebuilding.** The image is built again when the checkout moves. If it was replaced from
-  elsewhere (a `make deploy`), set `endora_rebuild: true` for one run to go back to the branch.
 
 ## Where its data lives
 

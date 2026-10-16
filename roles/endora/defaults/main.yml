@@ -1,20 +1,19 @@
 ---
 # Endora, a self-hosted butler for the house: https://github.com/RusticPotatoes/Endora
 #
-# Checks out a branch or tag of Endora on the NAS, builds it there and starts it with the
-# project's own docker-compose.yml. The Compose project name is the one Endora's
-# `make deploy` uses, so both reach the same containers and the same data volume: a node
-# deployed either way is the same node, and switching between them moves no data.
-# See website/docs/applications/other/endora.md.
+# Starts Endora on the NAS with the project's own docker-compose.yml, checked out at a branch
+# or tag, and this host's settings. It never builds: a release build needs several GB of
+# memory for minutes, and on a NAS that shares its memory with Home Assistant one ran the box
+# out of memory and swap and the house stopped answering. Build the image on another machine
+# with Endora's `make deploy` (ENDORA_BUILD_CONTEXT), which copies it here; this role starts
+# it. The Compose project name is the one `make deploy` uses, so both reach the same
+# containers and the same data volume. See website/docs/applications/other/endora.md.
 endora_enabled: false
 
 endora_repo: https://github.com/RusticPotatoes/Endora.git
-# A branch, tag or commit. The build is stamped with its short commit, which the console's
-# header and /health show.
+# A branch, tag or commit: where the compose file comes from. Keep it the version whose image
+# `make deploy` last copied here.
 endora_version: develop
-# Build again even when the checkout did not move (for example after a `make deploy` from
-# another machine replaced the image).
-endora_rebuild: false
 
 # The checkout and the files this role writes. Endora's data is not kept here (below).
 endora_root: "{{ docker_home }}/endora"
@@ -36,9 +35,11 @@ endora_model_url: http://host.docker.internal:11434/v1
 endora_model: qwen2.5:7b
 
 # Endora looking into things on its own and noticing the house's daily patterns (Endora
-# ADR 0094-0096). The offset is your distance from UTC in minutes.
+# ADR 0094-0096).
 endora_own_work: false
-endora_utc_offset_minutes: 0
+# Your time zone by name, so patterns are on your clock and the daily brief keeps its hour when
+# the clocks change. The NAS's own zone by default.
+endora_time_zone: "{{ ansible_nas_timezone | default('') }}"
 
 # The address the node's self-signed certificate is issued for, so the browser warning is
 # accepted once for the address you use. Empty: the certificate names localhost only.

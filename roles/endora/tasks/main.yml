@@ -45,13 +45,27 @@
               with no settings. Copy the volume there first (Endora's `make migrate-data`), or
               leave endora_data_dir empty.
 
+    # Built elsewhere and copied here by Endora's `make deploy`: a build on the NAS can run
+    # it out of memory.
+    - name: Look for the Endora image
+      community.docker.docker_image_info:
+        name: endora-node:latest
+      register: endora_image
+
+    - name: Refuse to build Endora here
+      ansible.builtin.assert:
+        that:
+          - endora_image.images | length > 0
+        fail_msg: >-
+          There is no endora-node image on this host. Build it on another machine and copy it
+          here with Endora's `make deploy` (ENDORA_BUILD_CONTEXT in its local.mk), then run this
+          role again. It is never built on the NAS.
+
     - name: Endora settings
       ansible.builtin.template:
         src: endora.env.j2
         dest: "{{ endora_root }}/endora.env"
         mode: "0640"
-      vars:
-        endora_build: "{{ endora_source.after[:7] }}"
 
     - name: Endora host settings
       ansible.builtin.template:
@@ -59,7 +73,7 @@
         dest: "{{ endora_root }}/docker-compose.override.yml"
         mode: "0640"
 
-    # Built here, on the NAS, from the checkout: no registry, and nothing pulled by name.
+    # Never built and never pulled: the image `make deploy` copied here, or nothing.
     - name: Endora
       community.docker.docker_compose_v2:
         project_src: "{{ endora_root }}/src"
@@ -70,7 +84,8 @@
         env_files:
           - "{{ endora_root }}/endora.env"
         profiles: "{{ ['homelab'] if endora_docker_observer | bool else [] }}"
-        build: "{{ 'always' if (endora_source is changed or endora_rebuild | bool) else 'policy' }}"
+        build: never
+        pull: never
         state: present
   when: endora_enabled is true
 
