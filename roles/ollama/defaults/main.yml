@@ -16,9 +16,11 @@ ollama_memory: 12g
 # layers to the CPU.
 ollama_context_length: 16384
 
-# One request at a time, so a request gets the whole window above rather than a share of it.
-# Requests from several clients queue rather than run side by side.
-ollama_num_parallel: 1
+# Requests a loaded model serves at once. Each gets the whole window above (Ollama sizes the
+# cache as window x slots: about 1 GB more per extra slot for a 7B at 16k). With one slot,
+# Endora's chat waited behind its own background mail reading (8.9 s for a request that took
+# 0.06 s), and each wiped the other's reusable prompt cache; two let them run side by side.
+ollama_num_parallel: 2
 
 # How long a model stays loaded after its last request. Ollama's default is 5 minutes, and
 # any request that does not say otherwise resets it to that, so the first message after a
