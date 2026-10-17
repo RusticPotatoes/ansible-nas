@@ -234,7 +234,7 @@ homebridge_enabled: true
 grafana_enabled: true
 promtail_enabled: true
 semaphore_enabled: true
-owntone_enabled: true
+owntone_enabled: false   # retired 2026-10-17: Endora's sound hub plays the HomePods and Spotify now
 overseerr_enabled: true
 thelounge_enabled: true
 unifi_enabled: true
