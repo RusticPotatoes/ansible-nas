@@ -240,8 +240,19 @@ thelounge_enabled: true
 unifi_enabled: true
 mongodb_enabled: true
 pihole_enabled: true
+# Declared, not clicked: the node's name (this NAS); and the router answers for each device's
+# own name (<device>.home), which follows it when its address moves. Addresses come from the
+# NAS's own facts at run time, so none is written here.
+pihole_dns_hosts:
+  - "{{ ansible_default_ipv4.address }} endora.home.arpa"
+pihole_rev_servers:
+  - "true,{{ ansible_default_ipv4.network }}/{{ ansible_default_ipv4.prefix }},{{ ansible_default_ipv4.gateway }},home"
 wireguard_enabled: true
 watchtower_enabled: true
+
+# The house's vault beside the Endora node (Endora ADR 0127): Endora initialises it and
+# unlocks it with the owner's passkey.
+openbao_enabled: true
 
 # Backups: Backrest (restic) to the archive array, everything that matters
 backrest_enabled: true

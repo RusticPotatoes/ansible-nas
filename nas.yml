@@ -235,6 +235,14 @@
         - endora
         - ai
 
+    # The house's vault, beside the node (after it: it joins the node's vault network). Off
+    # unless openbao_enabled; Endora initialises and unlocks it with the owner's passkey.
+    - role: endora.homelab.openbao
+      when: openbao_enabled | default(false) | bool
+      tags:
+        - openbao
+        - endora
+
     - role: open-webui
       tags:
         - open-webui
