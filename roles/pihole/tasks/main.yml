@@ -37,10 +37,13 @@
           - "53:53/udp"
           - "67:67/udp"
           - "80:80/tcp"
-        env:
-          TZ: "{{ pihole_timezone }}"
-          WEBPASSWORD: "{{ pihole_web_password }}"
-          FTLCONF_webserver_api_password: "{{ pihole_web_password }}"  # Pi-hole v6 ignores WEBPASSWORD
+        # Pi-hole v6 ignores WEBPASSWORD; local records and router forwarding only when declared.
+        env: >-
+          {{ {'TZ': pihole_timezone,
+              'WEBPASSWORD': pihole_web_password,
+              'FTLCONF_webserver_api_password': pihole_web_password}
+             | combine({'FTLCONF_dns_hosts': pihole_dns_hosts | join(';')} if pihole_dns_hosts else {})
+             | combine({'FTLCONF_dns_revServers': pihole_rev_servers | join(';')} if pihole_rev_servers else {}) }}
         capabilities:
           - "NET_ADMIN"
         restart_policy: unless-stopped

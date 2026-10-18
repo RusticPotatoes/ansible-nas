@@ -20,6 +20,15 @@ pihole_hostname: "pihole"
 pihole_timezone: "{{ ansible_nas_timezone }}"
 pihole_web_password: "{{ vault_pihole_web_password | default('') }}"
 
+# Local DNS records, declared here instead of clicked into the web UI: "<address> <name>" each,
+# e.g. "192.0.2.10 nas.home.arpa". Empty: Pi-hole keeps whatever its UI holds. Set, it
+# replaces that list (and the UI shows it read-only).
+pihole_dns_hosts: []
+# Names Pi-hole asks the router for, so a device's own name follows it when its address moves:
+# "true,<your LAN as CIDR>,<router>,<the router's domain>" each, e.g. "true,192.0.2.0/24,
+# 192.0.2.1,lan". Empty: none.
+pihole_rev_servers: []
+
 # specs
 pihole_memory: 1g
 
