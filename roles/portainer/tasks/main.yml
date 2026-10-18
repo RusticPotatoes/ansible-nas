@@ -1,3 +1,4 @@
+---
 - name: Debug Portainer Enabled Variable
   debug:
     var: portainer_enabled

@@ -1,3 +1,4 @@
+---
 groups:
   - name: loki_alerts
     interval: 1m
@@ -11,7 +12,7 @@ groups:
         annotations:
           summary: "High error rate detected in Loki"
           description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes"
-      
+
       - alert: LokiDown
         expr: |
           up{job="loki"} == 0

@@ -1,7 +1,7 @@
 ---
 - name: Start pihole
   block:
-    
+
     - name: Create macvlan network for Pi-hole
       community.docker.docker_network:
         name: pihole_macvlan
@@ -20,7 +20,7 @@
       with_items:
         - "{{ pihole_config_directory }}"
         - "{{ pihole_dnsmasq_directory }}"
-        
+
     - name: Deploy Pi-hole Docker Container
       community.docker.docker_container:
         name: "pihole"
