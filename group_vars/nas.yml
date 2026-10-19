@@ -258,6 +258,11 @@ watchtower_enabled: true
 # unlocks it with the owner's passkey.
 openbao_enabled: true
 
+# Before the NAS shuts down (the 04:00 security reboot, a manual one), Endora's HQ stops starting
+# turns and waits up to five minutes for the ones under way (Endora ADR 0134). It works with
+# Endora run by its own `make deploy`: the role brings the drain's script and unit only.
+endora_drain_on_shutdown: true
+
 # Backups: Backrest (restic) to the archive array, everything that matters
 backrest_enabled: true
 backrest_sources:

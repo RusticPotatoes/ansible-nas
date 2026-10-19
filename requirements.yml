@@ -21,4 +21,4 @@ collections:
   # with Endora and are pinned to a commit of it: https://github.com/RusticPotatos/Endora
   - name: https://github.com/RusticPotatos/Endora.git#/deploy/ansible/collection/
     type: git
-    version: 874d660926fc4144fe5ce6806164361ccefc26c3
+    version: a0806e313b36c397f9c8d9e3e1d6a52e8adadd3a
