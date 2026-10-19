@@ -82,6 +82,11 @@ if [ "${failed_children[*]:-}" != "" ]; then
     --vault-password-file "{{ gluetun_ansible_vault_password_file }}" \
     --tags gluetun
 fi
+{% else %}
+if [ "${failed_children[*]:-}" != "" ]; then
+  log "These did not start and need the gluetun role run again: ${failed_children[*]}"
+  exit 1
+fi
 {% endif %}
 
 log "Gluetun stack restart complete"
