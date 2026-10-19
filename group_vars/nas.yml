@@ -193,6 +193,9 @@ plex_nvidia_gpu: true
 gluetun_enabled: true
 gluetun_periodic_restart_enabled: true
 gluetun_periodic_restart_interval: "2h"
+# No playbook run from the restart (it needed the vault password on the NAS, and never ran):
+# a routed container that fails to start makes the restart fail, so it is seen and fixed.
+gluetun_recover_with_ansible_enabled: false
 radarr_enabled: true
 sonarr_enabled: true
 stats_enabled: true
