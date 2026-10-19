@@ -233,7 +233,7 @@ logging_stack_enabled: true
 homebridge_enabled: true
 grafana_enabled: true
 promtail_enabled: true
-semaphore_enabled: true
+semaphore_enabled: false   # retired 2026-10-18: broken since April; the NAS is managed from elsewhere
 owntone_enabled: false   # retired 2026-10-17: Endora's sound hub plays the HomePods and Spotify now
 overseerr_enabled: true
 thelounge_enabled: true
@@ -296,13 +296,13 @@ nas_status_directory: "{{ docker_home }}/nas-status"
 nas_btrfs_scrub_mountpoints: [/mnt/media, /mnt/archive]
 nas_hold_nvidia_driver: true
 nas_db_dumps_enabled: true
-nas_db_dump_postgres_container: postgres
+nas_db_dump_postgres_container: ""   # postgres retired 2026-10-18 (semaphore's only)
 nas_db_dump_mongodb_container: mongodb
 newspaper_enabled: true
 ebook2audiobook_enabled: false   # off for now: the NAS is short of memory (2026-10-16)
 ebook2audiobook_auto_convert_enabled: false   # disabled: slow XTTS churn; revisit with Kokoro-FastAPI engine
 ebook2audiobook_auto_convert_interval: "30m"
-postgres_enabled: true
+postgres_enabled: false   # retired 2026-10-18 with semaphore, its only user
 gatus_enabled: true
 
 # Observability
