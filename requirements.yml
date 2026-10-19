@@ -7,10 +7,16 @@ roles:
     version: 2.0.0
 
 collections:
+  # Pinned to the newest releases that support ansible-core 2.16 (Ubuntu 24.04's, and the
+  # Mac's via requirements-ansible.txt), so `make run` never upgrades them by surprise.
   - name: ansible.posix
+    version: 2.2.2
   - name: community.docker
+    version: 4.8.9
   - name: community.general
+    version: 11.4.9
   - name: vladgh.samba
+    version: 3.5.1
   # Endora's roles (mail_mirror, docker_egress, endora, endora_terminal_agent, openbao) ship
   # with Endora and are pinned to a commit of it: https://github.com/RusticPotatos/Endora
   - name: https://github.com/RusticPotatos/Endora.git#/deploy/ansible/collection/

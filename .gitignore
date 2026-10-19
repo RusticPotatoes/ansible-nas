@@ -44,3 +44,6 @@ vault_password*.txt
 *.p12
 *.pfx
 *.decrypted
+
+# The local ansible for running from another machine (make venv)
+.venv/
