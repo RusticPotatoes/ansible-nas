@@ -248,6 +248,7 @@ pihole_enabled: true
 # NAS's own facts at run time, so none is written here.
 pihole_dns_hosts:
   - "{{ ansible_default_ipv4.address }} endora.home.arpa"
+  - "{{ ansible_default_ipv4.address }} nas.home.arpa"   # the machine, for running the playbook from elsewhere
 pihole_rev_servers:
   - "true,{{ ansible_default_ipv4.network }}/{{ ansible_default_ipv4.prefix }},{{ ansible_default_ipv4.gateway }},home"
 wireguard_enabled: true
@@ -262,7 +263,7 @@ backrest_enabled: true
 backrest_sources:
   - { host: "{{ docker_home }}", container: /sources/docker }
   - { host: /mnt/media, container: /sources/media }
-  - { host: "{{ lookup('env', 'HOME') }}", container: /sources/home }
+  - { host: "/home/{{ ansible_nas_user }}", container: /sources/home }   # the NAS user's home, wherever the playbook runs from
   - { host: /etc, container: /sources/etc }
 backrest_plans:
   - id: system   # app configs/databases, home (incl. this repo + vault), /etc
