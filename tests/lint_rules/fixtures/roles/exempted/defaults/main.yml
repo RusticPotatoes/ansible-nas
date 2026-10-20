@@ -1,0 +1,2 @@
+---
+exempted_repo: "{{ playbook_dir }}"  # noqa: nas-controller-path off on this NAS, see AGENTS.md

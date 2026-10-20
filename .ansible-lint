@@ -1,4 +1,10 @@
 ---
+# The fork's own rules, beside ansible-lint's: how a change reaches the NAS (AGENTS.md).
+# Tested in tests/test_lint_rules.py.
+rulesdir:
+  - tests/lint_rules/
+use_default_rules: true
+
 skip_list:
  - risky-file-permissions
  - role-name
@@ -7,6 +13,7 @@ skip_list:
  - name[template]
 
 exclude_paths:
+ - tests/lint_rules/fixtures
  - roles/bertvv.samba
  - roles/geerlingguy.docker
  - roles/geerlingguy.docker_arm
