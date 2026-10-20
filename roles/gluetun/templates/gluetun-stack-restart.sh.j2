@@ -74,6 +74,7 @@ done
 if [ "${failed_children[*]:-}" != "" ]; then
   log "Running targeted Ansible repair for Gluetun-routed containers: ${failed_children[*]}"
   cd "{{ gluetun_ansible_repo_path }}"
+  {# noqa: nas-playbook-user: off on this NAS; see this role's defaults and AGENTS.md -#}
   ansible-playbook \
     -i "{{ gluetun_ansible_inventory }}" \
     "{{ gluetun_ansible_playbook }}" \

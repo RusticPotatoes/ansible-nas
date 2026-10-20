@@ -1,0 +1,14 @@
+---
+- name: Say the case
+  ansible.builtin.debug:
+    msg: "playbook_as_user"
+
+- name: Install the unit that runs it as the playbook's own user
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/playbook-as-user.service
+    mode: "0644"
+    content: |
+      [Service]
+      Type=oneshot
+      User={{ ansible_nas_user }}
+      ExecStart=/usr/local/sbin/playbook-as-user

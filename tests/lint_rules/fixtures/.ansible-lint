@@ -1,0 +1,3 @@
+---
+# The fixtures for tests/test_lint_rules.py: only the fork's own rules are asked for (-r).
+skip_list: []

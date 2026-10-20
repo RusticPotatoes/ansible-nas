@@ -1,0 +1,6 @@
+---
+# The controller's paths baked into what runs on the NAS: under make run-remote, the laptop's.
+controller_paths_repo: "{{ playbook_dir }}"
+controller_paths_inventory: "{{ inventory_file | default(playbook_dir + '/inventories/inventory.ini') }}"
+controller_paths_dir: "{{ inventory_dir }}/group_vars"
+controller_paths_data: "{{ docker_home }}/controller_paths"

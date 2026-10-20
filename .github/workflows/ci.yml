@@ -34,6 +34,9 @@ jobs:
       - name: Lint yaml files
         run: yamllint .
 
+      - name: Test the fork's own lint rules
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
+
       - name: Lint docs
         uses: articulate/actions-markdownlint@v1
         with:
