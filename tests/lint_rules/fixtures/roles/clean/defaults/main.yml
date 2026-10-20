@@ -1,0 +1,3 @@
+---
+# A comment may name playbook_dir; only a Jinja reference counts. Docs may name ansible-playbook.
+clean_data: "{{ docker_home }}/clean"

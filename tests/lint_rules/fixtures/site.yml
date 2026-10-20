@@ -1,0 +1,11 @@
+---
+# Fixtures for the fork's own ansible-lint rules (tests/test_lint_rules.py): each role is
+# one case. Not part of nas.yml.
+- name: Lint rule fixtures
+  hosts: all
+  roles:
+    - role: controller_paths
+    - role: playbook_as_root
+    - role: playbook_as_user
+    - role: exempted
+    - role: clean
