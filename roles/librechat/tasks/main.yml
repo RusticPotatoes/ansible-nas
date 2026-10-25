@@ -13,7 +13,6 @@
       with_items:
         - "{{ librechat_data_directory }}"
         - "{{ librechat_audiobooks_directory }}"
-        
 
     - name: Create librechat.yaml config file
       ansible.builtin.template:
@@ -63,8 +62,8 @@
           homepage.icon: librechat
           homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ librechat_port }}"
           homepage.description: Chat UI
-        # networks:
-        #   - name: librechat_internal_net
+          # networks:
+          #   - name: librechat_internal_net
 
       register: docker_container_result
       until: docker_container_result is succeeded
