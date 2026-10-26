@@ -1,6 +1,14 @@
 ---
 - name: Start MongoDB
   block:
+    - name: Require the MongoDB root password to be set
+      ansible.builtin.assert:
+        that:
+          - vault_mongodb_root_password is defined
+          - vault_mongodb_root_password | length > 0
+        fail_msg: "vault_mongodb_root_password must be set (vault or inventory); this role keeps no default for it."
+        quiet: true
+
     - name: Ensure MongoDB directories exist
       ansible.builtin.file:
         path: "{{ item }}"

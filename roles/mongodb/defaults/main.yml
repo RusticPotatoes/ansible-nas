@@ -14,7 +14,7 @@ mongodb_log_level: "error"
 
 # creds
 mongodb_user: "admin"
-mongodb_password: "strongpassword123"
+mongodb_password: "{{ vault_mongodb_root_password }}"
 
 # network
 mongodb_port: "27017"
