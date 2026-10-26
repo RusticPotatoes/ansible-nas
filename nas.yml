@@ -82,8 +82,11 @@
         - gatus
         - monitoring
 
+    # Only facts other roles read (gluetun on, the containers it routes): worked out on every
+    # run, so a run under one tag sees the stack as a full run does.
     - role: vpn-download-stack
       tags:
+        - always
         - vpn-download-stack
         - gluetun
 

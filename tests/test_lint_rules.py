@@ -99,5 +99,16 @@ class TheFork(unittest.TestCase):
         self.assertEqual(found, set(), ran.stdout[-3000:] + ran.stderr[-3000:])
 
 
+    def test_the_vpn_download_stack_is_worked_out_on_every_run(self):
+        # vpn-download-stack only sets facts other roles read: whether gluetun is on and which
+        # containers it routes. Run under one tag (nas_maintenance), the gluetun job was built
+        # without them and would have restarted sonarr with the stack every 2 hours.
+        import yaml
+
+        play = yaml.safe_load((REPO / "nas.yml").read_text(encoding="utf-8"))[0]
+        tags = next(r["tags"] for r in play["roles"] if r.get("role") == "vpn-download-stack")
+        self.assertIn("always", tags)
+
+
 if __name__ == "__main__":
     unittest.main()
