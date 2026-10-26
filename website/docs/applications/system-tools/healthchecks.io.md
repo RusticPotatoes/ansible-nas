@@ -4,7 +4,7 @@ title: "Healthchecks.io"
 
 Homepage: [https://healthchecks.io/](https://healthchecks.io/)
 
-A simple cronjob that uses `curl` to ping a given endpoint on the `healthchecks.io` servers. You can choose how often it should ping the endpoint, and what happens when it doesn't. Email/Slack/Telegram and many more services can be integrated.
+A [scheduled job on the NAS](../../further-configuration/scheduled-jobs.md) (`healthchecks-ping`, a systemd timer) that uses `curl` to ping a given endpoint on the `healthchecks.io` servers. You can choose how often it should ping the endpoint, and what happens when it doesn't. Email/Slack/Telegram and many more services can be integrated.
 
 ## Usage
 

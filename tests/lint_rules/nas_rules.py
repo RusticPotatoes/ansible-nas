@@ -133,3 +133,62 @@ class NasPlaybookUserRule(AnsibleLintRule):
                     )
                 )
         return found
+
+
+# A task that schedules a job with cron: the module, by its full or short name.
+CRON_MODULE = re.compile(r"^\s*(?:-\s+)?(?:ansible\.builtin\.)?cron:\s*$")
+# A systemd timer written inline in a task (`[Timer]` in a copied unit's content).
+TIMER_SECTION = re.compile(r"^\s*\[Timer\]\s*$")
+# The one role that schedules jobs on the NAS.
+SCHEDULER = "nas_maintenance"
+
+
+class NasScheduledJobRule(AnsibleLintRule):
+    """A role schedules a job on the NAS itself, instead of nas_maintenance listing it."""
+
+    id = "nas-scheduled-job"
+    shortdesc = "A job scheduled on the NAS outside nas_maintenance"
+    description = (
+        "What runs on the NAS by itself (a systemd timer, a cron job) is one of "
+        "nas_maintenance's scheduled jobs (nas_scheduled_jobs), with its schedule and its "
+        "reason, so the owner can see everything that runs and why. A role's own timer or cron "
+        "job was how the gluetun stack's 2-hourly restart went unexplained."
+    )
+    severity = "HIGH"
+    tags = ["nas"]
+    version_added = "fork"
+
+    def matchyaml(self, file: Lintable) -> list[MatchError]:
+        role = role_of(file)
+        if role is None or role.name == SCHEDULER:
+            return []
+        found: list[MatchError] = []
+        for path in files_of(role, ("templates", "files")):
+            if ".timer" not in path.name:
+                continue
+            lines = lines_of(path)
+            if lines and exempted(lines, 0, self.id):
+                continue
+            found.append(
+                self.create_matcherror(
+                    message=f"a timer of {role.name}'s own: list it in nas_scheduled_jobs",
+                    linenumber=1,
+                    filename=Lintable(str(path), kind="vars"),
+                )
+            )
+        for path in files_of(role, ("tasks",)):
+            lines = lines_of(path)
+            for index, line in enumerate(lines):
+                if not (CRON_MODULE.search(line) or TIMER_SECTION.search(line)):
+                    continue
+                if exempted(lines, index, self.id):
+                    continue
+                found.append(
+                    self.create_matcherror(
+                        message=f"a job {role.name} schedules itself: list it in "
+                        "nas_scheduled_jobs",
+                        linenumber=index + 1,
+                        filename=Lintable(str(path), kind="vars"),
+                    )
+                )
+        return found

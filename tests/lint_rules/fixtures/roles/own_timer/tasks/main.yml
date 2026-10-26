@@ -1,0 +1,6 @@
+---
+- name: Install a timer of the app's own
+  ansible.builtin.template:
+    src: app-sweep.timer.j2
+    dest: /etc/systemd/system/app-sweep.timer
+    mode: "0644"

@@ -45,44 +45,12 @@
         - { path: "{{ nas_db_dump_directory }}", mode: "0700" }
         - { path: "{{ nas_status_directory }}", mode: "0755" }
 
-    - name: Install dump script
-      ansible.builtin.template:
-        src: nas-db-dump.sh.j2
-        dest: /usr/local/sbin/nas-db-dump
-        mode: "0750"
-
-    - name: Install dump service and timer
-      ansible.builtin.copy:
-        dest: "/etc/systemd/system/{{ item.name }}"
-        mode: "0644"
-        content: "{{ item.content }}"
-      loop:
-        - name: nas-db-dump.service
-          content: |
-            [Unit]
-            Description=Dump container databases for backup
-            After=docker.service
-            Requires=docker.service
-
-            [Service]
-            Type=oneshot
-            ExecStart=/usr/local/sbin/nas-db-dump
-        - name: nas-db-dump.timer
-          content: |
-            [Unit]
-            Description=Nightly container database dumps
-
-            [Timer]
-            OnCalendar={{ nas_db_dump_time }}
-            Persistent=true
-
-            [Install]
-            WantedBy=timers.target
-      register: nas_db_dump_units
-
-    - name: Enable dump timer
-      ansible.builtin.systemd:
-        name: nas-db-dump.timer
-        enabled: true
-        state: started
-        daemon_reload: "{{ nas_db_dump_units is changed }}"
+# Everything that runs on the NAS by itself (nas_scheduled_jobs). Tagged for each app a job
+# serves too, so running an app's tag still brings its job in line with its switch.
+- name: Scheduled jobs on the NAS
+  ansible.builtin.import_tasks: scheduled_jobs.yml
+  tags:
+    - ansible-nas-docker
+    - ebook2audiobook
+    - gluetun
+    - healthchecks.io
