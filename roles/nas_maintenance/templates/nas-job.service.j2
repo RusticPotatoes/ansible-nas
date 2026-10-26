@@ -1,0 +1,14 @@
+# Managed by Ansible (nas_maintenance, nas_scheduled_jobs): {{ item.why }}
+[Unit]
+Description={{ item.description }}
+{% if item.needs_docker | default(true) %}
+After=docker.service
+Requires=docker.service
+{% endif %}
+
+[Service]
+Type=oneshot
+ExecStart={{ item.script_path }}
+{% if item.timeout is defined %}
+TimeoutStartSec={{ item.timeout }}
+{% endif %}

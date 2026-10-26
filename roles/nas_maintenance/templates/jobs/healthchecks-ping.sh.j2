@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+curl -m 10 --retry 5 "{{ healthchecks_url }}"
