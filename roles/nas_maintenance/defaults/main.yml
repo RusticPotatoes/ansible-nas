@@ -24,3 +24,53 @@ nas_db_dump_mongodb_container: ""    # e.g. mongodb; empty = skip
 
 # A successful dump writes "<name>.influx" here (Telegraf picks it up for alerts)
 nas_status_directory: "{{ docker_home }}/nas-status"
+
+# Everything that runs on the NAS by itself, in one place (the fork's lint rule
+# nas-scheduled-job keeps it so): each job's systemd unit name, what it does, why it exists,
+# whether it is on (the switch of the app it serves, unchanged), its schedule (`on_calendar`,
+# or `every`: an interval from boot and from its last run) and the script it runs, from
+# templates/jobs/. A job that is off has its timer stopped and disabled. The list is the
+# owner's to read on the docs page "Scheduled jobs on the NAS".
+nas_scheduled_jobs:
+  - name: ansible-nas-docker-prune
+    description: Prune unused Docker resources
+    why: Unused images, stopped containers and build cache fill the Docker disk; volumes are kept.
+    enabled: "{{ docker_prune_enabled | default(false) | bool }}"
+    on_calendar: "{{ docker_prune_interval | default('weekly') }}"
+    script: ansible-nas-docker-prune.sh.j2
+    script_path: "{{ docker_prune_script_path | default('/usr/local/sbin/ansible-nas-docker-prune') }}"
+  - name: ebook2audiobook-auto-convert
+    description: Convert new ebooks to audiobooks
+    why: Ebooks dropped in the books folder become audiobooks without anyone starting a conversion.
+    enabled: "{{ (ebook2audiobook_enabled | default(false) | bool) and (ebook2audiobook_auto_convert_enabled | default(false) | bool) }}"
+    every: "{{ ebook2audiobook_auto_convert_interval | default('30m') }}"
+    timeout: "{{ ebook2audiobook_auto_convert_timeout | default('0') }}"
+    script: ebook2audiobook-auto-convert.sh.j2
+    script_path: "{{ ebook2audiobook_auto_convert_script_path | default('/usr/local/sbin/ebook2audiobook-auto-convert') }}"
+  - name: gluetun-stack-restart
+    description: Restart gluetun and the containers routed through it
+    why: >-
+      A workaround for VPN stalls: gluetun and its routed containers (deluge, nzbget, prowlarr)
+      are restarted on a fixed interval. Whether it is still needed is being measured (Endora
+      #796); keep this reason true when that ends.
+    enabled: "{{ (gluetun_enabled | default(false) | bool) and (gluetun_periodic_restart_enabled | default(false) | bool) }}"
+    every: "{{ gluetun_periodic_restart_interval | default('2h') }}"
+    script: gluetun-stack-restart.sh.j2
+    script_path: "{{ gluetun_periodic_restart_script_path | default('/usr/local/sbin/gluetun-stack-restart') }}"
+  - name: nas-db-dump
+    description: Dump container databases for backup
+    why: Backups copy files; a logical dump gives them a consistent copy of each database.
+    enabled: "{{ nas_db_dumps_enabled | bool }}"
+    on_calendar: "{{ nas_db_dump_time }}"
+    script: nas-db-dump.sh.j2
+    script_path: /usr/local/sbin/nas-db-dump
+    mode: "0750"
+  - name: healthchecks-ping
+    description: Ping healthchecks.io
+    why: An outside service raises the alarm when the NAS stops pinging it.
+    enabled: "{{ healthchecks_enabled | default(false) | bool }}"
+    on_calendar: "*:0/{{ healthchecks_ping_minutes | default(15) }}"
+    needs_docker: false
+    script: healthchecks-ping.sh.j2
+    script_path: /usr/local/sbin/healthchecks-ping
+    mode: "0700"

@@ -1,0 +1,70 @@
+---
+# Each job of nas_scheduled_jobs: its script, service and timer when it is on; its timer
+# stopped and disabled when it is off. The unit names are the ones each app's role used before
+# the jobs came here, so a NAS that ran them keeps one timer each.
+- name: Install each scheduled job's script
+  ansible.builtin.template:
+    src: "jobs/{{ item.script }}"
+    dest: "{{ item.script_path }}"
+    owner: root
+    group: root
+    mode: "{{ item.mode | default('0755') }}"
+  loop: "{{ nas_scheduled_jobs | selectattr('enabled') | list }}"
+  loop_control:
+    label: "{{ item.name }}"
+  become: true
+
+- name: Install each scheduled job's service
+  ansible.builtin.template:
+    src: nas-job.service.j2
+    dest: "/etc/systemd/system/{{ item.name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ nas_scheduled_jobs | selectattr('enabled') | list }}"
+  loop_control:
+    label: "{{ item.name }}"
+  become: true
+
+- name: Install each scheduled job's timer
+  ansible.builtin.template:
+    src: nas-job.timer.j2
+    dest: "/etc/systemd/system/{{ item.name }}.timer"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ nas_scheduled_jobs | selectattr('enabled') | list }}"
+  loop_control:
+    label: "{{ item.name }}"
+  become: true
+
+- name: Start each scheduled job that is on
+  ansible.builtin.systemd:
+    name: "{{ item.name }}.timer"
+    enabled: true
+    state: started
+    daemon_reload: true
+  loop: "{{ nas_scheduled_jobs | selectattr('enabled') | list }}"
+  loop_control:
+    label: "{{ item.name }}"
+  become: true
+
+- name: Stop each scheduled job that is off
+  ansible.builtin.systemd:
+    name: "{{ item.name }}.timer"
+    enabled: false
+    state: stopped
+    daemon_reload: true
+  failed_when: false
+  loop: "{{ nas_scheduled_jobs | rejectattr('enabled') | list }}"
+  loop_control:
+    label: "{{ item.name }}"
+  become: true
+
+# healthchecks.io pinged from root's crontab before it was a scheduled job here.
+- name: Remove the healthchecks.io cron entry the ping replaced
+  ansible.builtin.cron:
+    name: healthchecks.io
+    user: root
+    state: absent
+  become: true

@@ -1,0 +1,6 @@
+---
+- name: Ping a monitor every few minutes
+  ansible.builtin.cron:
+    name: app-ping
+    minute: "*/15"
+    job: "curl -m 10 https://example.com/ping"

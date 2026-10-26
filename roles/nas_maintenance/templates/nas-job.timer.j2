@@ -1,0 +1,16 @@
+# Managed by Ansible (nas_maintenance, nas_scheduled_jobs): {{ item.why }}
+[Unit]
+Description={{ item.description }}, on a schedule
+
+[Timer]
+{% if item.on_calendar is defined %}
+OnCalendar={{ item.on_calendar }}
+{% else %}
+OnBootSec={{ item.every }}
+OnUnitActiveSec={{ item.every }}
+{% endif %}
+Persistent=true
+Unit={{ item.name }}.service
+
+[Install]
+WantedBy=timers.target

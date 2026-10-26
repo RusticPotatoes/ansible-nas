@@ -74,6 +74,20 @@ class TheRules(unittest.TestCase):
     def test_an_exemption_says_why_and_is_kept_to_its_line(self):
         self.assertEqual(self.of("exempted"), set(), self.ran.stdout + self.ran.stderr)
 
+    def test_a_role_scheduling_a_job_of_its_own_is_found(self):
+        # The gluetun stack's 2-hourly restart ran from a timer of its own role, and nobody
+        # could say what ran on the NAS by itself, or why (#796): every scheduled job on the
+        # host is one of nas_maintenance's, listed with its reason.
+        self.assertEqual(
+            self.of("own_timer") | self.of("own_cron"),
+            {("roles/own_timer/templates/app-sweep.timer.j2", 1, "nas-scheduled-job"),
+             ("roles/own_cron/tasks/main.yml", 3, "nas-scheduled-job")},
+            self.ran.stdout + self.ran.stderr,
+        )
+
+    def test_the_nas_scheduled_jobs_are_nas_maintenances(self):
+        self.assertEqual(self.of("nas_maintenance"), set(), self.ran.stdout + self.ran.stderr)
+
     def test_a_comment_or_another_variable_is_not_a_finding(self):
         self.assertEqual(self.of("clean"), set(), self.ran.stdout + self.ran.stderr)
 
@@ -83,6 +97,17 @@ class TheFork(unittest.TestCase):
         # As CI runs it: the repository's own .ansible-lint, which loads the rules.
         found, ran = findings(REPO, "nas.yml")
         self.assertEqual(found, set(), ran.stdout[-3000:] + ran.stderr[-3000:])
+
+
+    def test_the_vpn_download_stack_is_worked_out_on_every_run(self):
+        # vpn-download-stack only sets facts other roles read: whether gluetun is on and which
+        # containers it routes. Run under one tag (nas_maintenance), the gluetun job was built
+        # without them and would have restarted sonarr with the stack every 2 hours.
+        import yaml
+
+        play = yaml.safe_load((REPO / "nas.yml").read_text(encoding="utf-8"))[0]
+        tags = next(r["tags"] for r in play["roles"] if r.get("role") == "vpn-download-stack")
+        self.assertIn("always", tags)
 
 
 if __name__ == "__main__":
