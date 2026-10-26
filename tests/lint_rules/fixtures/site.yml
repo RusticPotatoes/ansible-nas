@@ -9,3 +9,6 @@
     - role: playbook_as_user
     - role: exempted
     - role: clean
+    - role: own_timer
+    - role: own_cron
+    - role: nas_maintenance
