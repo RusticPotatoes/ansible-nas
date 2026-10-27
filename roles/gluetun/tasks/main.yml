@@ -13,7 +13,7 @@
           {{
             (child_container_info.results | default([]))
             | selectattr('container', 'defined')
-            | rejectattr('container', 'none')                 
+            | rejectattr('container', 'none')
             | selectattr('container.State', 'defined')
             | selectattr('container.State.Status', 'equalto', 'running')
             | map(attribute='item')
