@@ -8,7 +8,7 @@ other role installs a systemd timer or a cron job: the fork's lint rule `nas-sch
 one that does, so nothing runs on a schedule without a reason written beside it.
 
 | Job (systemd unit) | Switch | Schedule | Why |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `ansible-nas-docker-prune` | `docker_prune_enabled` | `docker_prune_interval` (weekly) | Unused images, stopped containers and build cache fill the Docker disk; volumes are kept. |
 | `ebook2audiobook-auto-convert` | `ebook2audiobook_auto_convert_enabled` (and the app on) | every `ebook2audiobook_auto_convert_interval` (30m) | New ebooks become audiobooks without anyone starting a conversion. |
 | `gluetun-stack-restart` | `gluetun_periodic_restart_enabled` (and gluetun on) | every `gluetun_periodic_restart_interval` (2h) | A workaround for VPN stalls; whether it is still needed is being measured. |
