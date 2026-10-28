@@ -1,6 +1,15 @@
 ---
 - name: Start Minio
   block:
+    - name: Check Minio root password is set
+      ansible.builtin.assert:
+        that:
+          - minio_admin_password | length >= 8
+        fail_msg: >-
+          minio_admin_password is unset or shorter than 8 characters. Set
+          vault_minio_admin_password in your vault (ansible-vault edit) and run again.
+        quiet: true
+
     - name: Create Minio Directories
       ansible.builtin.file:
         path: "{{ item }}"
@@ -37,6 +46,8 @@
           homepage.icon: minio
           homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ minio_console_port }}"
           homepage.description: Object storage
+      # the container's env holds the root password: keep it out of the logs
+      no_log: true
       register: docker_container_result
       until: docker_container_result is succeeded
       retries: "{{ docker_container_pull_retries }}"

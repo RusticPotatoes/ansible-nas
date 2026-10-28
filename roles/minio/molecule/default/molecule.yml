@@ -4,3 +4,5 @@ provisioner:
     group_vars:
       all:
         minio_enabled: true
+        # generated once per scenario run (kept in molecule's ephemeral dir), never a literal
+        minio_admin_password: "{{ lookup('ansible.builtin.password', lookup('ansible.builtin.env', 'MOLECULE_EPHEMERAL_DIRECTORY') ~ '/minio_admin_password', length=24) }}"
