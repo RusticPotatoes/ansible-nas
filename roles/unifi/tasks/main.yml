@@ -18,7 +18,7 @@
       retries: "{{ unifi_image_pull_retries }}"
       delay: "{{ unifi_image_pull_delay }}"
 
-    - name: unifi Docker Container
+    - name: UniFi Docker Container
       community.docker.docker_container:
         name: "{{ unifi_container_name }}"
         image: "{{ unifi_image_name }}:{{ unifi_image_version }}"

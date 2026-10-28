@@ -1,6 +1,6 @@
 ---
-- name: Debug postgres Enabled Variable
-  debug:
+- name: Debug Postgres Enabled Variable
+  ansible.builtin.debug:
     var: postgres_enabled
 
 - name: Create postgres Docker network
@@ -18,7 +18,7 @@
       with_items:
         - "{{ postgres_data_directory }}"
 
-    - name: postgres Docker Container (Simplified)
+    - name: Postgres Docker Container (Simplified)
       community.docker.docker_container:
         name: "{{ postgres_container_name }}"
         image: "{{ postgres_image_name }}:{{ postgres_image_version }}"
