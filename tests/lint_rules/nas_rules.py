@@ -84,6 +84,8 @@ class NasControllerPathRule(AnsibleLintRule):
             for index, line in enumerate(lines):
                 if line.lstrip().startswith("#") or not CONTROLLER_PATH.search(line):
                     continue
+                if exempted(lines, index, self.id):
+                    continue
                 found.append(
                     self.create_matcherror(
                         message=f"{CONTROLLER_PATH.search(line).group(1)} is the controller's "
