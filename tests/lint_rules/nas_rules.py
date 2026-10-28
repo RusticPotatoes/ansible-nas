@@ -192,3 +192,66 @@ class NasScheduledJobRule(AnsibleLintRule):
                     )
                 )
         return found
+
+
+# A role default (a top-level variable) named for a secret: `<app>_password`, `_secret`, `_token`
+# and the keys (`_api_key`, `_secret_key`, `_encryption_key`, `_private_key`).
+SECRET_DEFAULT = re.compile(
+    r"^(?P<name>[A-Za-z_][A-Za-z0-9_]*?(?:^|_)(?:password|passwd|secret|token|api_?key|"
+    r"secret_key|encryption_key|private_key))\s*:(?P<value>.*)$",
+    re.IGNORECASE,
+)
+# What is no literal: nothing, null, or a vault reference (`!vault |`) or other Jinja reference.
+NO_LITERAL = re.compile(r"^(?:|''|\"\"|~|null|!vault\b.*|['\"]?\{\{.*)$", re.IGNORECASE)
+
+
+def value_of(raw: str) -> str:
+    """A default's value as written, without its comment."""
+    value = raw.strip()
+    if value.startswith("#"):
+        return ""
+    # A comment starts at ` #` outside quotes; a quoted value may hold a `#`.
+    if value[:1] in ("'", '"'):
+        end = value.find(value[0], 1)
+        return value if end < 0 else value[: end + 1]
+    return value.split(" #", 1)[0].strip()
+
+
+class NasSecretDefaultRule(AnsibleLintRule):
+    """A role's default gives a secret a literal value."""
+
+    id = "nas-secret-default"
+    shortdesc = "A literal secret in a role's defaults"
+    description = (
+        "Every repository is public: a password, secret, token or key a role defaults to is "
+        "published with it, and a role run without the owner's value runs with that one. "
+        "Default it to a vault reference (\"{{ vault_<app>_password }}\") or leave it empty, "
+        "and say in the branch which value the owner must set (AGENTS.md, The owner's values)."
+    )
+    severity = "HIGH"
+    tags = ["nas", "security"]
+    version_added = "fork"
+
+    def matchyaml(self, file: Lintable) -> list[MatchError]:
+        role = role_of(file)
+        if role is None:
+            return []
+        found: list[MatchError] = []
+        for path in files_of(role, ("defaults",)):
+            lines = lines_of(path)
+            for index, line in enumerate(lines):
+                match = SECRET_DEFAULT.match(line)
+                if not match or NO_LITERAL.match(value_of(match["value"])):
+                    continue
+                if exempted(lines, index, self.id):
+                    continue
+                # Name the variable, never its value.
+                found.append(
+                    self.create_matcherror(
+                        message=f"{match['name']} defaults to a literal secret: use a vault "
+                        "reference or leave it empty",
+                        linenumber=index + 1,
+                        filename=Lintable(str(path), kind="vars"),
+                    )
+                )
+        return found

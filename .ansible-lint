@@ -5,6 +5,11 @@ rulesdir:
   - tests/lint_rules/
 use_default_rules: true
 
+# Reported, not failed: today's role defaults still hold literal secrets (upstream's
+# placeholders). Fix one role at a time; when none is left, drop it from this list.
+warn_list:
+ - nas-secret-default
+
 skip_list:
  - risky-file-permissions
  - role-name

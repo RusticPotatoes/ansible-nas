@@ -88,15 +88,50 @@ class TheRules(unittest.TestCase):
     def test_the_nas_scheduled_jobs_are_nas_maintenances(self):
         self.assertEqual(self.of("nas_maintenance"), set(), self.ran.stdout + self.ran.stderr)
 
+    def test_a_literal_secret_default_is_found_by_its_line(self):
+        # Every repository is public: a password a role defaults to is published with it, and
+        # a role run without the owner's value runs with that one.
+        path = "roles/secret_literal/defaults/main.yml"
+        self.assertEqual(
+            self.of("secret_literal"),
+            {(path, 3, "nas-secret-default"), (path, 4, "nas-secret-default"),
+             (path, 5, "nas-secret-default"), (path, 6, "nas-secret-default")},
+            self.ran.stdout + self.ran.stderr,
+        )
+
+    def test_a_vault_reference_or_an_empty_default_passes(self):
+        self.assertEqual(self.of("secret_kept"), set(), self.ran.stdout + self.ran.stderr)
+
     def test_a_comment_or_another_variable_is_not_a_finding(self):
         self.assertEqual(self.of("clean"), set(), self.ran.stdout + self.ran.stderr)
 
 
+# Rules the fork's .ansible-lint reports without failing on: today's offenders are known.
+REPORTED_ONLY = {"nas-secret-default"}
+
+
 class TheFork(unittest.TestCase):
-    def test_nas_yml_has_no_finding_of_these_rules(self):
+    @classmethod
+    def setUpClass(cls):
         # As CI runs it: the repository's own .ansible-lint, which loads the rules.
-        found, ran = findings(REPO, "nas.yml")
-        self.assertEqual(found, set(), ran.stdout[-3000:] + ran.stderr[-3000:])
+        cls.found, cls.ran = findings(REPO, "nas.yml")
+
+    def test_nas_yml_has_no_finding_of_these_rules(self):
+        failing = {f for f in self.found if f[2] not in REPORTED_ONLY}
+        self.assertEqual(failing, set(), self.ran.stdout[-3000:] + self.ran.stderr[-3000:])
+
+    def test_todays_literal_secret_defaults_are_reported_not_failed(self):
+        # Reported, so the offenders stay in sight; a warning, so CI does not fail on them.
+        reported = {f for f in self.found if f[2] == "nas-secret-default"}
+        self.assertTrue(reported, self.ran.stdout[-3000:] + self.ran.stderr[-3000:])
+        self.assertTrue(all(p.startswith("roles/") and "/defaults/" in p for p, _, _ in reported))
+        self.assertNotIn("nas-secret-default", self.failed_rules())
+
+    def failed_rules(self):
+        """The rules ansible-lint counted as failures, from its summary's table."""
+        summary = self.ran.stdout.split("Rule Violation Summary", 1)[-1]
+        return {row.split()[1] for row in summary.splitlines()
+                if row.split()[:1] and row.split()[0].isdigit() and "warning" not in row}
 
 
     def test_the_vpn_download_stack_is_worked_out_on_every_run(self):

@@ -12,3 +12,5 @@
     - role: own_timer
     - role: own_cron
     - role: nas_maintenance
+    - role: secret_literal
+    - role: secret_kept
