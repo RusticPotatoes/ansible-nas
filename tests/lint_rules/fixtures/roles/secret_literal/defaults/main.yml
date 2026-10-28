@@ -1,0 +1,8 @@
+---
+# Fictional placeholders, each a literal secret a role would publish and run with.
+secret_literal_admin_password: "changeme"
+secret_literal_api_token: changeme  # a comment does not hide it
+secret_literal_jwt_secret: 'changeme'
+secret_literal_encryption_key: |
+  changeme
+secret_literal_port: "8080"

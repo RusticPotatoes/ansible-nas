@@ -1,0 +1,14 @@
+---
+# A secret defaults to the vault, to another variable, or to nothing; other names are no secret.
+secret_kept_admin_password: "{{ vault_secret_kept_admin_password }}"
+secret_kept_api_token: "{{ vault_secret_kept_api_token | default('') }}"
+secret_kept_jwt_secret: ""
+secret_kept_api_key: ''
+secret_kept_secret_key:
+secret_kept_private_key: ~
+secret_kept_encryption_key: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  00000000000000000000000000000000
+secret_kept_password_file: "/run/secrets/fictional"
+secret_kept_auth_user: "admin"
+secret_kept_vnc_password: "fictional"  # noqa: nas-secret-default the image ignores it, see its docs

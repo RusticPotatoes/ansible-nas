@@ -1,0 +1,4 @@
+---
+- name: Say the case
+  ansible.builtin.debug:
+    msg: "secret_kept"
