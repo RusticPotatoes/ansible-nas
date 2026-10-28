@@ -1,6 +1,6 @@
 ---
 - name: Debug Portainer Enabled Variable
-  debug:
+  ansible.builtin.debug:
     var: portainer_enabled
 
 - name: Start Portainer

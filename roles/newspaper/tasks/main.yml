@@ -8,7 +8,7 @@
       with_items:
         - "{{ newspaper_data_directory }}"
 
-    - name: newspaper Docker Container
+    - name: Newspaper Docker Container
       community.docker.docker_container:
         name: "{{ newspaper_container_name }}"
         image: "{{ newspaper_image_name }}:{{ newspaper_image_version }}"
