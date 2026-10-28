@@ -3,11 +3,12 @@ name: CI
 
 # Controls when the action will run.
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
+  # Every pushed branch, so a branch is checked before it is proposed; and pull requests to the
+  # fork's base branch (develop) and to main.
   push:
-    branches: [main]
+    branches: ["**"]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -34,8 +35,9 @@ jobs:
       - name: Lint yaml files
         run: yamllint .
 
+      # tests/test_lint_rules.py: the rules in tests/lint_rules, against their fixtures.
       - name: Test the fork's own lint rules
-        run: python3 -m unittest discover -s tests -p 'test_*.py'
+        run: python3 -m unittest discover -v -s tests -p 'test_*.py'
 
       - name: Lint docs
         uses: articulate/actions-markdownlint@v1
