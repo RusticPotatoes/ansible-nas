@@ -18,6 +18,7 @@
   ansible.builtin.command:
     cmd: /opt/ansible-venv/bin/python -m pip install --upgrade pip
   register: result
+  changed_when: "'Successfully installed' in result.stdout"
   until: result is succeeded
 
 - name: Remove docker-py python module (from venv)

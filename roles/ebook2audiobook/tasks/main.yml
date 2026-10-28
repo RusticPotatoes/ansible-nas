@@ -51,6 +51,7 @@
           -v {{ ebook2audiobook_voices_directory }}:/voice-output:rw
           {{ ebook2audiobook_image_name }}:{{ ebook2audiobook_image_version }}
           -lc 'cp -a /app/voices/. /voice-output/.'
+      changed_when: true
       when:
         - ebook2audiobook_seed_builtin_voices | bool
         - ebook2audiobook_existing_voices.matched == 0
@@ -68,7 +69,7 @@
           ebook2audiobook discovered {{ ebook2audiobook_discovered_voices.matched }}
           voice file(s) under {{ ebook2audiobook_voices_directory }}.
 
-    - name: ebook2audiobook Docker Container
+    - name: Ebook2audiobook Docker Container
       community.docker.docker_container:
         name: "{{ ebook2audiobook_container_name }}"
         image: "{{ ebook2audiobook_image_name }}:{{ ebook2audiobook_image_version }}"

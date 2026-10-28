@@ -75,7 +75,7 @@
       ansible.builtin.lineinfile:
         path: "{{ owntone_config_directory }}/owntone.conf"
         regexp: '^\s*user_agent\s*='
-        line: "\tuser_agent = \"{{ owntone_airplay_user_agent }}\""
+        line: "\tuser_agent = \"{{ owntone_airplay_user_agent }}\""  # noqa: no-tabs owntone.conf indents its settings with a tab
         insertafter: '^general \{'
       register: owntone_config
 
@@ -84,7 +84,7 @@
         name: "{{ owntone_container_name }}"
         state: started
         restart: true
-      when: owntone_config.changed
+      when: owntone_config.changed  # noqa: no-handler OwnTone restarts before the Spotify container below joins its pipe
 
     - name: Check For Saved Spotify Login
       ansible.builtin.stat:
