@@ -11,8 +11,11 @@ rules:
     min-spaces-inside: 0
     max-spaces-inside: 1
 
+# inventories/ holds the owner's own values, which a branch never edits (AGENTS.md), so its
+# findings cannot be fixed on a branch and must not gate one.
 ignore: |
   .cache
+  inventories/
   .github/workflows/*.yml
   roles/stats/files/dashboards/ansible-nas.yml
   roles/stats/templates/prometheus.yml
