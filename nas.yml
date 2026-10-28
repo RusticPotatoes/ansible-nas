@@ -22,7 +22,7 @@
       tags:
         - ansible-nas-users
         - ansible-nas
-        
+
     - role: vladgh.samba.server
       tags:
         - samba
@@ -130,7 +130,7 @@
     - role: unifi
       tags:
         - unifi
-    
+
     - role: mongodb
       tags:
         - mongodb
@@ -481,7 +481,7 @@
         - radarr
         - gluetun
 
-    # - role: readarr # retired 
+    # - role: readarr # retired
     #   tags:
     #     - readarr
     #     - gluetun
@@ -590,7 +590,7 @@
     - role: wireshark
       tags:
         - wireshark
-    
+
     - role: wireguard
       tags:
         - wireguard

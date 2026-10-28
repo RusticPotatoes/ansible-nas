@@ -75,11 +75,13 @@
       ansible.builtin.lineinfile:
         path: "{{ owntone_config_directory }}/owntone.conf"
         regexp: '^\s*user_agent\s*='
-        line: "\tuser_agent = \"{{ owntone_airplay_user_agent }}\""
+        # owntone.conf indents its settings with a tab.
+        line: "\tuser_agent = \"{{ owntone_airplay_user_agent }}\""  # noqa: no-tabs
         insertafter: '^general \{'
       register: owntone_config
 
-    - name: Restart OwnTone For Config Change
+    # Not a handler: OwnTone restarts with its new setting before the Spotify receiver below starts.
+    - name: Restart OwnTone For Config Change  # noqa: no-handler
       community.docker.docker_container:
         name: "{{ owntone_container_name }}"
         state: started
