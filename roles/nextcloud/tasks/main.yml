@@ -1,6 +1,17 @@
 ---
 - name: Start Nextcloud
   block:
+    - name: Check Nextcloud database passwords are set
+      ansible.builtin.assert:
+        that:
+          - nextcloud_sql_password | length > 0
+          - nextcloud_sql_root_password | length > 0
+        fail_msg: >-
+          Nextcloud needs its database passwords: set vault_nextcloud_sql_password and
+          vault_nextcloud_sql_root_password in your vault (or nextcloud_sql_password and
+          nextcloud_sql_root_password directly). See the Nextcloud page of the docs.
+        quiet: true
+
     - name: Create Nextcloud directories
       ansible.builtin.file:
         path: "{{ item }}"
@@ -30,6 +41,7 @@
           MYSQL_ROOT_PASSWORD: "{{ nextcloud_sql_root_password }}"
         restart_policy: unless-stopped
         memory: "{{ nextcloud_db_memory }}"
+      no_log: true # the env and the returned container config hold the passwords
       register: docker_container_result
       until: docker_container_result is succeeded
       retries: "{{ docker_container_pull_retries }}"
@@ -68,6 +80,7 @@
           homepage.description: Open source dropbox alternative
           homepage.widget.type: nextcloud
           homepage.widget.url: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ nextcloud_port }}"
+      no_log: true # the env and the returned container config hold the password
       register: docker_container_result
       until: docker_container_result is succeeded
       retries: "{{ docker_container_pull_retries }}"

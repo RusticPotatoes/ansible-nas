@@ -20,8 +20,11 @@ nextcloud_db_image_version: "5.7"
 
 # username / passwords
 nextcloud_sql_user: "nextcloud-user"
-nextcloud_sql_password: "nextcloud-pass"
-nextcloud_sql_root_password: "nextcloud-secret"
+# Secrets have no default: put the real values in your vault as
+# vault_nextcloud_sql_password and vault_nextcloud_sql_root_password (never here,
+# this repository is public). The play stops with a message while either is empty.
+nextcloud_sql_password: "{{ vault_nextcloud_sql_password | default('') }}"
+nextcloud_sql_root_password: "{{ vault_nextcloud_sql_root_password | default('') }}"
 
 # specs
 nextcloud_memory: 1g
