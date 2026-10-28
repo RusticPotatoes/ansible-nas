@@ -7,8 +7,10 @@ minio_available_externally: false
 minio_data_directory: "{{ docker_home }}/minio"
 
 # env
-minio_admin_username: admin
-minio_admin_password: supersecure
+# root credentials: MINIO_ROOT_USER and MINIO_ROOT_PASSWORD (at least 8 characters).
+# The password has no default: put it in your vault as vault_minio_admin_password.
+minio_admin_username: "{{ vault_minio_admin_username | default('admin') }}"
+minio_admin_password: "{{ vault_minio_admin_password | default('') }}"
 
 # network
 minio_hostname: "minio"
