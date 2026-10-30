@@ -13,18 +13,6 @@ gluetun_container_name: "gluetun"
 gluetun_image_name: "qmcgaw/gluetun"
 gluetun_image_version: "latest"
 gluetun_memory: "512m"
-gluetun_periodic_restart_enabled: false
-gluetun_periodic_restart_interval: "2h"
-gluetun_periodic_restart_script_path: "/usr/local/sbin/gluetun-stack-restart"
-gluetun_recover_with_ansible_enabled: true
-# The repair below runs the playbook on the NAS with the controller's paths, as root.
-# It is off on this NAS (gluetun_recover_with_ansible_enabled is false in group_vars):
-# before turning it on, give it the NAS's own paths and a User= (AGENTS.md).
-gluetun_ansible_repo_path: "{{ playbook_dir }}"  # noqa: nas-controller-path
-gluetun_ansible_playbook: "{{ playbook_dir }}/nas.yml"  # noqa: nas-controller-path
-gluetun_ansible_inventory: "{{ inventory_file | default(playbook_dir + '/inventories/inventory.ini') }}"  # noqa: nas-controller-path
-gluetun_ansible_vault_file: "{{ playbook_dir }}/vault.yml"  # noqa: nas-controller-path
-gluetun_ansible_vault_password_file: "{{ playbook_dir }}/vault_password.txt"  # noqa: nas-controller-path
 
 # gluetun config directory (persistent storage)
 gluetun_config_directory: "/{{ docker_home }}/gluetun"
