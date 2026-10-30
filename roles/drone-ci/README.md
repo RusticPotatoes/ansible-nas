@@ -21,8 +21,8 @@ Every variable in `defaults/main.yml`, with its default:
 | `drone_ci_agent_memory` | `1g` | Memory limit of the runner container. |
 | `drone_ci_container_name` | `drone-ci` | Name of the server container. |
 | `drone_ci_runner_container_name` | `drone-ci-runner` | Name of the runner container. |
-| `drone_ci_admin_user` | `david` | Gitea user (or comma-separated users) made a Drone admin. The default is an example: set your own. |
-| `drone_ci_agent_secret` | `d052ab29a86a02c6b6ff1e5851ee15e1` | `DRONE_RPC_SECRET` shared by server and runner. The default is a placeholder: generate your own (`openssl rand -hex 16`) and set it in your own vars, never in git. |
+| `drone_ci_admin_user` | `david` | Gitea user (or comma-separated users) made a Drone admin. Upstream's default user, kept here as the example: change it to your own. |
+| `drone_ci_agent_secret` | (a sample value; set your own — see defaults/main.yml) | `DRONE_RPC_SECRET` shared by server and runner. The default is a placeholder: generate your own (`openssl rand -hex 16`) and set it in your own vars, never in git. |
 | `drone_ci_debug_logging` | `false` | `DRONE_LOGS_DEBUG`. |
 | `drone_ci_gitea_url` | `"http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ gitea_port_http }}"` | `DRONE_GITEA_SERVER`: the Gitea server Drone signs in through. |
 | `drone_ci_gitea_client_id` | `notset` | Gitea OAuth2 client ID. The play fails while it is `notset`. |

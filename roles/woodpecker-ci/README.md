@@ -25,8 +25,8 @@ Every variable in `defaults/main.yml`, with its default:
 | `woodpecker_ci_agent_image_version` | `"latest"` | Image tag. |
 | `woodpecker_ci_memory` | `1g` | Container memory limit. |
 | `woodpecker_ci_agent_memory` | `1g` | Container memory limit. |
-| `woodpecker_ci_admin_user` | `david` | Users granted admin, comma separated (`WOODPECKER_ADMIN`). Set it to your Gitea user name. |
-| `woodpecker_ci_agent_secret` | `9f3aeaa7bbabcf42b724f65d4acb38456899ca32511677a8c3837869621c3798` | Secret shared by server and agent (`WOODPECKER_AGENT_SECRET`). The default is public: generate your own (`openssl rand -hex 32`) and set it in your vault, never in git. |
+| `woodpecker_ci_admin_user` | `david` | Users granted admin, comma separated (`WOODPECKER_ADMIN`). Upstream's default user, kept here as the example: change it to your own. |
+| `woodpecker_ci_agent_secret` | (a sample value; set your own — see defaults/main.yml) | Secret shared by server and agent (`WOODPECKER_AGENT_SECRET`). The default is public: generate your own (`openssl rand -hex 32`) and set it in your vault, never in git. |
 | `woodpecker_ci_log_level` | `info` | Log level of server and agent. |
 | `woodpecker_ci_gitea_url` | `"http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ gitea_port_http }}"` | URL of the Gitea server (`WOODPECKER_GITEA_URL`); `gitea_port_http` comes from the `gitea` role. |
 | `woodpecker_ci_gitea_client` | `notset` | Client ID of the OAuth2 application in Gitea. While it is `notset`, the role stops with an error. |

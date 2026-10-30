@@ -10,7 +10,7 @@ Every variable in `defaults/main.yml`, with its default:
 
 | Variable | Default | What it sets |
 | --- | --- | --- |
-| `ansible_nas_user` | `david` | Account added to the `docker` group. The default is upstream's example: set your own user. |
+| `ansible_nas_user` | `david` | Account added to the `docker` group. Upstream's default user, kept here as the example: change it to your own. |
 | `docker_home` | `/mnt/docker` | Where application data lives; most roles keep their folders under it. Worth backing up. |
 | `docker_image_directory` | `"/mnt/docker/docker-data/"` | Where Docker stores images (`data-root`). Best on a fast disk; it need not be backed up. |
 | `docker_storage_driver` | `overlay2` | Docker storage driver (`storage-driver`), for example `zfs` on a ZFS filesystem. |
