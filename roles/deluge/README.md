@@ -1,12 +1,21 @@
 # deluge
 
-Runs Deluge, the BitTorrent client, in a container.
+Runs Deluge, the BitTorrent client, in a container. Port: **8112** (web UI).
 
-- Enable: `deluge_enabled` (default `false`); `deluge_available_externally` controls outside access.
-- Port: `deluge_port` (default `8112`); hostname `deluge_hostname` (default `deluge`).
-- Log level: `deluge_log_level` (default `error`).
-- Timezone: `deluge_timezone` (default `{{ ansible_nas_timezone }}`).
-- Memory limit: `deluge_memory` (default `1g`).
-- Media: `deluge_download_directory` and `deluge_watch_directory`; config under `deluge_config_directory`.
-- Runs as `deluge_user_id` / `deluge_group_id` (default `0`).
-- Container name: `deluge_container_name` (default `deluge`).
+## Variables (defaults/main.yml)
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `deluge_enabled` | `false` | Turn the role on |
+| `deluge_available_externally` | `false` | Allow access from outside the network |
+| `deluge_config_directory` | `{{ docker_home }}/deluge/config` | Config directory on the host |
+| `deluge_download_directory` | `{{ downloads_root }}` | Download directory |
+| `deluge_watch_directory` | `{{ torrents_root }}` | Watch directory for .torrent files |
+| `deluge_user_id` | `"0"` | UID the container runs as |
+| `deluge_group_id` | `"0"` | GID the container runs as |
+| `deluge_log_level` | `"error"` | Log level |
+| `deluge_port` | `"8112"` | Web UI port |
+| `deluge_hostname` | `"deluge"` | Container hostname |
+| `deluge_timezone` | `{{ ansible_nas_timezone }}` | Timezone for the container |
+| `deluge_memory` | `1g` | Memory limit |
+| `deluge_container_name` | `deluge` | Container name |

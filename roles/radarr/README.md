@@ -1,11 +1,21 @@
 # radarr
 
-Runs Radarr, the movie collection manager, in a container.
+Runs Radarr, the movie collection manager, in a container. Port: **7878**.
 
-- Enable: `radarr_enabled` (default `false`); `radarr_available_externally` controls outside access.
-- Port: `radarr_port` (default `7878`); hostname `radarr_hostname` (default `radarr`).
-- Image: `radarr_image_name` (default `linuxserver/radarr`) / `radarr_image_version` (default `latest`).
-- Memory limit: `radarr_memory` (default `1g`).
-- Media: `radarr_movies_directory` and `radarr_download_directory`; config under `radarr_data_directory`.
-- Runs as `radarr_user_id` / `radarr_group_id` (default `0`).
-- Container name: `radarr_container_name` (default `radarr`).
+## Variables (defaults/main.yml)
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `radarr_enabled` | `false` | Turn the role on |
+| `radarr_available_externally` | `false` | Allow access from outside the network |
+| `radarr_movies_directory` | `{{ movies_root }}` | Movie library directory |
+| `radarr_download_directory` | `{{ downloads_root }}` | Download directory |
+| `radarr_data_directory` | `{{ docker_home }}/radarr` | Config directory on the host |
+| `radarr_user_id` | `"0"` | UID the container runs as |
+| `radarr_group_id` | `"0"` | GID the container runs as |
+| `radarr_port` | `"7878"` | Web port |
+| `radarr_hostname` | `"radarr"` | Container hostname |
+| `radarr_container_name` | `"radarr"` | Container name |
+| `radarr_image_name` | `"linuxserver/radarr"` | Image name |
+| `radarr_image_version` | `"latest"` | Image tag |
+| `radarr_memory` | `1g` | Memory limit |
