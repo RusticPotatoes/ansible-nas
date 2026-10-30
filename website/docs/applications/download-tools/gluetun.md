@@ -19,7 +19,7 @@ Containers listed in `gluetun_routed_containers` run in gluetun's network, so th
 * Memory limit: `gluetun_memory` (default `512m`)
 * Image: `qmcgaw/gluetun`, version `gluetun_image_version` (default `latest`)
 
-Optional periodic restart of the whole stack: `gluetun_periodic_restart_enabled` (default `false`) with `gluetun_periodic_restart_interval` (default `2h`), one of the [scheduled jobs on the NAS](../../further-configuration/scheduled-jobs.md). Recovery through ansible is controlled by `gluetun_recover_with_ansible_enabled` (default `true`).
+Gluetun watches its own tunnel and restarts the VPN inside the container when its health check fails, so the stack needs no restart on a timer (the [retired job](../../further-configuration/scheduled-jobs.md#retired-jobs) did that every 2 h).
 
 Available externally through Traefik only if `gluetun_available_externally: true`.
 

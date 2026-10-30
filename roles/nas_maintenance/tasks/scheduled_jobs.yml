@@ -68,3 +68,31 @@
     user: root
     state: absent
   become: true
+
+- name: Stop each retired scheduled job
+  ansible.builtin.systemd:
+    name: "{{ item.name }}.timer"
+    enabled: false
+    state: stopped
+  failed_when: false
+  loop: "{{ nas_retired_scheduled_jobs }}"
+  loop_control:
+    label: "{{ item.name }}"
+  become: true
+
+- name: Remove each retired scheduled job's units and script
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: >-
+    {{ (nas_retired_scheduled_jobs | map(attribute='name') | product(['.timer', '.service'])
+        | map('join') | map('regex_replace', '^', '/etc/systemd/system/') | list)
+       + (nas_retired_scheduled_jobs | map(attribute='script_path') | list) }}
+  register: nas_retired_job_files
+  become: true
+
+- name: Reload systemd after removing retired units  # noqa: no-handler
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when: nas_retired_job_files is changed
+  become: true

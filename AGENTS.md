@@ -57,9 +57,9 @@ lint rules; the rest are for the branch's description.
    present stops the whole play where it is missing, and the owner's values live where a branch
    never reads (below). A branch that makes a variable required names it, for the owner to set
    before merging.
-6. **What is switched off here is no precedent.** Some upstream features are off on this NAS:
-   gluetun's repair by playbook, for one, which is exempted from both rules with a reason in its
-   role. Don't copy a pattern from a role without asking whether it is on and works here.
+6. **What is switched off here is no precedent.** Some upstream features are off on this NAS,
+   and a role may still carry them. Don't copy a pattern from a role without asking whether it
+   is on and works here.
 7. **A dry run may not be quiet here.** Many roles pull their images (`pull: true`) and track
    `latest`, so `--check` can report changes when nothing drifted. Anything built on counting
    its changes needs a baseline from a real run first.

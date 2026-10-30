@@ -47,16 +47,6 @@ nas_scheduled_jobs:
     timeout: "{{ ebook2audiobook_auto_convert_timeout | default('0') }}"
     script: ebook2audiobook-auto-convert.sh.j2
     script_path: "{{ ebook2audiobook_auto_convert_script_path | default('/usr/local/sbin/ebook2audiobook-auto-convert') }}"
-  - name: gluetun-stack-restart
-    description: Restart gluetun and the containers routed through it
-    why: >-
-      A workaround for VPN stalls: gluetun and its routed containers (deluge, nzbget, prowlarr)
-      are restarted on a fixed interval. Whether it is still needed is being measured (Endora
-      #796); keep this reason true when that ends.
-    enabled: "{{ (gluetun_enabled | default(false) | bool) and (gluetun_periodic_restart_enabled | default(false) | bool) }}"
-    every: "{{ gluetun_periodic_restart_interval | default('2h') }}"
-    script: gluetun-stack-restart.sh.j2
-    script_path: "{{ gluetun_periodic_restart_script_path | default('/usr/local/sbin/gluetun-stack-restart') }}"
   - name: nas-db-dump
     description: Dump container databases for backup
     why: Backups copy files; a logical dump gives them a consistent copy of each database.
@@ -74,3 +64,12 @@ nas_scheduled_jobs:
     script: healthchecks-ping.sh.j2
     script_path: /usr/local/sbin/healthchecks-ping
     mode: "0700"
+
+# Jobs that were retired: their timer is stopped and disabled, and their units and script removed
+# from the NAS, so a NAS that ran them keeps nothing of them.
+nas_retired_scheduled_jobs:
+  # Restarted gluetun and its routed containers every 2 h as a workaround for VPN stalls. Retired
+  # after a 72 h run without it (26-29 Oct 2026, Endora #796): no VPN restart, no failed health
+  # check, and the routed apps kept working; the restarts only cut them off every 2 h.
+  - name: gluetun-stack-restart
+    script_path: /usr/local/sbin/gluetun-stack-restart
