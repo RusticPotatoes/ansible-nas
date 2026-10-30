@@ -42,7 +42,7 @@
         pull: true
         volumes:
           - "{{ piwigo_config_directory }}:/config:rw"
-          - "{{ piwigo_photos }}:/gallery:rw"
+          - "{{ piwigo_photos }}:/gallery:{{ piwigo_photos_permission }}"
         ports:
           - "{{ piwigo_port }}:80"
         env:
