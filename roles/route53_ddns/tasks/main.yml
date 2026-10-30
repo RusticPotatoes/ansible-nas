@@ -28,11 +28,11 @@
       until: docker_container_result is succeeded
       retries: "{{ docker_container_pull_retries }}"
       delay: "{{ docker_container_pull_delay }}"
-  when: route53_enabled is true
+  when: route53_ddns_enabled | bool
 - name: Stop AWS Route53 Dynamic DNS
   block:
     - name: Stop AWS Route53 Dynamic DNS
       community.docker.docker_container:
         name: "{{ route53_container_name }}"
         state: absent
-  when: route53_enabled is false
+  when: not (route53_ddns_enabled | bool)

@@ -1,6 +1,8 @@
 ---
 
-route53_ddns_enabled: false
+# Starts the container when true; removes it when false.
+# route53_enabled, the name the tasks used to read, still works when this one is not set.
+route53_ddns_enabled: "{{ route53_enabled | default(false) }}"
 
 # Data directory for config file
 route53_data_directory: "{{ docker_home }}/route53_ddns"
