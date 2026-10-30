@@ -39,11 +39,11 @@
       until: docker_container_result is succeeded
       retries: "{{ docker_container_pull_retries }}"
       delay: "{{ docker_container_pull_delay }}"
-  when: speedtest_enabled is true
+  when: speedtest_tracker_enabled | bool
 - name: Stop Speedtest-Tracker
   block:
     - name: Stop Speedtest-Tracker
       community.docker.docker_container:
         name: "{{ speedtest_container_name }}"
         state: absent
-  when: speedtest_enabled is false
+  when: not (speedtest_tracker_enabled | bool)
