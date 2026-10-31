@@ -77,11 +77,6 @@
       tags:
         - promtail
 
-    - role: gatus
-      tags:
-        - gatus
-        - monitoring
-
     # Only facts other roles read (gluetun on, the containers it routes): worked out on every
     # run, so a run under one tag sees the stack as a full run does.
     - role: vpn-download-stack
@@ -97,6 +92,14 @@
 
     - role: gluetun
       tags:
+        - gluetun
+
+    # After gluetun: with gatus_use_vpn it joins gluetun's network, and a container that joins
+    # must be recreated after gluetun is (the role sees the new id), or it is left on a dead one.
+    - role: gatus
+      tags:
+        - gatus
+        - monitoring
         - gluetun
 
     - role: cloudflared
@@ -325,6 +328,7 @@
     - role: jackett
       tags:
         - jackett
+        - gluetun
 
     - role: jellyfin
       tags:
@@ -501,6 +505,7 @@
     - role: sabnzbd
       tags:
         - sabnzbd
+        - gluetun
 
     - role: sickchill
       tags:
