@@ -17,7 +17,8 @@ nzbget_hostname: "nzbget"
 # docker
 nzbget_container_name: "nzbget"
 nzbget_image_name: "linuxserver/nzbget"
-nzbget_image_version: "latest"
+# Pinned: the VPN stack is out of Watchtower and updated by the playbook (docs: gluetun).
+nzbget_image_version: "v26.3-ls270"
 
 # specs
 nzbget_memory: "1g"
