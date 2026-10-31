@@ -36,6 +36,8 @@
         restart_policy: unless-stopped
         memory: "{{ nzbget_memory }}"
         labels:
+          # Out of Watchtower while on gluetun's network: the playbook updates the VPN stack.
+          com.centurylinklabs.watchtower.enable: "{{ (not (vpn_download_stack_enabled | default(false) | bool)) | string | lower }}"
           traefik.enable: "{{ nzbget_available_externally | string }}"
           traefik.http.routers.nzbget.rule: "Host(`{{ nzbget_hostname }}.{{ ansible_nas_domain }}`)"
           traefik.http.routers.nzbget.tls.certresolver: "letsencrypt"

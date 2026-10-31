@@ -22,6 +22,8 @@
         restart_policy: unless-stopped
         memory: "{{ flaresolverr_memory }}"
         labels:
+          # Out of Watchtower while on gluetun's network: the playbook updates the VPN stack.
+          com.centurylinklabs.watchtower.enable: "{{ (not (vpn_download_stack_enabled | default(false) | bool)) | string | lower }}"
           traefik.enable: "{{ flaresolverr_available_externally | string }}"
           traefik.http.routers.flaresolverr.rule: "Host(`flaresolverr.{{ ansible_nas_domain }}`)"
           traefik.http.routers.flaresolverr.tls.certresolver: "letsencrypt"

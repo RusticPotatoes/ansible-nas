@@ -34,6 +34,8 @@
           - "{{ gatus_config_file }}:/config/config.yaml:ro"
 
         labels:
+          # Out of Watchtower while on gluetun's network: the playbook updates the VPN stack.
+          com.centurylinklabs.watchtower.enable: "{{ (not (gatus_use_vpn | default(false) | bool)) | string | lower }}"
           traefik.enable: "{{ gatus_available_externally | string }}"
           traefik.http.routers.gatus.rule: "Host(`{{ gatus_hostname }}.{{ ansible_nas_domain }}`)"
           traefik.http.routers.gatus.tls.certresolver: "letsencrypt"

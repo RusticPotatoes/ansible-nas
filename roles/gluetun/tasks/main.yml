@@ -103,6 +103,8 @@
           net.ipv6.conf.all.disable_ipv6: "1"      # tunnel has no working IPv6; stop apps trying dead AAAA routes
           net.ipv6.conf.default.disable_ipv6: "1"
         labels:
+          # Out of Watchtower: the playbook updates the VPN stack as one unit.
+          com.centurylinklabs.watchtower.enable: "false"
           traefik.enable: "{{ gluetun_available_externally | string }}"
           traefik.http.routers.gluetun.rule: "Host(`{{ gluetun_hostname }}.{{ ansible_nas_domain }}`)"
           traefik.http.routers.gluetun.tls.certresolver: "letsencrypt"

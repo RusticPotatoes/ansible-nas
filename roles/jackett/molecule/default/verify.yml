@@ -16,3 +16,4 @@
         that:
           - result.container['State']['Status'] == "running"
           - result.container['State']['Restarting'] == false
+          - result.container['Config']['Labels']['com.centurylinklabs.watchtower.enable'] == "true"  # off the VPN
