@@ -34,3 +34,6 @@ vpn_download_stack_sabnzbd_enabled: true
 When the stack is enabled, these application containers do not publish their own
 ports. Their web UIs are exposed through Gluetun's port bindings so outbound
 download traffic uses the VPN path.
+
+The stack is left out of Watchtower and updated as one unit with `make run TAGS=gluetun`, from
+pinned image tags; see [Gluetun's updates](../download-tools/gluetun.md#updates).
