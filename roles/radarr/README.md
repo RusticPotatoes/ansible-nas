@@ -20,4 +20,4 @@ Variables (from `defaults/main.yml`):
 | `radarr_image_version` | `"latest"` | Image tag |
 | `radarr_memory` | `1g` | Container memory limit |
 
-Port: the web UI listens on 7878 inside the container; it is published on `radarr_port` (default 7878) unless the VPN download stack is enabled, in which case the container shares the gluetun network and no port is published here.
+Port: the web UI listens on 7878 inside the container; it is published on `radarr_port` (default 7878) unless the VPN download stack is enabled (`radarr_vpn_enabled`, which defaults to `vpn_download_stack_enabled`), in which case the container shares the gluetun network and no port is published here.

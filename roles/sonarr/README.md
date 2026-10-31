@@ -20,4 +20,4 @@ Variables (from `defaults/main.yml`):
 | `sonarr_image_version` | `"latest"` | Image tag |
 | `sonarr_memory` | `1g` | Container memory limit |
 
-Port: the web UI listens on 8989 inside the container; it is published on `sonarr_port` (default 8989) unless the VPN download stack is enabled, in which case the container shares the gluetun network and no port is published here.
+Port: the web UI listens on 8989 inside the container; it is published on `sonarr_port` (default 8989) unless the VPN download stack is enabled (`sonarr_vpn_enabled`, which defaults to `vpn_download_stack_enabled`), in which case the container shares the gluetun network and no port is published here.
