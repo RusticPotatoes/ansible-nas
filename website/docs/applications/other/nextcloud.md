@@ -10,6 +10,17 @@ Set `nextcloud_enabled: true` in your `inventories/<your_inventory>/group_vars/n
 
 Tread carefully.
 
+### Secrets
+
+The database passwords have no default. Set them in your vault (`vault.yml`, encrypted with `ansible-vault`), and the role reads them from these variables:
+
+```yaml
+vault_nextcloud_sql_password: "<database user password>"
+vault_nextcloud_sql_root_password: "<database root password>"
+```
+
+If either is unset or empty, the play stops before any container is started, with a message naming the variable to set.
+
 External access may require that you manually configure your Fully Qualified Domain Name (FQDN) as a trusted domain within the application.  There is an environment variable set up for this in the "nextcloud task" which will most likely make manual configuration unnecessary.  If you get the following [screenshot](https://docs.nextcloud.com/server/14/admin_manual/installation/installation_wizard.html#trusted-domains) warning when trying to access nextcloud externally you'll need to manually set it up.
 
 This can be accomplished in two commands.
