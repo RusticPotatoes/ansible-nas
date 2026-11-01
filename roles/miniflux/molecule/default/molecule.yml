@@ -4,3 +4,6 @@ provisioner:
     group_vars:
       all:
         miniflux_enabled: true
+        # throw-away test values, not the owner's
+        vault_miniflux_admin_password: molecule-admin-test
+        vault_miniflux_db_password: molecule-db-test
