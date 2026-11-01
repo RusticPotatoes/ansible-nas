@@ -8,8 +8,15 @@ Miniflux is a minimalist and opinionated feed reader.
 
 Set `miniflux_enabled: true` in your `inventories/<your_inventory>/group_vars/nas.yml` file.
 
-The Miniflux web interface can be found at [http://ansible_nas_host_or_ip:8070](http://ansible_nas_host_or_ip:8070), the default username is `admin` and password `supersecure`.
+The Miniflux web interface can be found at [http://ansible_nas_host_or_ip:8070](http://ansible_nas_host_or_ip:8070). The admin user's username is `miniflux_admin_username` (default `admin`).
 
 ## Specific Configuration
 
-An admin user will be created with the username and password of `miniflux_admin_username` and `miniflux_admin_password` respectively. These can be found in the Miniflux section within `all.yml.dist`.
+An admin user will be created with the username `miniflux_admin_username` and the password `miniflux_admin_password`. Both secrets are taken from your **vault** (never in a tracked file: this repository may be public):
+
+```yaml
+vault_miniflux_admin_password: "<the admin password>"
+vault_miniflux_db_password: "<the Postgres password for the miniflux database>"
+```
+
+With either one empty the play stops before Miniflux starts, and says which to set.

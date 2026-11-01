@@ -4,3 +4,6 @@ provisioner:
     group_vars:
       all:
         miniflux_enabled: true
+        # test-only values, never a real credential
+        vault_miniflux_admin_password: molecule-admin-test
+        vault_miniflux_db_password: molecule-db-test
