@@ -4,3 +4,5 @@ provisioner:
     group_vars:
       all:
         miniflux_enabled: true
+        # Throwaway value for this scenario's ephemeral database only; the role has no default.
+        vault_miniflux_db_password: "molecule-throwaway-not-a-secret"
