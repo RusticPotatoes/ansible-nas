@@ -4,3 +4,6 @@ provisioner:
     group_vars:
       all:
         miniflux_enabled: true
+        # Throwaway test values for the molecule run only, not secrets.
+        vault_miniflux_admin_password: molecule-test-admin
+        vault_miniflux_db_password: molecule-test-db

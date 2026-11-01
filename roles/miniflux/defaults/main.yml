@@ -8,7 +8,11 @@ miniflux_data_directory: "{{ docker_home }}/miniflux"
 
 # env
 miniflux_admin_username: admin
-miniflux_admin_password: supersecure
+# Real values live in vault.yml as vault_miniflux_admin_password and
+# vault_miniflux_db_password (never here - this repo is public). Empty = the
+# admin user / database password is unset and the deploy will not log in.
+miniflux_admin_password: "{{ vault_miniflux_admin_password | default('') }}"
+miniflux_db_password: "{{ vault_miniflux_db_password | default('') }}"
 
 # network
 miniflux_hostname: "miniflux"
