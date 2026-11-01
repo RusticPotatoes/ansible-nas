@@ -8,7 +8,13 @@ miniflux_data_directory: "{{ docker_home }}/miniflux"
 
 # env
 miniflux_admin_username: admin
-miniflux_admin_password: supersecure
+# Put the REAL value in vault.yml as vault_miniflux_admin_password (never here - this repo is
+# public). Empty: the admin user is not created with a usable password.
+miniflux_admin_password: "{{ vault_miniflux_admin_password | default('') }}"
+# Postgres password for the miniflux database. Put it in vault.yml as vault_miniflux_db_password.
+# Postgres takes it only when its data folder is first created: changing it later needs the
+# database's own password changed to match.
+miniflux_db_password: "{{ vault_miniflux_db_password | default('') }}"
 
 # network
 miniflux_hostname: "miniflux"
