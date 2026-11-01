@@ -6,9 +6,10 @@ miniflux_available_externally: false
 # directories
 miniflux_data_directory: "{{ docker_home }}/miniflux"
 
-# env
+# credentials - set these in your vault (vault_miniflux_admin_password and vault_miniflux_db_password)
 miniflux_admin_username: admin
-miniflux_admin_password: supersecure
+miniflux_admin_password: "{{ vault_miniflux_admin_password | default('') }}"
+miniflux_db_password: "{{ vault_miniflux_db_password | default('') }}"
 
 # network
 miniflux_hostname: "miniflux"
