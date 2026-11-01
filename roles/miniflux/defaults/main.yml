@@ -8,7 +8,9 @@ miniflux_data_directory: "{{ docker_home }}/miniflux"
 
 # env
 miniflux_admin_username: admin
-miniflux_admin_password: supersecure
+# Secrets. Set these in vault.yml before enabling Miniflux (never a literal here - this repo is public).
+miniflux_admin_password: "{{ vault_miniflux_admin_password | default('') }}"
+miniflux_db_password: "{{ vault_miniflux_db_password | default('') }}"
 
 # network
 miniflux_hostname: "miniflux"
