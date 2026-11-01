@@ -8,7 +8,9 @@ miniflux_data_directory: "{{ docker_home }}/miniflux"
 
 # env
 miniflux_admin_username: admin
-miniflux_admin_password: supersecure
+# credentials - set these in your vault (never in git)
+miniflux_admin_password: "{{ vault_miniflux_admin_password | default('') }}"
+miniflux_db_password: "{{ vault_miniflux_db_password | default('') }}"
 
 # network
 miniflux_hostname: "miniflux"
