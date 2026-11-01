@@ -23,3 +23,9 @@ sonarr_image_version: "4.0.20.3014-ls2"
 
 # specs
 sonarr_memory: 1g
+
+# logging
+# Sonarr 4.0.20's console log does not scrub API keys (its file log does): a 429 from an indexer
+# prints the whole Torznab URL, Prowlarr's key included, at Warn. Error keeps it out of
+# `docker logs` and Loki; raise it only on a build whose console cleanses (as Radarr's does).
+sonarr_console_log_level: "Error"
