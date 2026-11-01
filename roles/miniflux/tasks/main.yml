@@ -1,6 +1,15 @@
 ---
 - name: Start Miniflux
   block:
+    - name: Check the Miniflux secrets are set in the vault
+      ansible.builtin.assert:
+        that:
+          - miniflux_admin_password | length > 0
+          - miniflux_db_password | length > 0
+        fail_msg: >-
+          miniflux: set vault_miniflux_admin_password and vault_miniflux_db_password in
+          vault.yml before enabling Miniflux.
+
     - name: Create Miniflux Directories
       ansible.builtin.file:
         path: "{{ item }}"
@@ -24,7 +33,7 @@
           - "{{ miniflux_data_directory }}/postgres:/var/lib/postgresql/data:rw"
         env:
           POSTGRES_USER: "miniflux"
-          POSTGRES_PASSWORD: "supersecure"
+          POSTGRES_PASSWORD: "{{ miniflux_db_password }}"
         restart_policy: unless-stopped
         memory: "{{ miniflux_postgres_memory }}"
       register: docker_container_result
@@ -42,7 +51,7 @@
         ports:
           - "{{ miniflux_port }}:8080"
         env:
-          DATABASE_URL: "postgres://miniflux:supersecure@{{ miniflux_db_container_name }}/miniflux?sslmode=disable"
+          DATABASE_URL: "postgres://miniflux:{{ miniflux_db_password }}@{{ miniflux_db_container_name }}/miniflux?sslmode=disable"
           RUN_MIGRATIONS: "1"
           CREATE_ADMIN: "1"
           ADMIN_USERNAME: "{{ miniflux_admin_username }}"
