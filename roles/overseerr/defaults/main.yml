@@ -8,7 +8,7 @@ overseerr_data_directory: "{{ docker_home }}/overseerr"
 # docker
 overseerr_container_name: "overseerr"
 overseerr_image_name: "sctx/overseerr"
-overseerr_image_version: "latest"
+overseerr_image_version: "1.33.2"
 overseerr_user_id: "1000"
 overseerr_group_id: "1000"
 
