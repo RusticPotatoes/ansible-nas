@@ -4,3 +4,6 @@ provisioner:
     group_vars:
       all:
         nextcloud_enabled: true
+        # throwaway test values for molecule only, not real secrets
+        nextcloud_sql_password: "molecule-test-password"
+        nextcloud_sql_root_password: "molecule-test-root"
