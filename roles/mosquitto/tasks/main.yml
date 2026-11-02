@@ -30,7 +30,7 @@
           - "{{ mosquitto_port_b }}:9001"
         restart_policy: unless-stopped
         restart: "{{ mosquitto_conf is changed }}"
-        memory: 1g
+        memory: "{{ mosquitto_memory }}"
       register: docker_container_result
       until: docker_container_result is succeeded
       retries: "{{ docker_container_pull_retries }}"
