@@ -325,6 +325,7 @@
     - role: jackett
       tags:
         - jackett
+        - gluetun
 
     - role: jellyfin
       tags:
@@ -501,6 +502,7 @@
     - role: sabnzbd
       tags:
         - sabnzbd
+        - gluetun
 
     - role: sickchill
       tags:

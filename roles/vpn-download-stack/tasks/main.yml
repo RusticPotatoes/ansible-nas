@@ -12,6 +12,7 @@
         readarr_enabled: "{{ (readarr_enabled | default(false) | bool) or (vpn_download_stack_readarr_enabled | bool) }}"
         jackett_enabled: "{{ (jackett_enabled | default(false) | bool) or (vpn_download_stack_jackett_enabled | bool) }}"
         sabnzbd_enabled: "{{ (sabnzbd_enabled | default(false) | bool) or (vpn_download_stack_sabnzbd_enabled | bool) }}"
+        flaresolverr_enabled: "{{ (flaresolverr_enabled | default(false) | bool) or (vpn_download_stack_flaresolverr_enabled | bool) }}"
 
     - name: Configure Gluetun-routed download services
       ansible.builtin.set_fact:
@@ -26,6 +27,7 @@
             + ([{'name': readarr_container_name, 'ports': [readarr_port ~ ':8787']}] if (readarr_enabled | default(false) | bool) else [])
             + ([{'name': jackett_container_name, 'ports': [jackett_port ~ ':9117']}] if (jackett_enabled | default(false) | bool) else [])
             + ([{'name': sabnzbd_container_name, 'ports': [sabnzbd_port ~ ':8080']}] if (sabnzbd_enabled | default(false) | bool) else [])
+            + ([{'name': flaresolverr_container_name, 'ports': [flaresolverr_port ~ ':8191']}] if (flaresolverr_enabled | default(false) | bool) else [])
           }}
   when: vpn_download_stack_enabled is true
 

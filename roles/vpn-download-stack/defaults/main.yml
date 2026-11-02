@@ -11,3 +11,4 @@ vpn_download_stack_nzbget_enabled: true
 vpn_download_stack_readarr_enabled: false
 vpn_download_stack_jackett_enabled: false
 vpn_download_stack_sabnzbd_enabled: false
+vpn_download_stack_flaresolverr_enabled: true
