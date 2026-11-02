@@ -41,3 +41,9 @@ drone_ci_runner_capacity: 2
 
 # name of the Drone runner
 drone_ci_runner_name: "{{ ansible_nas_hostname }}"
+
+# docker image
+drone_ci_image_name: "drone/drone"
+drone_ci_image_version: "2"
+drone_ci_runner_image_name: "drone/drone-runner-docker"
+drone_ci_runner_image_version: "1"

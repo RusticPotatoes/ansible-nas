@@ -12,7 +12,7 @@
     - name: Airsonic Docker Container
       community.docker.docker_container:
         name: "{{ airsonic_container_name }}"
-        image: airsonic/airsonic:latest
+        image: "{{ airsonic_image_name }}:{{ airsonic_image_version }}"
         pull: true
         volumes:
           - "{{ airsonic_data_directory }}/data:/airsonic/data:rw"

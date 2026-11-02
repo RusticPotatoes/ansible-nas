@@ -20,3 +20,7 @@ bazarr_memory: 1g
 
 # docker
 bazarr_container_name: bazarr
+
+# docker image
+bazarr_image_name: "linuxserver/bazarr"
+bazarr_image_version: "latest"

@@ -15,3 +15,7 @@ mumble_hostname: mumble
 mumble_server_password: "abcpassword123"
 
 mumble_container_name: mumble-server
+
+# docker image
+mumble_image_name: "mumblevoip/mumble-server"
+mumble_image_version: "latest"

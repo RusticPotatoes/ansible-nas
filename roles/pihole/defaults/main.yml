@@ -33,3 +33,7 @@ pihole_rev_servers: []
 pihole_memory: 1g
 
 pihole_container_name: pihole
+
+# docker image
+pihole_image_name: "pihole/pihole"
+pihole_image_version: "latest"

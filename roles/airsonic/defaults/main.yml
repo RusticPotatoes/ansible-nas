@@ -16,3 +16,7 @@ airsonic_memory: 1g
 
 # docker
 airsonic_container_name: airsonic
+
+# docker image
+airsonic_image_name: "airsonic/airsonic"
+airsonic_image_version: "latest"
