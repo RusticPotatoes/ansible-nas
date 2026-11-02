@@ -10,7 +10,8 @@
       ansible.builtin.template:
         src: config.yml.j2
         dest: "{{ gatus_config_file }}"
-        backup: true
+        mode: "0600"
+        backup: false
       register: gatus_config
 
     - name: Gatus Docker Container
