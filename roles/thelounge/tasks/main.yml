@@ -10,6 +10,7 @@
         - "{{ thelounge_data_directory }}/users"
 
     - name: Set up admin user
+      no_log: true
       ansible.builtin.copy:
         src: admin.json
         dest: "{{ thelounge_data_directory }}/users/admin.json"

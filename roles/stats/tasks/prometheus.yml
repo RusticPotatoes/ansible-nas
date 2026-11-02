@@ -19,6 +19,7 @@
         - "{{ stats_prometheus_config_directory }}"
 
     - name: Template Prometheus config
+      no_log: true
       ansible.builtin.template:
         src: prometheus.yml.j2
         dest: "{{ stats_prometheus_config_directory }}/prometheus.yml"
