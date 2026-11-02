@@ -10,6 +10,7 @@
         - "{{ virtual_desktop_data_directory }}/home"
 
     - name: Create users file
+      no_log: true
       ansible.builtin.template:
         src: "users.txt.j2"
         dest: "{{ virtual_desktop_data_directory }}/users.txt"

@@ -12,6 +12,7 @@
       when: ddns_updater_config is not defined
 
     - name: Generate config.json
+      no_log: true
       ansible.builtin.copy:
         content: "{{ ddns_updater_config | to_nice_json }}"
         dest: "{{ ddns_updater_data_directory }}/config.json"

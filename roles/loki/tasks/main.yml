@@ -31,6 +31,7 @@
         - "{{ minio_data_directory }}/data/loki-ruler"
 
     - name: Template Loki config
+      no_log: true
       ansible.builtin.template:
         src: config.yml
         dest: "{{ loki_data_directory }}/config.yml"
