@@ -38,3 +38,7 @@ ddns_updater_http_timeout: 10s
 #       domain: example.com
 #       host: "@"
 #       password: e5322165c1d74692bfa6d807100c0310
+
+# docker image
+ddns_updater_image_name: "qmcgaw/ddns-updater"
+ddns_updater_image_version: "latest"

@@ -20,3 +20,7 @@ couchpotato_memory: 1g
 
 # docker
 couchpotato_container_name: couchpotato
+
+# docker image
+couchpotato_image_name: "linuxserver/couchpotato"
+couchpotato_image_version: "latest"

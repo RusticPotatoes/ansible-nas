@@ -22,3 +22,7 @@ apcupsd_annoy: 300
 apcupsd_annoydelay: 60
 apcupsd_nologon: "disable"
 apcupsd_killdelay: 0
+
+# docker image
+apcupsd_image_name: "gregewing/apcupsd"
+apcupsd_image_version: "latest"

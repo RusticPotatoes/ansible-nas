@@ -24,7 +24,7 @@
     - name: Deploy Pi-hole Docker Container
       community.docker.docker_container:
         name: "pihole"
-        image: "pihole/pihole:latest"
+        image: "{{ pihole_image_name }}:{{ pihole_image_version }}"
         pull: true
         networks:
           - name: pihole_macvlan

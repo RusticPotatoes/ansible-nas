@@ -17,3 +17,9 @@ firefly_mysql_memory: "1g"
 # docker
 firefly_container_name: firefly
 firefly_mysql_container_name: firefly-mysql
+
+# docker image
+firefly_mysql_image_name: "mariadb"
+firefly_mysql_image_version: "10.9"
+firefly_image_name: "fireflyiii/core"
+firefly_image_version: "latest"

@@ -20,3 +20,7 @@ duplicati_memory: 1g
 
 # docker
 duplicati_container_name: duplicati
+
+# docker image
+duplicati_image_name: "linuxserver/duplicati"
+duplicati_image_version: "latest"

@@ -12,7 +12,7 @@
     - name: Couchpotato Docker Container
       community.docker.docker_container:
         name: "{{ couchpotato_container_name }}"
-        image: linuxserver/couchpotato
+        image: "{{ couchpotato_image_name }}:{{ couchpotato_image_version }}"
         pull: true
         volumes:
           - "{{ couchpotato_config_directory }}:/config:rw"

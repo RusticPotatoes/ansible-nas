@@ -18,3 +18,7 @@ esphome_memory: 1g
 
 # docker
 esphome_container_name: esphome
+
+# docker image
+esphome_image_name: "esphome/esphome"
+esphome_image_version: "latest"
