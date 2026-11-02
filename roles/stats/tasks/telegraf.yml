@@ -47,7 +47,7 @@
           HOST_RUN: "/hostfs/run"
           HOST_MOUNT_PREFIX: "/hostfs"
         restart_policy: unless-stopped
-        memory: 1g
+        memory: "{{ stats_telegraf_memory }}"
         restart: "{{ telegraf_config is changed }}"
       register: docker_container_result
       until: docker_container_result is succeeded
