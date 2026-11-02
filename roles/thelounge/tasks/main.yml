@@ -10,6 +10,7 @@
         - "{{ thelounge_data_directory }}/users"
 
     - name: Set up admin user
+      no_log: true  # the file holds a credential; keep it out of --diff
       ansible.builtin.copy:
         src: admin.json
         dest: "{{ thelounge_data_directory }}/users/admin.json"

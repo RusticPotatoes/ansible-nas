@@ -27,6 +27,7 @@
         mode: "0755"
 
     - name: Seed Backrest config (only if none exists)
+      no_log: true  # the file holds a credential; keep it out of --diff
       ansible.builtin.template:
         src: config.json.j2
         dest: "{{ backrest_data_directory }}/config/config.json"
