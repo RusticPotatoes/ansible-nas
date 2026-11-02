@@ -14,4 +14,6 @@ The Lounge web interface can be found at [http://ansible_nas_host_or_ip:9000](ht
 
 ## Specific Configuration
 
-The default username and password is `admin`. Change this once you've logged in!
+The first time the role runs, it creates the `admin` account with the default password `admin` in `users/admin.json` under the data directory. Log in with that account and change the password straight away.
+
+Later playbook runs leave `users/admin.json` alone: the password you set, your networks and sessions are kept. The role only writes the file when it is missing. To reset the account to the default, stop The Lounge, delete `users/admin.json` and run the playbook again.
