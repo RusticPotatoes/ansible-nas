@@ -16,7 +16,7 @@ Desktop. [http://pytivo.org/](http://pytivo.org/)
 ## Usage
 
 Set `pytivo_enabled: true` in your `group_vars/all.yml` file. The PyTivo
-web interface can be found at [http://ansible_nas_host_or_ip:9032](http://ansible_nas_host_or_ip:9032).
+web interface is on port 9032 of the NAS. The role publishes it in its tasks and sets no port default, so the port is not a link here.
 
 ## Specific Configuration
 

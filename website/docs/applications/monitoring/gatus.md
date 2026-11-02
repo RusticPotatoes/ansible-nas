@@ -10,6 +10,6 @@ Gatus is an open source synthetic monitoring tool that performs health checks on
 
 Set `gatus_enabled: true` in your `inventories/<your_inventory>/group_vars/nas.yml` file.
 
-The Gatus web interface can be found at `http://ansible_nas_host_or_ip:8080`.
+The Gatus web interface can be found at `http://ansible_nas_host_or_ip:9382`.
 
 The default config is stored at `{{ docker_home }}/gatus/config.yml`; edit it to add your own checks and notifications.

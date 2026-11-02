@@ -26,4 +26,4 @@ Set `syncthing_enabled: true` in your `\inventories\[my inventory]\group_vars\na
 
 ## Specific Configuration
 
-Open the web interface at :8384 to configure.
+Open the web interface at `http://ansible_nas_host_or_ip:8384` to configure.
