@@ -10,7 +10,7 @@ Plex is a personal media server that also provides access to several external mo
 
 Set `plex_enabled: true` in your `inventories/<your_inventory>/group_vars/nas.yml` file.
 
-The Plex web interface can be found at [http://ansible_nas_host_or_ip:32400/web/index.html](http://ansible_nas_host_or_ip:32400/web/index.html).
+The Plex web interface is on port 32400 of the NAS, at `/web/index.html`. The role runs with host networking and sets no port default, so the port is not a link here.
 
 ## Specific Configuration
 

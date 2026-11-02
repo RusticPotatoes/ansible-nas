@@ -10,4 +10,4 @@ Wireshark is the world’s foremost and widely-used network protocol analyzer. I
 
 Set `wireshark_enabled: true` in your `inventories/<your_inventory>/group_vars/nas.yml` file.
 
-The Wireshark web interface can be found at [http://ansible_nas_host_or_ip:3000](http://ansible_nas_host_or_ip:3000).
+The Wireshark web interface is on port 3000 of the NAS. The role runs with host networking and sets no port default, so the port is not a link here.
