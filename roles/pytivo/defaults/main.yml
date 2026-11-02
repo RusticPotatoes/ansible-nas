@@ -21,3 +21,4 @@ pytivo_hostname: "pytivo"
 pytivo_container_name: "pytivo"
 pytivo_image_name: "pinion/docker-pytivo"
 pytivo_image_version: "latest"
+pytivo_memory: 1g
