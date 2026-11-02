@@ -11,6 +11,7 @@
         - "{{ znc_data_directory }}/configs"
 
     - name: Template Znc config
+      no_log: true  # the file holds a credential; keep it out of --diff
       ansible.builtin.template:
         src: znc.conf.j2
         dest: "{{ znc_data_directory }}/configs/znc.conf"

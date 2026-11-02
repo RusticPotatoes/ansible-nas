@@ -19,6 +19,7 @@
         - "{{ stats_prometheus_config_directory }}"
 
     - name: Template Prometheus config
+      no_log: true  # the file holds a credential; keep it out of --diff
       ansible.builtin.template:
         src: prometheus.yml.j2
         dest: "{{ stats_prometheus_config_directory }}/prometheus.yml"

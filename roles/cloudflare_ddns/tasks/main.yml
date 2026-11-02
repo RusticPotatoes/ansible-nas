@@ -12,6 +12,7 @@
         state: directory
 
     - name: Template Cloudflare Dynamic DNS config.yml with scoped token
+      no_log: true  # the file holds a credential; keep it out of --diff
       ansible.builtin.template:
         src: config.yml
         dest: "{{ cloudflare_data_directory }}/config.yml"
