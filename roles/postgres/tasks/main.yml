@@ -34,6 +34,7 @@
           POSTGRES_PASSWORD: "{{ postgres_password | default('postgres') }}"
           POSTGRES_DB: "{{ postgres_db | default('default') }}"
         restart_policy: unless-stopped
+        memory: "{{ postgres_memory }}"
       register: docker_container_result
       until: docker_container_result is succeeded
       retries: "{{ docker_container_pull_retries }}"
