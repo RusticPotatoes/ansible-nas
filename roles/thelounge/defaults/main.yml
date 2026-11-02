@@ -13,5 +13,8 @@ thelounge_hostname: thelounge
 # Container
 thelounge_memory: 1g
 thelounge_container_name: "thelounge"
+# uid/gid the container runs as; the data directory and users/admin.json are owned by it
+thelounge_user_id: "1000"
+thelounge_group_id: "1000"
 thelounge_image_name: "thelounge/thelounge"
 thelounge_image_version: "latest"

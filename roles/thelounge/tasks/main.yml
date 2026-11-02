@@ -5,15 +5,32 @@
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
+        owner: "{{ thelounge_user_id }}"
+        group: "{{ thelounge_group_id }}"
+        mode: "0755"
       with_items:
         - "{{ thelounge_data_directory }}"
         - "{{ thelounge_data_directory }}/users"
 
-    - name: Set up admin user
+    # The Lounge keeps the admin account, its password and sessions in admin.json
+    # after the first login. Seed it only when it is missing, so later runs leave it alone.
+    - name: Seed The Lounge admin user (first run only)
       ansible.builtin.copy:
         src: admin.json
         dest: "{{ thelounge_data_directory }}/users/admin.json"
-        mode: 0777
+        owner: "{{ thelounge_user_id }}"
+        group: "{{ thelounge_group_id }}"
+        mode: "0600"
+        force: false
+
+    # Ownership and mode are enforced on every run; the content is not touched.
+    - name: The Lounge admin user ownership
+      ansible.builtin.file:
+        path: "{{ thelounge_data_directory }}/users/admin.json"
+        state: file
+        owner: "{{ thelounge_user_id }}"
+        group: "{{ thelounge_group_id }}"
+        mode: "0600"
 
     - name: The Lounge Docker Container
       community.docker.docker_container:
