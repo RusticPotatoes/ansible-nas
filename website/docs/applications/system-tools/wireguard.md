@@ -10,7 +10,7 @@ WireGuard is a fast, modern VPN.
 
 Set `wireguard_enabled: true` in your `inventories/<your_inventory>/group_vars/nas.yml` file.
 
-* UDP port: `51820` (`wireguard_udp_port`); forward it on your router
+* UDP port: `wireguard_udp_port` (default `51820`), published on the host and written as the server port in the peer configs; the container keeps listening on 51820 internally. Forward this port on your router
 * Data directory: `wireguard_data_directory` (default `<docker_home>/wireguard`)
 * Peers (clients): `wireguard_peers` (default `3`)
 * VPN subnet: `wireguard_subnet` (default `10.0.0.0`; server is .1, peers .2 and up)
