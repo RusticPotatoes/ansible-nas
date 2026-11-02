@@ -8,13 +8,22 @@ out="{{ nas_db_dump_directory }}"
 status="{{ nas_status_directory }}"
 rc=0
 
-# dump NAME CONTAINER FILE COMMAND...: write atomically, record success for Telegraf
+# dump NAME CONTAINER FILE COMMAND [FILTER]: write atomically, record success for Telegraf.
+# COMMAND runs in the container; FILTER (optional, on this host) post-processes its output.
+# The pipe is run by this script's bash with pipefail, so a failing COMMAND fails the dump
+# whatever shell the container ships, and gzip's exit status can no longer hide it.
 dump() {
-  local name=$1 container=$2 file=$3; shift 3
+  local name=$1 container=$2 file=$3 command=$4 filter=${5:-}
   if ! docker inspect -f '{{ '{{' }}.State.Running{{ '}}' }}' "$container" 2>/dev/null | grep -q true; then
     echo "$name: container $container not running" >&2; rc=1; return
   fi
-  if docker exec "$container" sh -c "$*" > "$out/$file.tmp"; then
+  local status_ok=0
+  if [ -n "$filter" ]; then
+    docker exec "$container" sh -c "$command" | $filter > "$out/$file.tmp" || status_ok=$?
+  else
+    docker exec "$container" sh -c "$command" > "$out/$file.tmp" || status_ok=$?
+  fi
+  if [ "$status_ok" -eq 0 ]; then
     mv "$out/$file.tmp" "$out/$file"
     echo "nas_db_dump,db=$name last_success=$(date +%s)i" > "$status/db_$name.influx"
     echo "$name: ok ($(du -h "$out/$file" | cut -f1))"
@@ -25,7 +34,7 @@ dump() {
 
 {% if nas_db_dump_postgres_container %}
 dump postgres {{ nas_db_dump_postgres_container }} postgres.sql.gz \
-  'pg_dumpall -U "$POSTGRES_USER" | gzip'
+  'pg_dumpall -U "$POSTGRES_USER"' gzip
 {% endif %}
 {% if nas_db_dump_mongodb_container %}
 dump mongodb {{ nas_db_dump_mongodb_container }} mongodb.archive.gz \
