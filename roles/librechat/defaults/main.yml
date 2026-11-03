@@ -28,8 +28,18 @@ librechat_image_version: "latest"
 # specs
 librechat_memory: 4g
 
-# Secrets. Set these in vault.yml before enabling LibreChat.
+# Secrets. Each reads its own vault_* variable, empty by default: set them in
+# vault.yml before enabling LibreChat, never in git. The role refuses to start
+# while any of them is empty (see tasks/main.yml).
+# CREDS_KEY: 64 hex characters.
 librechat_encryption_key: "{{ vault_librechat_encryption_key | default('') }}"
+# CREDS_IV: 32 hex characters.
+librechat_creds_iv: "{{ vault_librechat_creds_iv | default('') }}"
 librechat_jwt_secret: "{{ vault_librechat_jwt_secret | default('') }}"
+librechat_jwt_refresh_secret: "{{ vault_librechat_jwt_refresh_secret | default('') }}"
 librechat_admin_email: "{{ vault_librechat_admin_email | default('admin@local.com') }}"
 librechat_admin_password: "{{ vault_librechat_admin_password | default('') }}"
+
+# Access. Off unless switched on.
+librechat_allow_registration: false
+librechat_allow_social_login: false
