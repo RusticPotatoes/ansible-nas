@@ -22,7 +22,7 @@
           homepage.description: Nightly container updates
           homepage.widget.type: watchtower
           homepage.widget.url: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ watchtower_metrics_port }}"
-          homepage.widget.key: "{{ watchtower_api_token }}"
+          homepage.widget.key: "{{ '{{' }}HOMEPAGE_VAR_WATCHTOWER_API_TOKEN{{ '}}' }}"
         restart_policy: unless-stopped
         memory: "{{ watchtower_memory }}"
       register: docker_container_result

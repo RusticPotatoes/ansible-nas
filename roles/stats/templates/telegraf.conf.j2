@@ -192,7 +192,8 @@
   ## docker labels to include and exclude as tags.  Globs accepted.
   ## Note that an empty array for both will include all labels as tags
   docker_label_include = []
-  docker_label_exclude = []
+  # homepage.* labels carry Homepage settings (some once held credentials): never export them
+  docker_label_exclude = ["homepage.*"]
 
   ## Optional SSL Config
   # ssl_ca = "/etc/telegraf/ca.pem"

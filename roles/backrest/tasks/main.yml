@@ -74,8 +74,8 @@
           homepage.description: Restic backups
           homepage.widget.type: backrest
           homepage.widget.url: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ backrest_port }}"
-          homepage.widget.username: "{{ backrest_ui_username }}"
-          homepage.widget.password: "{{ backrest_ui_password }}"
+          homepage.widget.username: "{{ '{{' }}HOMEPAGE_VAR_BACKREST_UI_USERNAME{{ '}}' }}"
+          homepage.widget.password: "{{ '{{' }}HOMEPAGE_VAR_BACKREST_UI_PASSWORD{{ '}}' }}"
       register: docker_container_result
       until: docker_container_result is succeeded
       retries: "{{ docker_container_pull_retries }}"
