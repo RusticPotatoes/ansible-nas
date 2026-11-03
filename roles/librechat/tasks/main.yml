@@ -8,10 +8,11 @@
       - librechat_encryption_key is match('^[0-9a-fA-F]{64}$')
       - librechat_creds_iv is match('^[0-9a-fA-F]{32}$')
     fail_msg: >-
-      LibreChat needs librechat_encryption_key (vault_librechat_encryption_key, 64 hex characters),
-      librechat_creds_iv (vault_librechat_creds_iv, 32 hex characters),
-      librechat_jwt_secret (vault_librechat_jwt_secret) and
-      librechat_jwt_refresh_secret (vault_librechat_jwt_refresh_secret) set before enabling.
+      LibreChat needs these set before enabling:
+      librechat_encryption_key (vault_librechat_encryption_key, 64 hex),
+      librechat_creds_iv (vault_librechat_creds_iv, 32 hex),
+      librechat_jwt_secret (vault_librechat_jwt_secret),
+      librechat_jwt_refresh_secret (vault_librechat_jwt_refresh_secret).
     quiet: true
   when: librechat_enabled is true
 
