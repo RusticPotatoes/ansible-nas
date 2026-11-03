@@ -1,21 +1,14 @@
 ---
 pihole_enabled: false
-pihole_available_externally: false
 
 # directories
 pihole_config_directory: "{{ docker_home }}/pihole/config"
 pihole_dnsmasq_directory: "{{ docker_home }}/pihole/dnsmasq"
 
-# uid / gid
-pihole_user_id: "1000"
-pihole_group_id: "1000"
-
-# error logging
-pihole_log_level: "error"
-
 # network
-pihole_port: "8443"
-pihole_hostname: "pihole"
+# The address Pi-hole takes on the macvlan network: the LAN address its DNS and web UI answer on,
+# and the one the Homepage links use. No default: set it when pihole_enabled is true.
+pihole_macvlan_address: ""
 
 pihole_timezone: "{{ ansible_nas_timezone }}"
 pihole_web_password: "{{ vault_pihole_web_password | default('') }}"

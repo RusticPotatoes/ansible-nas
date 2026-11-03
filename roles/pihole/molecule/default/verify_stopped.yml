@@ -6,13 +6,13 @@
     - ansible.builtin.include_vars:
         file: ../../defaults/main.yml
 
-    - name: Try and stop and remove Deluge
+    - name: Try and stop and remove Pi-hole
       community.docker.docker_container:
-        name: "{{ deluge_container_name }}"
+        name: "{{ pihole_container_name }}"
         state: absent
       register: result
 
-    - name: Check Deluge is stopped
+    - name: Check Pi-hole is stopped
       ansible.builtin.assert:
         that:
           - not result.changed

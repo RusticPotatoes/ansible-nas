@@ -7,4 +7,5 @@
       ansible.builtin.include_role:
         name: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
       vars:
-        deluge_enabled: false
+        pihole_enabled: false
+        pihole_macvlan_address: "192.0.2.2"
