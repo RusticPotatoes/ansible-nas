@@ -3,4 +3,5 @@ provisioner:
   inventory:
     group_vars:
       all:
-        deluge_enabled: true
+        pihole_enabled: true
+        pihole_macvlan_address: "192.0.2.2"

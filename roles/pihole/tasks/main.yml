@@ -2,6 +2,13 @@
 - name: Start pihole
   block:
 
+    - name: Check the Pi-hole macvlan address is set
+      ansible.builtin.assert:
+        that:
+          - pihole_macvlan_address | default('') | length > 0
+        fail_msg: "pihole_macvlan_address must be set when pihole_enabled is true (Pi-hole's LAN address, e.g. in group_vars)."
+      when: pihole_enabled is true
+
     - name: Create macvlan network for Pi-hole
       community.docker.docker_network:
         name: pihole_macvlan
@@ -23,12 +30,12 @@
 
     - name: Deploy Pi-hole Docker Container
       community.docker.docker_container:
-        name: "pihole"
+        name: "{{ pihole_container_name }}"
         image: "pihole/pihole:latest"
         pull: true
         networks:
           - name: pihole_macvlan
-            ipv4_address: "192.168.1.2"
+            ipv4_address: "{{ pihole_macvlan_address }}"
         volumes:
           - "{{ pihole_config_directory }}:/etc/pihole:rw"
           - "{{ pihole_dnsmasq_directory }}:/etc/dnsmasq.d:rw"
@@ -52,9 +59,9 @@
           homepage.group: Networking
           homepage.name: Pi-hole
           homepage.icon: pi-hole
-          homepage.href: "http://192.168.1.2/admin"
+          homepage.href: "http://{{ pihole_macvlan_address }}/admin"
           homepage.widget.type: pihole
-          homepage.widget.url: "http://192.168.1.2"
+          homepage.widget.url: "http://{{ pihole_macvlan_address }}"
           homepage.widget.version: "6"
           homepage.widget.key: "{{ pihole_web_password | default('') }}"
           homepage.description: DNS filtering

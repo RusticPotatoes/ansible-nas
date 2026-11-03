@@ -8,10 +8,10 @@
 
     - name: Get container state
       community.docker.docker_container_info:
-        name: "{{ deluge_container_name }}"
+        name: "{{ pihole_container_name }}"
       register: result
 
-    - name: Check Deluge is running
+    - name: Check Pi-hole is running
       ansible.builtin.assert:
         that:
           - result.container['State']['Status'] == "running"
