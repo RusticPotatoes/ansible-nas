@@ -48,8 +48,8 @@
           homepage.href: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ nzbget_port }}"
           homepage.widget.type: nzbget
           homepage.widget.url: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ nzbget_port }}"
-          homepage.widget.username: "{{ nzbget_user | default('') }}"
-          homepage.widget.password: "{{ nzbget_pass | default('') }}"
+          homepage.widget.username: "{{ '{{' }}HOMEPAGE_VAR_NZBGET_USER{{ '}}' }}"
+          homepage.widget.password: "{{ '{{' }}HOMEPAGE_VAR_NZBGET_PASS{{ '}}' }}"
           homepage.description: Usenet downloader
       register: docker_container_result
       until: docker_container_result is succeeded

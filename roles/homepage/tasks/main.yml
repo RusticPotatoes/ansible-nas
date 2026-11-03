@@ -29,6 +29,21 @@
         env:
           TZ: "{{ ansible_nas_timezone }}"
           HOMEPAGE_ALLOWED_HOSTS: "{{ homepage_allowed_hosts }}"
+          # Widget credentials reach Homepage here, never as container labels: a label is
+          # visible to anything that reads container metadata, and Telegraf exports labels.
+          # Homepage substitutes {{HOMEPAGE_VAR_NAME}} in widget settings from these.
+          HOMEPAGE_VAR_WATCHTOWER_API_TOKEN: "{{ watchtower_api_token | default('') }}"
+          HOMEPAGE_VAR_SONARR_API_KEY: "{{ sonarr_api_key | default('') }}"
+          HOMEPAGE_VAR_RADARR_API_KEY: "{{ radarr_api_key | default('') }}"
+          HOMEPAGE_VAR_PROWLARR_API_KEY: "{{ prowlarr_api_key | default('') }}"
+          HOMEPAGE_VAR_PLEX_TOKEN: "{{ plex_token | default('') }}"
+          HOMEPAGE_VAR_PIHOLE_WEB_PASSWORD: "{{ pihole_web_password | default('') }}"
+          HOMEPAGE_VAR_OVERSEERR_API_KEY: "{{ overseerr_api_key | default('') }}"
+          HOMEPAGE_VAR_NZBGET_USER: "{{ nzbget_user | default('') }}"
+          HOMEPAGE_VAR_NZBGET_PASS: "{{ nzbget_pass | default('') }}"
+          HOMEPAGE_VAR_DELUGE_WEB_PASSWORD: "{{ deluge_web_password | default('deluge') }}"
+          HOMEPAGE_VAR_BACKREST_UI_USERNAME: "{{ backrest_ui_username | default('') }}"
+          HOMEPAGE_VAR_BACKREST_UI_PASSWORD: "{{ backrest_ui_password | default('') }}"
         ports:
           - "{{ homepage_port }}:3000"
         restart_policy: unless-stopped
