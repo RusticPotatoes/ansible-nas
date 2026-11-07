@@ -1,0 +1,65 @@
+---
+- name: Create the binaries folder
+  ansible.builtin.file:
+    path: "{{ t3_bin_directory }}"
+    state: directory
+    mode: "0755"
+
+- name: Fetch each agent's installer
+  ansible.builtin.get_url:
+    url: "{{ item.installer }}"
+    dest: "{{ t3_home_directory }}/caches/{{ item.name }}-installer.sh"
+    mode: "0700"
+  loop: "{{ t3_clis }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Install each agent that is not there yet
+  ansible.builtin.command:
+    cmd: "bash {{ t3_home_directory }}/caches/{{ item.name }}-installer.sh"
+  args:
+    creates: "{{ t3_bin_directory }}/{{ item.name }}"
+    stdin: ""
+  environment:
+    PATH: "{{ t3_bin_directory }}:{{ ansible_env.PATH }}"
+    # Codex's installer otherwise waits at "Start Codex now?" for an answer no one gives.
+    CODEX_NON_INTERACTIVE: "1"
+  loop: "{{ t3_clis }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Show each agent's version
+  ansible.builtin.command:
+    cmd: "{{ t3_bin_directory }}/{{ item.name }} --version"
+  register: t3_versions
+  changed_when: false
+  check_mode: false
+  failed_when: false
+  loop: "{{ t3_clis }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Report the versions
+  ansible.builtin.debug:
+    msg: "{{ t3_versions.results | map(attribute='item.name') | zip(t3_versions.results | map(attribute='stdout')) | list }}"
+
+- name: Read T3 Code's settings
+  ansible.builtin.slurp:
+    src: "{{ t3_home_directory }}/userdata/settings.json"
+  register: t3_settings_file
+  failed_when: false
+
+- name: Turn the agents' providers on in T3 Code, keeping every other setting
+  ansible.builtin.copy:
+    dest: "{{ t3_home_directory }}/userdata/settings.json"
+    mode: "0600"
+    content: >-
+      {{ ((t3_settings_file.content | default('e30=') | b64decode | from_json)
+          | combine({'providerInstances': dict(t3_clis | map(attribute='provider')
+              | zip(t3_clis | map(attribute='provider')
+                | map('regex_replace', '^(.*)$', '{"driver": "\1", "enabled": true}')
+                | map('from_json')))}, recursive=True)
+          | combine({'providerInstances': {
+              'claudeAgent': {'config': {'binaryPath': t3_bin_directory ~ '/claude'}},
+              'codex': {'config': {'binaryPath': t3_bin_directory ~ '/codex'}}}}, recursive=True))
+         | to_nice_json }}

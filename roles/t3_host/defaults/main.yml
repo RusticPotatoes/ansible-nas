@@ -1,0 +1,18 @@
+---
+# The agents' command-line tools T3 Code runs, each installed by its maker's own installer into
+# the user's ~/.local/bin (no root, no Node). `provider` is T3 Code's name for it in
+# ~/.t3/userdata/settings.json. Drop an entry to leave that agent off a machine.
+t3_clis:
+  - name: claude
+    provider: claudeAgent
+    installer: https://claude.ai/install.sh
+  - name: codex
+    provider: codex
+    installer: https://chatgpt.com/codex/install.sh
+  - name: agy
+    provider: antigravity
+    installer: https://antigravity.google/cli/install.sh
+
+# Where the installers put the binaries, and T3 Code's data folder on the remote.
+t3_bin_directory: "{{ ansible_env.HOME }}/.local/bin"
+t3_home_directory: "{{ ansible_env.HOME }}/.t3"
