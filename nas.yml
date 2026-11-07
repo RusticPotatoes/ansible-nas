@@ -434,6 +434,13 @@
       tags:
         - organizr
 
+    # Endora Audio (github.com/RusticPotatos/endora-audio): the sound hub, Spotify, the AirPlay
+    # senders and the AirPlay 2 door. Never beside owntone (the role refuses it). Off unless
+    # endora_audio_enabled.
+    - role: endora_audio
+      tags:
+        - endora_audio
+
     - role: owntone
       tags:
         - owntone

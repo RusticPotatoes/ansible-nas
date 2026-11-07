@@ -1,0 +1,72 @@
+---
+# Endora Audio, the sound hub (https://github.com/RusticPotatos/endora-audio): sources (radio,
+# Spotify, anything cast in over AirPlay) wired at their own levels to speakers (AirPlay
+# speakers, and phones listening to a stream). Four containers that move together: the hub, the
+# Spotify receiver, the AirPlay senders and, if wanted, the AirPlay 2 door on a LAN address of
+# its own. They replace Endora's own sound containers; see the docs page for moving over.
+endora_audio_enabled: false
+# Through Traefik, with TLS: the page's Live mode needs a secure page (an AudioWorklet).
+endora_audio_available_externally: false
+
+# images
+# The three are built and published by the endora-audio repository's CI. Pin a release or a
+# `sha-<commit>` tag for a reproducible NAS; `latest` follows main.
+endora_audio_version: latest
+endora_audio_image: "ghcr.io/rusticpotatos/endora-audio:{{ endora_audio_version }}"
+endora_audio_senders_image: "ghcr.io/rusticpotatos/endora-audio-senders:{{ endora_audio_version }}"
+endora_audio_airplay_image: "ghcr.io/rusticpotatos/endora-audio-airplay:{{ endora_audio_version }}"
+# Spotify is the stock librespot image, pinned by digest.
+endora_audio_spotify_image: "giof71/librespot@sha256:0c7cd19a49547cd0e34ac7c6d9aadd4b2703c5cb13acd1dbfd4982c311d478fb"
+
+# parts
+# The senders take the AirPlay clock's ports and the speakers on this host: never beside the
+# owntone role (the role refuses that).
+endora_audio_senders_enabled: true
+endora_audio_spotify_enabled: true
+# The AirPlay 2 door, "Endora Mixer", so an Apple TV keeps lip-sync. Needs the four door values
+# below. Off: the senders run the classic door on the host's address instead.
+endora_audio_airplay_enabled: false
+
+# volumes
+# Docker volumes, so the hub's state (one JSON file) and the senders' and Spotify's own data are
+# kept across upgrades. Moving over from Endora's containers: name Endora's volumes here (the
+# docs page lists them) and nothing is lost.
+endora_audio_data_volume: endora-audio-data
+endora_audio_token_volume: endora-audio-token
+endora_audio_pipes_volume: endora-audio-pipes
+endora_audio_secret_volume: endora-audio-secret
+endora_audio_senders_data_volume: endora-audio-senders-data
+endora_audio_spotify_login_volume: endora-audio-spotify-login
+
+# network
+endora_audio_port: "8791"
+endora_audio_hostname: "audio"
+# The four senders' OwnTone APIs, on the host's network, as the hub reaches them.
+endora_audio_senders_ports: ["3701", "3702", "3703", "3704"]
+# The name the Spotify app shows.
+endora_audio_spotify_name: Endora
+
+# the AirPlay 2 door
+# An existing macvlan network on the LAN (Docker allows one per subnet; the pihole role makes
+# one). The role checks it exists and does not create it.
+endora_audio_airplay_network: pihole_macvlan
+# The door's own LAN address, outside the router's DHCP pool and reserved there, and a fixed
+# MAC so the router keeps the reservation. Both must be set when the door is on.
+endora_audio_airplay_ip: ""
+endora_audio_airplay_mac: ""
+endora_audio_airplay_hostname: endora-mixer
+# Seconds the door hands its sound over early, 0 to 2, so an Apple TV's picture and the sound
+# line up. Tune by ear.
+endora_audio_airplay_latency: 0.5
+
+# specs
+endora_audio_memory: 256m
+endora_audio_spotify_memory: 128m
+endora_audio_senders_memory: 512m
+endora_audio_airplay_memory: 128m
+
+# docker
+endora_audio_container_name: endora-audio
+endora_audio_spotify_container_name: endora-audio-spotify
+endora_audio_senders_container_name: endora-audio-senders
+endora_audio_airplay_container_name: endora-audio-airplay

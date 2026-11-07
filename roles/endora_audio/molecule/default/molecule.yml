@@ -1,0 +1,10 @@
+---
+# The hub alone: the senders and Spotify need the host's network and mDNS, and the door a LAN
+# address, none of which a CI runner has. Their containers are covered by the role's unit test.
+provisioner:
+  inventory:
+    group_vars:
+      all:
+        endora_audio_enabled: true
+        endora_audio_senders_enabled: false
+        endora_audio_spotify_enabled: false

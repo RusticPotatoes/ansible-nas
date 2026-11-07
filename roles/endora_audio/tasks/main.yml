@@ -1,0 +1,199 @@
+---
+- name: Start Endora Audio
+  block:
+    # The senders take the AirPlay clock's ports (UDP 319/320) and the speakers: OwnTone's own
+    # role on the same host would fight them for both.
+    - name: Check the AirPlay senders are not beside the owntone role
+      ansible.builtin.assert:
+        that:
+          - not (endora_audio_senders_enabled and (owntone_enabled | default(false)))
+        fail_msg: "endora_audio's senders and the owntone role cannot run on one host; turn one off"
+
+    - name: Check the AirPlay 2 door's values
+      ansible.builtin.assert:
+        that:
+          - endora_audio_airplay_ip | length > 0
+          - endora_audio_airplay_mac is match('^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$')
+          - (endora_audio_airplay_latency | float) >= 0
+          - (endora_audio_airplay_latency | float) <= 2
+        fail_msg: >-
+          The AirPlay 2 door needs endora_audio_airplay_ip (a free, reserved LAN address),
+          endora_audio_airplay_mac (fixed, e.g. 02:00:00:00:a2:01) and a latency from 0 to 2
+      when: endora_audio_airplay_enabled
+
+    # The door joins a macvlan network another role made (Docker allows one per subnet). It is
+    # never created here, so a missing one stops the play rather than making a second.
+    - name: Look for the AirPlay 2 door's network
+      community.docker.docker_network_info:
+        name: "{{ endora_audio_airplay_network }}"
+      register: endora_audio_airplay_network_info
+      when: endora_audio_airplay_enabled
+
+    - name: Check the AirPlay 2 door's network exists and is macvlan
+      ansible.builtin.assert:
+        that:
+          - endora_audio_airplay_network_info.exists
+          - endora_audio_airplay_network_info.network.Driver in ['macvlan', 'ipvlan']
+        fail_msg: "The network {{ endora_audio_airplay_network }} does not exist or is not macvlan/ipvlan; enable the role that makes it (pihole) or name another"
+      when: endora_audio_airplay_enabled
+
+    # Kept across upgrades and when the role is switched off: they hold the owner's speakers,
+    # wires and setups, the senders' password and Spotify's login.
+    - name: Endora Audio Docker Volumes
+      community.docker.docker_volume:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - "{{ endora_audio_data_volume }}"
+        - "{{ endora_audio_token_volume }}"
+        - "{{ endora_audio_pipes_volume }}"
+        - "{{ endora_audio_secret_volume }}"
+        - "{{ endora_audio_senders_data_volume }}"
+        - "{{ endora_audio_spotify_login_volume }}"
+
+    - name: Endora Audio Docker Container
+      community.docker.docker_container:
+        name: "{{ endora_audio_container_name }}"
+        image: "{{ endora_audio_image }}"
+        pull: true
+        restart_policy: unless-stopped
+        env:
+          # The senders, on the host's network, reached through the host. Each one's API needs
+          # the password the senders made, which only the hub is given.
+          SOUND_SENDERS: >-
+            {{ endora_audio_senders_ports | map('regex_replace', '^', 'http://host.docker.internal:') | join(',')
+               if endora_audio_senders_enabled else '' }}
+          SOUND_SENDER_PASSWORD_FILE: /sender-secret/password
+          SOUND_SPOTIFY: "{{ 'on' if endora_audio_spotify_enabled else 'off' }}"
+        etc_hosts:
+          host.docker.internal: host-gateway
+        published_ports:
+          - "{{ endora_audio_port }}:8791"
+        volumes:
+          - "{{ endora_audio_data_volume }}:/data"
+          - "{{ endora_audio_token_volume }}:/token"
+          - "{{ endora_audio_pipes_volume }}:/pipes"
+          - "{{ endora_audio_secret_volume }}:/sender-secret:ro"
+        tmpfs:
+          - /tmp
+        read_only: true
+        cap_drop: [ALL]
+        security_opts: [no-new-privileges:true]
+        memory: "{{ endora_audio_memory }}"
+        labels:
+          traefik.enable: "{{ endora_audio_available_externally | string }}"
+          traefik.http.routers.endora_audio.rule: "Host(`{{ endora_audio_hostname }}.{{ ansible_nas_domain }}`)"
+          traefik.http.routers.endora_audio.tls.certresolver: "letsencrypt"
+          traefik.http.routers.endora_audio.tls.domains[0].main: "{{ ansible_nas_domain }}"
+          traefik.http.routers.endora_audio.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
+          traefik.http.services.endora_audio.loadbalancer.server.port: "8791"
+        state: started
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
+
+    # Spotify into the hub: stock librespot on the host's network (the Spotify app finds it over
+    # mDNS), writing into the hub's Spotify pipe. It keeps its own login once given.
+    - name: Endora Audio Spotify Docker Container
+      community.docker.docker_container:
+        name: "{{ endora_audio_spotify_container_name }}"
+        image: "{{ endora_audio_spotify_image }}"
+        pull: false
+        restart_policy: unless-stopped
+        network_mode: host
+        env:
+          DEVICE_NAME: "{{ endora_audio_spotify_name }}"
+          BACKEND: pipe
+          DEVICE: /pipes/spotify.pcm
+          FORMAT: S16
+          BITRATE: "320"
+          INITIAL_VOLUME: "100"
+          ENABLE_SYSTEM_CACHE: "Y"
+          DISABLE_AUDIO_CACHE: "Y"
+        volumes:
+          - "{{ endora_audio_pipes_volume }}:/pipes"
+          - "{{ endora_audio_spotify_login_volume }}:/data/system-cache"
+        security_opts: [no-new-privileges:true]
+        memory: "{{ endora_audio_spotify_memory }}"
+        state: "{{ 'started' if endora_audio_spotify_enabled else 'absent' }}"
+
+    # The senders: one airptpd clock and four stock OwnTone instances on the host's network,
+    # where AirPlay speakers are found and reached over mDNS.
+    - name: Endora Audio Senders Docker Container
+      community.docker.docker_container:
+        name: "{{ endora_audio_senders_container_name }}"
+        image: "{{ endora_audio_senders_image }}"
+        pull: true
+        restart_policy: unless-stopped
+        network_mode: host
+        env:
+          # 1: the door is the airplay container's and none runs here.
+          SOUND_AIRPLAY2: "{{ '1' if endora_audio_airplay_enabled else '0' }}"
+        volumes:
+          - "{{ endora_audio_pipes_volume }}:/pipes"
+          - "{{ endora_audio_senders_data_volume }}:/data"
+          - "{{ endora_audio_secret_volume }}:/secret"
+        tmpfs:
+          - /run
+          - /tmp
+        read_only: true
+        cap_drop: [ALL]
+        capabilities: [CHOWN, SETUID, SETGID, NET_BIND_SERVICE, KILL]
+        security_opts: [no-new-privileges:true]
+        memory: "{{ endora_audio_senders_memory }}"
+        state: "{{ 'started' if endora_audio_senders_enabled else 'absent' }}"
+
+    # The AirPlay 2 door, on its own LAN address: its nqptp needs UDP 319/320, which the
+    # senders' airptpd holds on the host. Only the pipes volume connects it to the hub; the NAS
+    # cannot reach a macvlan address, and does not need to.
+    - name: Endora Audio AirPlay 2 Door Docker Container
+      community.docker.docker_container:
+        name: "{{ endora_audio_airplay_container_name }}"
+        image: "{{ endora_audio_airplay_image }}"
+        pull: true
+        restart_policy: unless-stopped
+        hostname: "{{ endora_audio_airplay_hostname }}"
+        env:
+          SOUND_AIRPLAY2_HOSTNAME: "{{ endora_audio_airplay_hostname }}"
+          SOUND_AIRPLAY2_LATENCY: "{{ endora_audio_airplay_latency | string }}"
+          SOUND_AIRPLAY2_INTERFACE: eth0
+        networks_cli_compatible: true
+        network_mode: "{{ endora_audio_airplay_network }}"
+        networks:
+          - name: "{{ endora_audio_airplay_network }}"
+            ipv4_address: "{{ endora_audio_airplay_ip }}"
+        mac_address: "{{ endora_audio_airplay_mac }}"
+        volumes:
+          - "{{ endora_audio_pipes_volume }}:/pipes"
+        tmpfs:
+          - /run
+          - /tmp
+        read_only: true
+        cap_drop: [ALL]
+        capabilities: [CHOWN, SETUID, SETGID, NET_BIND_SERVICE, KILL]
+        security_opts: [no-new-privileges:true]
+        memory: "{{ endora_audio_airplay_memory }}"
+        state: started
+      when: endora_audio_airplay_enabled
+
+    - name: Remove the AirPlay 2 door when it is off
+      community.docker.docker_container:
+        name: "{{ endora_audio_airplay_container_name }}"
+        state: absent
+      when: not endora_audio_airplay_enabled
+  when: endora_audio_enabled is true
+
+# The volumes are never removed: they hold the owner's setup and logins.
+- name: Stop Endora Audio
+  block:
+    - name: Stop Endora Audio
+      community.docker.docker_container:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ endora_audio_airplay_container_name }}"
+        - "{{ endora_audio_senders_container_name }}"
+        - "{{ endora_audio_spotify_container_name }}"
+        - "{{ endora_audio_container_name }}"
+  when: endora_audio_enabled is false
