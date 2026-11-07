@@ -1,0 +1,42 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Include the role's defaults
+      ansible.builtin.include_vars:
+        file: ../../defaults/main.yml
+
+    - name: Get container state
+      community.docker.docker_container_info:
+        name: "{{ endora_audio_container_name }}"
+      register: result
+
+    # The hub's own port, asked from inside its container (no curl there: bash's /dev/tcp):
+    # molecule's instance is another container and does not share its network.
+    - name: Ask the hub whether it is up
+      community.docker.docker_container_exec:
+        container: "{{ endora_audio_container_name }}"
+        command: >-
+          bash -c "exec 3<>/dev/tcp/127.0.0.1/8791 && printf 'GET /health HTTP/1.0\\r\\n\\r\\n' >&3 && cat <&3"
+      register: health
+      changed_when: false
+      until: health.rc == 0 and health.stdout is search('"ok":true')
+      retries: 15
+      delay: 2
+
+    - name: Ask for its state without the token
+      community.docker.docker_container_exec:
+        container: "{{ endora_audio_container_name }}"
+        command: >-
+          bash -c "exec 3<>/dev/tcp/127.0.0.1/8791 && printf 'GET /v1/state HTTP/1.0\\r\\n\\r\\n' >&3 && cat <&3"
+      register: unsigned
+      changed_when: false
+
+    - name: Check the hub is running, answers, and refuses without the token
+      ansible.builtin.assert:
+        that:
+          - result.container['State']['Status'] == "running"
+          - result.container['State']['Restarting'] == false
+          - health.stdout is search('"ok":true')
+          - unsigned.stdout is search('^HTTP/1.[01] 401')

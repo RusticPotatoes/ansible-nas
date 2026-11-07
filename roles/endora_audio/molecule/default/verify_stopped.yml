@@ -1,0 +1,19 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Include the role's defaults
+      ansible.builtin.include_vars:
+        file: ../../defaults/main.yml
+
+    - name: Try and stop and remove the hub
+      community.docker.docker_container:
+        name: "{{ endora_audio_container_name }}"
+        state: absent
+      register: result
+
+    - name: Check the hub is stopped
+      ansible.builtin.assert:
+        that:
+          - not result.changed
