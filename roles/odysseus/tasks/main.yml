@@ -1,0 +1,131 @@
+---
+- name: Start Odysseus
+  block:
+    - name: Check the Odysseus admin password is set
+      ansible.builtin.assert:
+        that:
+          - odysseus_admin_password | length >= 12
+        fail_msg: "Set vault_odysseus_admin_password (12+ characters) in vault.yml before enabling Odysseus."
+        quiet: true
+
+    - name: Create Odysseus directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ odysseus_data_directory }}/data"
+        - "{{ odysseus_data_directory }}/logs"
+        - "{{ odysseus_data_directory }}/chromadb"
+        - "{{ odysseus_data_directory }}/searxng"
+
+    - name: Create Odysseus network
+      community.docker.docker_network:
+        name: "{{ odysseus_network_name }}"
+
+    - name: Odysseus ChromaDB Docker Container
+      community.docker.docker_container:
+        name: "{{ odysseus_chromadb_container_name }}"
+        image: "{{ odysseus_chromadb_image_name }}:{{ odysseus_chromadb_image_version }}"
+        pull: "{{ docker_container_pull | default(true) }}"
+        volumes:
+          - "{{ odysseus_data_directory }}/chromadb:/data:rw"
+        env:
+          ANONYMIZED_TELEMETRY: "FALSE"
+        networks:
+          - name: "{{ odysseus_network_name }}"
+        restart_policy: unless-stopped
+        memory: "{{ odysseus_chromadb_memory }}"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
+
+    # Upstream's settings, with a secret made once on the first run and kept only on the NAS.
+    - name: Odysseus SearXNG settings
+      ansible.builtin.copy:
+        dest: "{{ odysseus_data_directory }}/searxng/settings.yml"
+        force: false
+        mode: "0640"
+        content: |
+          use_default_settings: true
+          server:
+            secret_key: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits'], length=48) }}"
+          search:
+            formats:
+              - html
+              - json
+      no_log: true
+
+    - name: Odysseus SearXNG Docker Container
+      community.docker.docker_container:
+        name: "{{ odysseus_searxng_container_name }}"
+        image: "{{ odysseus_searxng_image_name }}:{{ odysseus_searxng_image_version }}"
+        pull: "{{ docker_container_pull | default(true) }}"
+        volumes:
+          - "{{ odysseus_data_directory }}/searxng:/etc/searxng:rw"
+        env:
+          SEARXNG_BASE_URL: "http://{{ odysseus_searxng_container_name }}:8080/"
+        networks:
+          - name: "{{ odysseus_network_name }}"
+        restart_policy: unless-stopped
+        memory: "{{ odysseus_searxng_memory }}"
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
+
+    # No Docker socket, GPU or host folders beyond its own data: models come from Ollama.
+    - name: Odysseus Docker Container
+      community.docker.docker_container:
+        name: "{{ odysseus_container_name }}"
+        image: "{{ odysseus_image_name }}:{{ odysseus_image_version }}"
+        pull: "{{ docker_container_pull | default(true) }}"
+        volumes:
+          - "{{ odysseus_data_directory }}/data:/app/data:rw"
+          - "{{ odysseus_data_directory }}/logs:/app/logs:rw"
+        ports:
+          - "{{ odysseus_port }}:7000"
+        networks:
+          - name: "{{ odysseus_network_name }}"
+        env:
+          PUID: "{{ odysseus_user_id }}"
+          PGID: "{{ odysseus_group_id }}"
+          OLLAMA_BASE_URL: "{{ odysseus_ollama_base_url }}"
+          CHROMADB_HOST: "{{ odysseus_chromadb_container_name }}"
+          CHROMADB_PORT: "8000"
+          SEARXNG_INSTANCE: "http://{{ odysseus_searxng_container_name }}:8080"
+          AUTH_ENABLED: "true"
+          LOCALHOST_BYPASS: "false"
+          ODYSSEUS_ADMIN_USER: "admin"
+          ODYSSEUS_ADMIN_PASSWORD: "{{ odysseus_admin_password }}"
+          ALLOWED_ORIGINS: "{{ odysseus_allowed_origins }}"
+        restart_policy: unless-stopped
+        memory: "{{ odysseus_memory }}"
+        labels:
+          homepage.group: AI
+          homepage.name: Odysseus
+          homepage.href: "{{ odysseus_lan_url }}"
+          traefik.enable: "{{ odysseus_available_externally | string }}"
+          traefik.http.routers.odysseus.rule: "Host(`{{ odysseus_hostname }}.{{ ansible_nas_domain }}`)"
+          traefik.http.routers.odysseus.tls.certresolver: "letsencrypt"
+          traefik.http.routers.odysseus.tls.domains[0].main: "{{ ansible_nas_domain }}"
+          traefik.http.routers.odysseus.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
+          traefik.http.services.odysseus.loadbalancer.server.port: "7000"
+      no_log: true
+      register: docker_container_result
+      until: docker_container_result is succeeded
+      retries: "{{ docker_container_pull_retries }}"
+      delay: "{{ docker_container_pull_delay }}"
+  when: odysseus_enabled is true
+
+- name: Stop Odysseus
+  block:
+    - name: Stop Odysseus
+      community.docker.docker_container:
+        name: "{{ item }}"
+        state: absent
+      with_items:
+        - "{{ odysseus_container_name }}"
+        - "{{ odysseus_chromadb_container_name }}"
+        - "{{ odysseus_searxng_container_name }}"
+  when: odysseus_enabled is false
