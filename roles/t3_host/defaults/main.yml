@@ -16,3 +16,9 @@ t3_clis:
 # Where the installers put the binaries, and T3 Code's data folder on the remote.
 t3_bin_directory: "{{ ansible_env.HOME }}/.local/bin"
 t3_home_directory: "{{ ansible_env.HOME }}/.t3"
+
+# Antigravity also needs T3 Code's ACP runtime, which T3's Install button would fetch from the
+# ACP registry. The same release, pinned by its checksum (registry entry `antigravity-acp`).
+t3_antigravity_acp_version: "1.4.5"
+t3_antigravity_acp_sha256: "923923a0d7dc8073f66cc6f78647a3107e3a7ee2b7e1a24df8b3927b5188013b"
+t3_antigravity_acp_url: "https://dl.google.com/agy-extensions/releases/linux/agy-acp-server-{{ t3_antigravity_acp_version }}-linux-x86_64.zip"

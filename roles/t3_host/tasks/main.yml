@@ -63,3 +63,43 @@
               'claudeAgent': {'config': {'binaryPath': t3_bin_directory ~ '/claude'}},
               'codex': {'config': {'binaryPath': t3_bin_directory ~ '/codex'}}}}, recursive=True))
          | to_nice_json }}
+
+- name: Install Antigravity's ACP runtime where T3 Code looks for it
+  when: "'antigravity' in (t3_clis | map(attribute='provider'))"
+  vars:
+    t3_acp_directory: "{{ t3_home_directory }}/tools/antigravity-acp/linux-x64"
+  block:
+    - name: Fetch the ACP runtime
+      ansible.builtin.get_url:
+        url: "{{ t3_antigravity_acp_url }}"
+        dest: "{{ t3_home_directory }}/caches/antigravity-acp.zip"
+        checksum: "sha256:{{ t3_antigravity_acp_sha256 }}"
+        mode: "0600"
+
+    - name: Unpack it with Python, as unzip is not on every host
+      ansible.builtin.command:
+        cmd: >-
+          python3 -m zipfile -e {{ t3_home_directory }}/caches/antigravity-acp.zip
+          {{ t3_acp_directory }}/versions/{{ t3_antigravity_acp_sha256 }}
+        creates: "{{ t3_acp_directory }}/versions/{{ t3_antigravity_acp_sha256 }}/agy_acp_server.par"
+
+    - name: Make the server and its harness executable
+      ansible.builtin.file:
+        path: "{{ t3_acp_directory }}/versions/{{ t3_antigravity_acp_sha256 }}/{{ item }}"
+        mode: "0755"
+      loop: [agy_acp_server.par, localharness_external]
+      register: t3_acp_files
+
+    - name: Write T3 Code's install marker (it checks the sizes)
+      ansible.builtin.copy:
+        dest: "{{ t3_acp_directory }}/versions/{{ t3_antigravity_acp_sha256 }}/.install-complete.json"
+        mode: "0600"
+        content: "{{ {'releaseId': t3_antigravity_acp_sha256, 'version': t3_antigravity_acp_version,
+          'executable': {'name': 'agy_acp_server.par', 'bytes': t3_acp_files.results[0].size},
+          'harness': {'name': 'localharness_external', 'bytes': t3_acp_files.results[1].size}} | to_json }}"
+
+    - name: Mark that release active
+      ansible.builtin.copy:
+        dest: "{{ t3_acp_directory }}/active.json"
+        content: '{"releaseId":"{{ t3_antigravity_acp_sha256 }}"}'
+        mode: "0644"
