@@ -14,6 +14,20 @@
         - always
         - samba
 
+    # The system account behind each Samba user: `smbpasswd -a` needs it to exist.
+    - name: Create the system accounts of the Samba users
+      ansible.builtin.user:
+        name: "{{ item.name }}"
+        state: present
+        system: true
+        create_home: false
+        shell: /usr/sbin/nologin
+      loop: "{{ samba_users | default([]) }}"
+      loop_control:
+        label: "{{ item.name }}"
+      tags:
+        - samba
+
   roles:
     ###
     ### Requirements
