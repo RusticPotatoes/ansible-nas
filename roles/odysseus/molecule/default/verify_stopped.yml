@@ -1,0 +1,22 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    - ansible.builtin.include_vars:
+        file: ../../defaults/main.yml
+
+    - name: Try and stop and remove Odysseus
+      community.docker.docker_container:
+        name: "{{ item }}"
+        state: absent
+      register: result
+      with_items:
+        - "{{ odysseus_container_name }}"
+        - "{{ odysseus_chromadb_container_name }}"
+        - "{{ odysseus_searxng_container_name }}"
+
+    - name: Check Odysseus is stopped
+      ansible.builtin.assert:
+        that:
+          - not result.changed

@@ -79,6 +79,7 @@ If you have a spare domain name you can configure applications to be accessible 
 * [NZBget](https://nzbget.net/) - The most efficient usenet downloader
 * [Octoprint](https://octoprint.org/) - Control and monitor your 3D printer
 * [OwnTone](https://owntone.github.io/owntone-server/) - AirPlay 2 sender with a Spotify Connect receiver, for playing Spotify on HomePods
+* [Odysseus](https://github.com/odysseus-dev/odysseus) - Self-hosted AI workspace: chat, agents, memory and documents, on your own models
 * [Ombi](https://ombi.io/) - web application that automatically gives your users the ability to request content
 * [openHAB](https://www.openhab.org/) - A vendor and technology agnostic open source automation software for your home
 * [Organizr](https://organizr.app/) - ORGANIZR aims to be your one stop shop for your Servers Frontend.

@@ -1,0 +1,45 @@
+---
+odysseus_enabled: false
+odysseus_available_externally: false
+
+# directories
+odysseus_data_directory: "{{ docker_home }}/odysseus"
+
+# uid / gid the app drops to; its entrypoint chowns the data folders to match
+odysseus_user_id: "1000"
+odysseus_group_id: "1000"
+
+# network
+odysseus_port: "7011"
+odysseus_hostname: "odysseus"
+odysseus_network_name: "odysseus"
+odysseus_lan_url: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ odysseus_port }}"
+odysseus_allowed_origins: "{{ odysseus_lan_url }},https://{{ odysseus_hostname }}.{{ ansible_nas_domain }}"
+
+# The house's Ollama, used as the model backend instead of bundling another runtime.
+odysseus_ollama_base_url: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:11434/v1"
+
+# docker
+# Upstream publishes no releases, and its `latest` moves on every push to main, so this pins
+# an immutable main build (X.Y.Z-<commit>): 1.0.3 at commit 9d0d372, main's head on 2026-10-25.
+odysseus_container_name: "odysseus"
+odysseus_image_name: "ghcr.io/odysseus-dev/odysseus"
+odysseus_image_version: "1.0.3-9d0d372"
+# Vector memory. Same version upstream's compose pins.
+odysseus_chromadb_container_name: "odysseus-chromadb"
+odysseus_chromadb_image_name: "chromadb/chroma"
+odysseus_chromadb_image_version: "1.5.9"
+# Web search for the agents. Same version upstream's compose pins (2026.6.2 crashes on boot).
+odysseus_searxng_container_name: "odysseus-searxng"
+odysseus_searxng_image_name: "searxng/searxng"
+odysseus_searxng_image_version: "2026.10.24-ef0ec03da"
+
+# specs. Upstream sets no limits; these keep a runaway service from stalling the NAS.
+# Models run in Ollama, so the app itself needs no room for them.
+odysseus_memory: 4g
+odysseus_chromadb_memory: 1g
+odysseus_searxng_memory: 512m
+
+# Secret. Set vault_odysseus_admin_password in vault.yml before enabling: it seeds the
+# `admin` account on the first boot only (later changes are made in the app's Settings).
+odysseus_admin_password: "{{ vault_odysseus_admin_password | default('') }}"

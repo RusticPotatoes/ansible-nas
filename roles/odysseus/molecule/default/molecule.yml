@@ -1,0 +1,7 @@
+---
+provisioner:
+  inventory:
+    group_vars:
+      all:
+        odysseus_enabled: true
+        vault_odysseus_admin_password: "molecule-only-password"
