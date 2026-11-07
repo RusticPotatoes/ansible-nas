@@ -40,9 +40,17 @@ Open `http://<your NAS>:8791` and paste the token. The page keeps it in that bro
 ### Live mode and HTTPS
 
 A phone can listen in two ways. *Listening* plays an MP3 stream and keeps going with the screen
-locked. *Live* is a fraction of a second behind and needs a secure page. Set
-`endora_audio_available_externally: true` to serve the page through Traefik at
-`https://audio.<your domain>`. Over plain HTTP the page offers Listening only.
+locked. *Live* is a fraction of a second behind, and browsers allow it only on a secure page.
+Over plain HTTP on the LAN the page offers Listening only. Everything else works.
+
+For Live, give the page TLS **on the LAN only**: a reverse proxy on the LAN serving the hub under
+a local name (a `home.arpa` record in Pi-hole, say) with a certificate your devices trust, such
+as one from your own private CA. This role does not set that up yet.
+
+Do **not** use `endora_audio_available_externally` for this. It publishes the page through
+Traefik on your internet domain, so control of your speakers would be reachable from the
+internet, guarded only by the token. It is off by default. Turning it on is a separate decision
+about that risk.
 
 ### The AirPlay 2 door
 

@@ -5,7 +5,9 @@
 # Spotify receiver, the AirPlay senders and, if wanted, the AirPlay 2 door on a LAN address of
 # its own. They replace Endora's own sound containers; see the docs page for moving over.
 endora_audio_enabled: false
-# Through Traefik, with TLS: the page's Live mode needs a secure page (an AudioWorklet).
+# Publishes the page through Traefik on the internet domain, which would put control of the
+# hub on the internet. Off, and staying off is the default: turning it on is the owner's own
+# decision about that risk, not a way to get TLS on the LAN (see the docs page).
 endora_audio_available_externally: false
 
 # images

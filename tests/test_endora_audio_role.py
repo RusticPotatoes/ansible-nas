@@ -58,6 +58,8 @@ class TheRole(unittest.TestCase):
     def test_it_is_off_unless_switched_on_and_the_door_is_opt_in(self):
         self.assertIs(self.defaults["endora_audio_enabled"], False)
         self.assertIs(self.defaults["endora_audio_airplay_enabled"], False)
+        # Publishing to the internet domain is the owner's decision, never a default.
+        self.assertIs(self.defaults["endora_audio_available_externally"], False)
         self.assertEqual(self.defaults["endora_audio_airplay_ip"], "")
         self.assertEqual(self.defaults["endora_audio_airplay_mac"], "")
 
