@@ -96,10 +96,15 @@ since the two sets cannot run together. Keep the old images until the new ones a
 turn off Endora's `sound` profile, and set its node's sound URL to the new hub if Endora is still
 the remote: the token in the token volume is the same.
 
+After moving over, each phone or browser opens the hub's page at a new address, so it no longer
+knows which speaker it was. The page offers "This is me: …" with the stream speakers already
+there: pick yours, and it keeps its wires and its live delay. The live delay applies in Live mode
+only; music in Listening mode is not delayed.
+
 ## Specific configuration
 
 * `endora_audio_port` (default `8791`): the hub's page and API.
-* `endora_audio_version` (default `1.0.0`): the release of all three images (see the
+* `endora_audio_version` (default `1.0.1`): the release of all three images (see the
   repository's releases for each one's digests).
 * `endora_audio_senders_enabled`, `endora_audio_spotify_enabled` (default `true`): each part on
   or off.

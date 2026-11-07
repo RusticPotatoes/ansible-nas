@@ -13,7 +13,7 @@ endora_audio_available_externally: false
 # images
 # The three are built and published by the endora-audio repository's CI, for each release
 # (its notes list the digests). A released version, so the NAS changes only when this does.
-endora_audio_version: "1.0.0"
+endora_audio_version: "1.0.1"
 endora_audio_image: "ghcr.io/rusticpotatos/endora-audio:{{ endora_audio_version }}"
 endora_audio_senders_image: "ghcr.io/rusticpotatos/endora-audio-senders:{{ endora_audio_version }}"
 endora_audio_airplay_image: "ghcr.io/rusticpotatos/endora-audio-airplay:{{ endora_audio_version }}"
