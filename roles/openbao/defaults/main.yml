@@ -1,0 +1,41 @@
+---
+# OpenBao, the house's vault for machine secrets, in its own role and on its own network. It
+# moved here from Endora's collection (Endora ADR 0127, amended 2026-11-07) so that the vault
+# does not depend on Endora: Endora's node is one client of it. No key, share or token is ever
+# set here; the vault is unsealed by the owner (website/docs/applications/other/openbao.md).
+openbao_enabled: false
+
+# Pinned by digest: the vault holds every secret, so the image it runs is chosen, never pulled
+# from a moving tag, and never auto-updated (the watchtower label in tasks/main.yml).
+# OpenBao v2.7.1, the multi-architecture index: the same image Endora's collection ran.
+openbao_image: "openbao/openbao:2.7.1@sha256:6d2b93856e3fcf7b18ad855a0b51eaba474dc8b79cf554379ea32034797d2acf"
+openbao_container_name: openbao
+
+# The container Endora's collection ran on the same data. The role removes it (never its data)
+# before starting its own, so two servers never open one folder.
+openbao_legacy_container_name: endora-openbao
+
+# directories
+# Its integrated (raft) storage and audit log, encrypted by the vault's own barrier: a copy of
+# the folder opens nothing without the unseal shares. The folder Endora's role used, so the
+# vault keeps its data and its shares; an inventory that still sets that role's
+# `openbao_data_dir` is honoured.
+openbao_data_directory: "{{ openbao_data_dir | default(docker_home ~ '/openbao') }}"
+# The image's own `openbao` user, which owns the folder.
+openbao_uid: 100
+openbao_gid: 1000
+
+# network
+# Its own network, internal and with no gateway on the host: the vault reaches no internet, no
+# LAN and not the NAS. A client joins it by name (Endora: ENDORA_VAULT_NETWORK = openbao) and
+# reaches the vault at http://openbao:8200.
+openbao_network_name: openbao
+openbao_alias: openbao
+# A port on the NAS for the `bao` command line, e.g. "127.0.0.1:8200". Empty: no port, and
+# only members of the vault's network reach it. `docker exec -it openbao bao ...` needs none.
+openbao_port: ""
+
+# specs
+# It idles near 20 MB. GOMEMLIMIT keeps Go's collector working well inside the cap.
+openbao_memory: 256m
+openbao_go_memory_limit: 200MiB
