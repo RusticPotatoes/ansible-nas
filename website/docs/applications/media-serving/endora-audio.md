@@ -99,7 +99,8 @@ the remote: the token in the token volume is the same.
 ## Specific configuration
 
 * `endora_audio_port` (default `8791`): the hub's page and API.
-* `endora_audio_version` (default `latest`): the image tag of all three, e.g. a release.
+* `endora_audio_version` (default `1.0.0`): the release of all three images (see the
+  repository's releases for each one's digests).
 * `endora_audio_senders_enabled`, `endora_audio_spotify_enabled` (default `true`): each part on
   or off.
 * `endora_audio_*_volume`: the volumes, kept when the role is turned off.

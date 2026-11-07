@@ -69,6 +69,7 @@ class TheRole(unittest.TestCase):
                           ("endora_audio_airplay_image", "endora-audio-airplay")]:
             self.assertEqual(self.defaults[key], f"ghcr.io/rusticpotatos/{name}:{{{{ endora_audio_version }}}}")
         self.assertEqual(self.defaults["endora_audio_spotify_image"], LIBRESPOT, "the build Endora ran")
+        self.assertEqual(self.defaults["endora_audio_version"], "1.0.0", "a release, never a moving tag")
 
     def test_the_hub_is_fenced_as_endora_ran_it_and_publishes_its_page(self):
         hub = self.hub
