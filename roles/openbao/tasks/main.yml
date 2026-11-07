@@ -30,6 +30,7 @@
         driver_options:
           com.docker.network.bridge.gateway_mode_ipv4: isolated
         state: present
+      register: openbao_network
 
     # The container Endora's collection ran on this data. Removed before the new one starts,
     # so two servers never open the same raft folder; its data folder is not touched.
@@ -39,6 +40,9 @@
         state: absent
 
     - name: OpenBao Docker Container
+      # Check mode cannot create the network. Compare an existing container when its
+      # network exists; defer this comparison on a first installation, without applying.
+      when: not ansible_check_mode or openbao_network.network is not none
       community.docker.docker_container:
         name: "{{ openbao_container_name }}"
         image: "{{ openbao_image }}"
@@ -81,6 +85,16 @@
           # Never auto-updated: a new vault image is a decision, made by changing the digest.
           com.centurylinklabs.watchtower.enable: "false"
         state: started
+
+    - name: Explain the first-installation check-mode limit
+      ansible.builtin.debug:
+        msg: >-
+          The OpenBao network would be created. Container comparison is deferred because
+          check mode does not create that network; the normal apply creates it before
+          starting the container. No vault has been started or initialised by this check.
+      when:
+        - ansible_check_mode
+        - openbao_network.network is none
 
     # What the owner needs next: whether to unseal it, or (no data where it was expected) not
     # to initialise a fresh vault by mistake. Reads the status only; never a value.

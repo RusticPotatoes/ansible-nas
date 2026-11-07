@@ -17,6 +17,12 @@ yourself, at the vault's own prompt.
 Set `openbao_enabled: true` in your `inventories/<your_inventory>/group_vars/nas.yml` file, then
 run the playbook with `-t openbao`.
 
+On a first installation, `--check` plans the network without creating it. The role reports
+that the container comparison is deferred until that network exists; applying the playbook
+creates the network before starting the container. Subsequent dry runs compare the container
+normally. A successful first-installation dry run does not prove the container has started
+or that the vault has been initialised.
+
 ## What it runs
 
 - The official image, **pinned by digest** (`openbao_image`), never pulled again and never

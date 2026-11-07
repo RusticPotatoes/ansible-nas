@@ -16,6 +16,9 @@ import unittest
 from pathlib import Path
 
 import yaml
+from ansible.parsing.dataloader import DataLoader
+from ansible.playbook.conditional import Conditional
+from ansible.template import Templar
 
 REPO = Path(__file__).resolve().parent.parent
 ROLE = REPO / "roles" / "openbao"
@@ -105,6 +108,31 @@ class TheRole(unittest.TestCase):
         # Clients reach it by this name: http://openbao:8200.
         self.assertEqual(self.defaults["openbao_alias"], "openbao")
         self.assertEqual(self.vars["openbao_config"]["api_addr"], "http://{{ openbao_alias }}:8200")
+
+    def container_is_checked(self, check_mode, network):
+        """Evaluate the task's real condition through Ansible, without Docker writes."""
+        loader = DataLoader()
+        condition = Conditional(loader=loader)
+        when = self.container_task().get("when", [])
+        condition.when = [when] if isinstance(when, str) else when
+        variables = {
+            "ansible_check_mode": check_mode,
+            "openbao_network": {"network": network},
+        }
+        return condition.evaluate_conditional(Templar(loader=loader), variables)
+
+    def test_first_installation_check_defers_container_until_its_network_exists(self):
+        self.assertFalse(self.container_is_checked(True, None))
+
+    def test_existing_network_still_gets_a_container_drift_check(self):
+        self.assertTrue(self.container_is_checked(True, {"Name": "example-vault"}))
+
+    def test_apply_starts_the_container_after_creating_its_network(self):
+        self.assertTrue(self.container_is_checked(False, None))
+
+    def test_network_inspection_result_is_available_to_the_container(self):
+        network = next(t for t in self.tasks if module(t, "docker_network"))
+        self.assertEqual(network.get("register"), "openbao_network")
 
     def test_it_no_longer_needs_endoras_network(self):
         text = (ROLE / "tasks" / "main.yml").read_text(encoding="utf-8")
