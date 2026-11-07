@@ -381,6 +381,37 @@ samba_extra_shares:
     path: /mnt/archive
     directory_mode: "0755"
 
+  # Time Machine target for the Mac. Its own folder, not under /mnt/archive/backups, and not
+  # mounted into Backrest (backrest_sources above), so the nightly plans never copy it.
+  # Not guest: only the dedicated `timemachine` Samba user can open it.
+  - name: timemachine
+    comment: "Time Machine backups"
+    guest_ok: no
+    public: no
+    writable: yes
+    read_only: no
+    valid_users: timemachine
+    owner: timemachine
+    group: timemachine
+    browseable: yes
+    path: /mnt/archive/timemachine
+    directory_mode: "0700"
+    force_directory_mode: "0700"
+    create_mode: "0600"
+    force_create_mode: "0600"
+    vfs_objects:
+      - name: catia
+      - name: fruit
+        options:
+          - { name: "time machine", value: "yes" }
+          - { name: "time machine max size", value: "1500G" }
+      - name: streams_xattr
+
+# Samba accounts beyond the NAS user. The password comes from vault.yml (vault_timemachine_password).
+samba_users:
+  - name: timemachine
+    password: "{{ vault_timemachine_password | mandatory }}"
+
 # Local AI stack (GPU). Codified from the containers stood up by hand.
 ollama_enabled: true
 open_webui_enabled: true
