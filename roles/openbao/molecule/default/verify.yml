@@ -1,0 +1,35 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Include the role's defaults
+      ansible.builtin.include_vars:
+        file: ../../defaults/main.yml
+
+    - name: Get container state
+      community.docker.docker_container_info:
+        name: "{{ openbao_container_name }}"
+      register: result
+
+    - name: Ask it whether it is sealed
+      community.docker.docker_container_exec:
+        container: "{{ openbao_container_name }}"
+        command: bao status -address=http://127.0.0.1:8200 -format=json
+      register: status
+      changed_when: false
+      failed_when: status.rc not in [0, 2]
+
+    - name: Get its network
+      community.docker.docker_network_info:
+        name: "{{ openbao_network_name }}"
+      register: network
+
+    # A fresh vault is not initialised, so it is sealed: running, but not healthy.
+    - name: Check OpenBao is running, sealed, and on its own internal network
+      ansible.builtin.assert:
+        that:
+          - result.container['State']['Status'] == "running"
+          - result.container['State']['Restarting'] == false
+          - (status.stdout | from_json).sealed
+          - network.network['Internal']

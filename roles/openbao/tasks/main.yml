@@ -1,0 +1,115 @@
+---
+- name: Start OpenBao
+  block:
+    - name: Check the image is pinned by digest
+      ansible.builtin.assert:
+        that:
+          - openbao_image is search('@sha256:[0-9a-f]{64}$')
+        fail_msg: "openbao_image must be pinned by digest (…@sha256:<64 hex>); got '{{ openbao_image }}'"
+
+    - name: Check the data directory is an absolute path
+      ansible.builtin.assert:
+        that:
+          - openbao_data_directory is match('/')
+        fail_msg: "openbao_data_directory must be an absolute path on this host; got '{{ openbao_data_directory }}'"
+
+    # Its storage and audit log; only the vault's own user reads it. Kept, never emptied.
+    - name: Create OpenBao Directories
+      ansible.builtin.file:
+        path: "{{ openbao_data_directory }}"
+        state: directory
+        owner: "{{ openbao_uid }}"
+        group: "{{ openbao_gid }}"
+        mode: "0700"
+
+    # Internal, and isolated: no address on the host, so no route out (Docker 28 and later).
+    - name: OpenBao Docker Network
+      community.docker.docker_network:
+        name: "{{ openbao_network_name }}"
+        internal: true
+        driver_options:
+          com.docker.network.bridge.gateway_mode_ipv4: isolated
+        state: present
+
+    # The container Endora's collection ran on this data. Removed before the new one starts,
+    # so two servers never open the same raft folder; its data folder is not touched.
+    - name: Retire the OpenBao container Endora's collection ran
+      community.docker.docker_container:
+        name: "{{ openbao_legacy_container_name }}"
+        state: absent
+
+    - name: OpenBao Docker Container
+      community.docker.docker_container:
+        name: "{{ openbao_container_name }}"
+        image: "{{ openbao_image }}"
+        # Pinned by digest: fetched once when missing, never refreshed.
+        pull: false
+        command: [server]
+        restart_policy: unless-stopped
+        env:
+          BAO_LOCAL_CONFIG: "{{ openbao_config | to_json }}"
+          GOMEMLIMIT: "{{ openbao_go_memory_limit }}"
+          # The folder is already the vault's user's; the entrypoint need not chown it.
+          SKIP_CHOWN: "1"
+        volumes:
+          - "{{ openbao_data_directory }}:/openbao/file"
+        # The entrypoint writes BAO_LOCAL_CONFIG here; the rest of the filesystem is read-only.
+        tmpfs:
+          - /openbao/config:mode=1777,size=1m
+          - /tmp:size=8m
+        read_only: true
+        cap_drop: [ALL]
+        security_opts: [no-new-privileges:true]
+        memory: "{{ openbao_memory }}"
+        networks_cli_compatible: true
+        network_mode: "{{ openbao_network_name }}"
+        networks: >-
+          {{ [{'name': openbao_network_name, 'aliases': [openbao_alias]}]
+             + ([{'name': 'bridge'}] if openbao_port | length > 0 else []) }}
+        published_ports: "{{ [openbao_port ~ ':8200'] if openbao_port | length > 0 else [] }}"
+        # Healthy only while unsealed. `bao status` exits 0 unsealed, 2 sealed or not yet
+        # initialised, 1 when it cannot reach the server; Docker reserves 2, so anything but 0
+        # is reported as 1, unhealthy. A sealed vault shows as unhealthy, and the lab's
+        # "container unhealthy" alert says so.
+        healthcheck:
+          test: ["CMD-SHELL", "bao status -address=http://127.0.0.1:8200 >/dev/null 2>&1 || exit 1"]
+          interval: 30s
+          timeout: 5s
+          retries: 3
+          start_period: 10s
+        labels:
+          # Never auto-updated: a new vault image is a decision, made by changing the digest.
+          com.centurylinklabs.watchtower.enable: "false"
+        state: started
+
+    # What the owner needs next: whether to unseal it, or (no data where it was expected) not
+    # to initialise a fresh vault by mistake. Reads the status only; never a value.
+    - name: Ask OpenBao whether it is sealed
+      community.docker.docker_container_exec:
+        container: "{{ openbao_container_name }}"
+        command: bao status -address=http://127.0.0.1:8200 -format=json
+      register: openbao_status
+      changed_when: false
+      failed_when: openbao_status.rc not in [0, 2]
+      until: openbao_status.rc in [0, 2]
+      retries: 10
+      delay: 3
+      when: not ansible_check_mode
+
+    - name: Say whether OpenBao is sealed
+      ansible.builtin.debug:
+        msg: >-
+          {%- set s = openbao_status.stdout | from_json -%}
+          OpenBao is {{ 'not initialised (no vault data in ' ~ openbao_data_directory ~ ')' if not s.initialized
+                        else ('sealed: unseal it with your shares' if s.sealed else 'unsealed') }}.
+      when: not ansible_check_mode
+  when: openbao_enabled is true
+
+# Its data directory is never removed: it holds the vault.
+- name: Stop OpenBao
+  block:
+    - name: Stop OpenBao
+      community.docker.docker_container:
+        name: "{{ openbao_container_name }}"
+        state: absent
+  when: openbao_enabled is false
