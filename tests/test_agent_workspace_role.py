@@ -117,5 +117,13 @@ class TheRole(unittest.TestCase):
         self.assertIs(seed[0]["ansible.posix.synchronize"]["delete"], False)
 
 
+class ADryRun(unittest.TestCase):
+    def test_starting_the_timer_does_not_fail_before_its_unit_exists(self):
+        tasks = tasks_of(load(ROLE / "tasks" / "main.yml"))
+        start = [t for t in tasks if t.get("name") == "Keep the timer running"]
+        self.assertEqual(len(start), 1)
+        self.assertEqual(start[0].get("ignore_errors"), "{{ ansible_check_mode }}")
+
+
 if __name__ == "__main__":
     unittest.main()

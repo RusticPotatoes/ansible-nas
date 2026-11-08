@@ -165,6 +165,8 @@
       register: agent_workspace_units
 
     - name: Keep the timer running
+      # A dry run has not written the unit yet, so systemd cannot find it.
+      ignore_errors: "{{ ansible_check_mode }}"
       ansible.builtin.systemd_service:
         name: agent-config-update.timer
         scope: user
