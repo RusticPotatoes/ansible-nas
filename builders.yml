@@ -5,6 +5,22 @@
 - name: Build machines
   hosts: builders
   become: false
+  pre_tasks:
+    # Ubuntu 25.10 and later run sudo-rs as `sudo`, whose password prompt Ansible doesn't
+    # recognise (it times out "waiting for privilege escalation prompt"). They keep the
+    # classic sudo as sudo.ws: use it where it's there.
+    - name: Find the classic sudo
+      ansible.builtin.stat:
+        path: /usr/bin/sudo.ws
+      register: builders_sudo_ws
+      tags: [always]
+
+    - name: Use it for become
+      ansible.builtin.set_fact:
+        ansible_become_exe: /usr/bin/sudo.ws
+      when: builders_sudo_ws.stat.exists
+      tags: [always]
+
   roles:
     - role: geerlingguy.docker
       become: true
