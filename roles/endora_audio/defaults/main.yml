@@ -72,3 +72,14 @@ endora_audio_container_name: endora-audio
 endora_audio_spotify_container_name: endora-audio-spotify
 endora_audio_senders_container_name: endora-audio-senders
 endora_audio_airplay_container_name: endora-audio-airplay
+
+# moving over
+# Endora's own sound containers, replaced by these. Off: they are left alone. On: removed once
+# the hub is running here (their volumes are kept). A one-off, e.g.
+#   make run-remote TAGS=endora_audio EXTRA="-e endora_audio_remove_old_containers=true"
+endora_audio_remove_old_containers: false
+endora_audio_old_containers:
+  - endora-sound
+  - endora-senders
+  - endora-airplay2
+  - endora-spotify
