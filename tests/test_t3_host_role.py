@@ -58,8 +58,7 @@ class TheRole(unittest.TestCase):
         self.assertEqual(len(runs), 1)
         self.assertIn("creates", runs[0]["args"])
 
-    def test_nothing_runs_as_root(self):
-        self.assertFalse(any(t.get("become") for t in self.tasks))
+    def test_the_play_runs_as_the_user(self):
         play = self.playbook[0]
         self.assertFalse(play.get("become", False))
 
@@ -80,6 +79,17 @@ class TheRole(unittest.TestCase):
         links = [t for t in self.tasks if "ansible.builtin.file" in t
                  and t["ansible.builtin.file"].get("state") == "link"]
         self.assertEqual(links[0]["loop"], ["node", "npm", "npx"])
+
+    def test_the_service_finds_the_agents_and_only_linger_needs_root(self):
+        by_name = {t.get("name"): t for t in self.tasks}
+        path = [t for t in self.tasks if "ansible.builtin.copy" in t
+                and "path.conf" in str(t["ansible.builtin.copy"]["dest"])]
+        self.assertEqual(len(path), 1)
+        self.assertIn("{{ t3_bin_directory }}", path[0]["ansible.builtin.copy"]["content"])
+        root = [n for n, t in by_name.items() if t.get("become")]
+        self.assertEqual(len(root), 1)
+        self.assertIn("enable-linger", by_name[root[0]]["ansible.builtin.command"]["cmd"])
+        self.assertIn("t3_host_sudo", by_name[root[0]]["tags"])
 
     def test_the_playbook_targets_its_own_group(self):
         self.assertEqual(self.playbook[0]["hosts"], "t3")
