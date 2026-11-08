@@ -1,11 +1,31 @@
 ---
 # Makes each machine in the `t3` group a T3 Code remote with Claude, Codex and Antigravity.
-# Runs as the machine's own user: nothing here needs root. See website/docs/applications/
-# other/t3-host.md.
+# Runs as the machine's own user; only linger and the optional tailscale role need sudo (-K).
+# See website/docs/applications/development-tools/t3-host.md and tailscale.md.
 - name: T3 Code remotes
   hosts: t3
   become: false
+  pre_tasks:
+    # Ubuntu 25.10 and later run sudo-rs as `sudo`, whose password prompt Ansible doesn't
+    # recognise. They keep the classic sudo as sudo.ws: use it where it's there.
+    - name: Find the classic sudo
+      ansible.builtin.stat:
+        path: /usr/bin/sudo.ws
+      register: t3_sudo_ws
+      tags: [always]
+
+    - name: Use it for become
+      ansible.builtin.set_fact:
+        ansible_become_exe: /usr/bin/sudo.ws
+      when: t3_sudo_ws.stat.exists
+      tags: [always]
+
   roles:
+    - role: tailscale
+      become: true
+      when: tailscale_enabled | bool
+      tags:
+        - tailscale
     - role: t3_host
       tags:
         - t3_host

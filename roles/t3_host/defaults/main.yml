@@ -39,4 +39,9 @@ t3_service_enabled: true
 # another T3 Code can link this machine and run threads here that outlive the laptop. Off, the
 # server answers only on 127.0.0.1. Either way a device still needs a pairing token.
 t3_lan: false
+
+# Publish the service over HTTPS on the tailnet with T3 Code's own `tailscale serve`, so another
+# T3 Code can link this machine (it refuses plain http). Needs the machine on the tailnet with
+# this user as Tailscale's operator: the tailscale role, run by t3.yml, does both.
+t3_tailscale_serve: false
 t3_version: "0.1.7"

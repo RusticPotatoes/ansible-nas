@@ -1,0 +1,14 @@
+---
+# Puts the machine on the owner's tailnet (Tailscale), so the T3 Code remotes can be linked over
+# HTTPS: t3_host's `t3_tailscale_serve` then has T3 Code publish itself with `tailscale serve`.
+# Run by t3.yml on the `t3` group; needs sudo, so -K (make t3 passes it).
+tailscale_enabled: false
+
+# Leave empty and join each machine once by hand (`sudo tailscale up`, open the link it prints).
+# Or set a reusable auth key from the tailnet's admin console, in vault.yml, never in a tracked
+# file.
+tailscale_auth_key: ""
+
+# The user allowed to change Tailscale's settings without sudo: T3 Code's service runs as this
+# user and configures `tailscale serve` itself.
+tailscale_operator: "{{ ansible_user_id }}"
