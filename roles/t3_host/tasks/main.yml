@@ -95,7 +95,7 @@
   register: t3_settings_file
   failed_when: false
 
-- name: Turn the agents' providers on in T3 Code, keeping every other setting
+- name: Turn the agents' providers (and linking, if asked) on in T3 Code, keeping every other setting
   ansible.builtin.copy:
     dest: "{{ t3_home_directory }}/userdata/settings.json"
     mode: "0600"
@@ -107,8 +107,10 @@
                 | map('from_json')))}, recursive=True)
           | combine({'providerInstances': {
               'claudeAgent': {'config': {'binaryPath': t3_bin_directory ~ '/claude'}},
-              'codex': {'config': {'binaryPath': t3_bin_directory ~ '/codex'}}}}, recursive=True))
+              'codex': {'config': {'binaryPath': t3_bin_directory ~ '/codex'}}}}, recursive=True)
+          | combine({'linkedEnvironmentsEnabled': t3_linked_environments | bool}))
          | to_nice_json }}
+  notify: Restart T3 Code
 
 - name: Install Antigravity's ACP runtime where T3 Code looks for it
   ignore_errors: "{{ ansible_check_mode }}"

@@ -109,6 +109,14 @@ class TheRole(unittest.TestCase):
         self.assertIn("t3_tailscale_serve", env[0]["ansible.builtin.lineinfile"]["line"])
         self.assertEqual(env[0]["notify"], "Restart T3 Code")
 
+    def test_linked_environments_are_off_unless_asked_and_kept_with_the_other_settings(self):
+        self.assertIs(self.defaults["t3_linked_environments"], False)
+        writes = [t for t in self.tasks if "ansible.builtin.copy" in t
+                  and "settings.json" in str(t["ansible.builtin.copy"].get("dest"))]
+        content = writes[0]["ansible.builtin.copy"]["content"]
+        self.assertIn("'linkedEnvironmentsEnabled': t3_linked_environments | bool", content)
+        self.assertEqual(writes[0]["notify"], "Restart T3 Code")
+
     def test_the_playbook_targets_its_own_group(self):
         self.assertEqual(self.playbook[0]["hosts"], "t3")
         self.assertEqual(self.playbook[0]["roles"][-1]["role"], "t3_host")

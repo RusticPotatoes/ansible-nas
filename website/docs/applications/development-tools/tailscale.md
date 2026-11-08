@@ -13,6 +13,7 @@ Set in `inventories/t3.ini` (git-ignored), under `[t3:vars]`:
 ```ini
 tailscale_enabled=true
 t3_tailscale_serve=true
+t3_linked_environments=true
 ```
 
 Then `make t3` (asks sudo's password). The role installs Tailscale from its own signed apt
