@@ -44,4 +44,8 @@ t3_lan: false
 # T3 Code can link this machine (it refuses plain http). Needs the machine on the tailnet with
 # this user as Tailscale's operator: the tailscale role, run by t3.yml, does both.
 t3_tailscale_serve: false
+
+# Accept links from another T3 Code (its Settings > Labs > Linked environments), so threads it
+# starts here run on this machine. Also needs a secure address: see t3_tailscale_serve.
+t3_linked_environments: false
 t3_version: "0.1.7"
