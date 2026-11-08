@@ -70,6 +70,17 @@ class TheRole(unittest.TestCase):
         self.assertIn("combine", writes[0]["ansible.builtin.copy"]["content"])
         self.assertIn("recursive=True", writes[0]["ansible.builtin.copy"]["content"])
 
+    def test_it_installs_node_lts_for_the_user_checked_by_checksum(self):
+        self.assertTrue(self.defaults["t3_node_version"].startswith("24."))
+        self.assertEqual(set(self.defaults["t3_node_sha256"]), {"x64", "arm64"})
+        fetch = [t for t in self.tasks if "ansible.builtin.get_url" in t
+                 and "nodejs.org" in t["ansible.builtin.get_url"]["url"]]
+        self.assertEqual(len(fetch), 1)
+        self.assertIn("checksum", fetch[0]["ansible.builtin.get_url"])
+        links = [t for t in self.tasks if "ansible.builtin.file" in t
+                 and t["ansible.builtin.file"].get("state") == "link"]
+        self.assertEqual(links[0]["loop"], ["node", "npm", "npx"])
+
     def test_the_playbook_targets_its_own_group(self):
         self.assertEqual(self.playbook[0]["hosts"], "t3")
         self.assertEqual(self.playbook[0]["roles"][0]["role"], "t3_host")

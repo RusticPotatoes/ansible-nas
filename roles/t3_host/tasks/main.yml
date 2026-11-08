@@ -5,6 +5,50 @@
     state: directory
     mode: "0755"
 
+- name: Put the binaries folder on PATH for every shell, SSH commands included
+  # At the top of ~/.bashrc: Ubuntu's returns early for non-interactive shells, which is how
+  # T3 Code's desktop app starts its server over SSH (and the agents it runs inherit that PATH).
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    insertbefore: BOF
+    marker: "# {mark} t3_host: binaries folder on PATH"
+    block: |
+      case ":$PATH:" in *":{{ t3_bin_directory }}:"*) ;; *) export PATH="{{ t3_bin_directory }}:$PATH" ;; esac
+
+- name: Install Node.js for the user
+  vars:
+    t3_node_arch: "{{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'x64' }}"
+    t3_node_name: "node-v{{ t3_node_version }}-linux-{{ t3_node_arch }}"
+    t3_node_directory: "{{ ansible_env.HOME }}/.local/share/node"
+  block:
+    - name: Create Node's folder
+      ansible.builtin.file:
+        path: "{{ t3_node_directory }}"
+        state: directory
+        mode: "0755"
+
+    - name: Fetch Node.js
+      ansible.builtin.get_url:
+        url: "https://nodejs.org/dist/v{{ t3_node_version }}/{{ t3_node_name }}.tar.xz"
+        dest: "{{ t3_home_directory }}/caches/{{ t3_node_name }}.tar.xz"
+        checksum: "sha256:{{ t3_node_sha256[t3_node_arch] }}"
+        mode: "0600"
+
+    - name: Unpack Node.js
+      ansible.builtin.unarchive:
+        src: "{{ t3_home_directory }}/caches/{{ t3_node_name }}.tar.xz"
+        dest: "{{ t3_node_directory }}"
+        remote_src: true
+        creates: "{{ t3_node_directory }}/{{ t3_node_name }}/bin/node"
+
+    - name: Link node, npm and npx into the binaries folder
+      ansible.builtin.file:
+        src: "{{ t3_node_directory }}/{{ t3_node_name }}/bin/{{ item }}"
+        dest: "{{ t3_bin_directory }}/{{ item }}"
+        state: link
+        force: true
+      loop: [node, npm, npx]
+
 - name: Fetch each agent's installer
   ansible.builtin.get_url:
     url: "{{ item.installer }}"
