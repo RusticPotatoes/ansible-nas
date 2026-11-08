@@ -1,0 +1,45 @@
+---
+- name: Install the native build tools
+  ansible.builtin.apt:
+    name: "{{ build_host_apt_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: Fetch rustup's installer
+  ansible.builtin.get_url:
+    url: "{{ build_host_rustup_url }}"
+    dest: "{{ ansible_env.HOME }}/.cache/rustup-init.sh"
+    mode: "0700"
+
+- name: Install Rust for the user
+  ansible.builtin.command:
+    cmd: >-
+      sh {{ ansible_env.HOME }}/.cache/rustup-init.sh -y --no-modify-path
+      --default-toolchain {{ build_host_rust_toolchain }} --profile minimal
+      -c clippy -c rustfmt
+    creates: "{{ ansible_env.HOME }}/.cargo/bin/cargo"
+
+- name: Put cargo on PATH for every shell, SSH commands included
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    insertbefore: BOF
+    marker: "# {mark} build_host: cargo on PATH"
+    block: |
+      case ":$PATH:" in *":$HOME/.cargo/bin:"*) ;; *) export PATH="$HOME/.cargo/bin:$PATH" ;; esac
+
+- name: Show the tool versions
+  ansible.builtin.shell: |
+    set -e
+    docker --version
+    docker compose version
+    {{ ansible_env.HOME }}/.cargo/bin/cargo --version
+  register: build_host_versions
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Report them
+  ansible.builtin.debug:
+    var: build_host_versions.stdout_lines

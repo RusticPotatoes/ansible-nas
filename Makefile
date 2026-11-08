@@ -3,7 +3,7 @@ PLAYBOOK ?= nas.yml
 VAULT_FILE ?= vault.yml
 VAULT_PASSWORD_FILE ?= vault_password.txt
 
-.PHONY: deploy syntax tags run run-remote venv t3
+.PHONY: deploy syntax tags run run-remote venv t3 builders
 
 # Where the ansible commands come from: the system's (empty, on the NAS) or the venv's.
 BIN ?=
@@ -43,6 +43,17 @@ t3: venv
 	@printf 'Apply these changes? [y/N] '; read answer; \
 		[ "$$answer" = y ] || [ "$$answer" = Y ] || { echo "Nothing applied."; exit 1; }
 	$(T3_PLAY) $(EXTRA)
+
+# Build machines: Docker and Rust on every machine in the [builders] group of
+# $(T3_INVENTORY). Docker's install needs sudo, so -K is passed (the default EXTRA).
+builders: venv
+	@test -f $(T3_INVENTORY) || { echo "list your machines in $(T3_INVENTORY) first (see the build-host docs page)"; exit 1; }
+	.venv/bin/ansible-galaxy role install -r requirements.yml
+	.venv/bin/ansible-playbook -i $(T3_INVENTORY) builders.yml --check --diff $(EXTRA) \
+		|| echo "(a dry run stops early on a new machine: Docker's apt source isn't there yet)"
+	@printf 'Apply these changes? [y/N] '; read answer; \
+		[ "$$answer" = y ] || [ "$$answer" = Y ] || { echo "Nothing applied."; exit 1; }
+	.venv/bin/ansible-playbook -i $(T3_INVENTORY) builders.yml $(EXTRA)
 
 # ansible-core as the NAS runs it (requirements-ansible.txt), in .venv, made once, on the NAS's
 # Python (3.12: ansible-core 2.16 does not run on newer ones).
