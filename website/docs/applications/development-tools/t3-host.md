@@ -28,7 +28,7 @@ box2 ansible_host=192.0.2.11
 ansible_user=me
 ```
 
-Then, from the laptop: `make t3` (a dry run, then apply on a yes; asks sudo's password for
+Then, from the laptop: `make t3` (applies straight away, `DRY=1` for a dry run and a yes first; asks sudo's password for
 linger). Without sudo: `make t3 EXTRA="--skip-tags t3_host_sudo"`.
 
 Drop an entry from `t3_clis` to leave an agent off; set `t3_service_enabled: false` to keep
