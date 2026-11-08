@@ -10,7 +10,7 @@
 
     - name: MongoDB Docker Container
       community.docker.docker_container:
-        name: mongodb
+        name: "{{ mongodb_container_name }}"
         image: "{{ mongodb_image_name }}:{{ mongodb_image_version }}"
         pull: true
         user: "{{ mongodb_user_id }}:{{ mongodb_group_id }}"

@@ -1,5 +1,7 @@
 ---
-speedtest_tracker_enabled: false
+# Starts the container when true; removes it when false.
+# speedtest_enabled, the name the tasks used to read, still works when this one is not set.
+speedtest_tracker_enabled: "{{ speedtest_enabled | default(false) }}"
 speedtest_tracker_available_externally: false
 
 # directories

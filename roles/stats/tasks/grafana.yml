@@ -84,10 +84,10 @@
           GF_UNIFIED_ALERTING_STATE_HISTORY_LOKI_TENANT_ID: "1"
           GF_FEATURE_TOGGLES_ENABLE: "alertingCentralAlertHistory"
         restart_policy: unless-stopped
-        memory: 1g
+        memory: "{{ stats_grafana_memory }}"
         labels:
           traefik.enable: "{{ stats_grafana_available_externally | string }}"
-          traefik.http.routers.grafana.rule: "Host(`grafana.{{ ansible_nas_domain }}`) "
+          traefik.http.routers.grafana.rule: "Host(`{{ stats_grafana_hostname }}.{{ ansible_nas_domain }}`) "
           traefik.http.routers.grafana.tls.certresolver: "letsencrypt"
           traefik.http.routers.grafana.tls.domains[0].main: "{{ ansible_nas_domain }}"
           traefik.http.routers.grafana.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
