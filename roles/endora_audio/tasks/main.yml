@@ -182,30 +182,6 @@
         name: "{{ endora_audio_airplay_container_name }}"
         state: absent
       when: not endora_audio_airplay_enabled
-
-    # Endora's own sound containers, stopped since the move to Endora Audio. Removed only when
-    # asked, and only once the hub is running here. The containers go; their volumes stay.
-    - name: Look at the Endora Audio hub before removing the old containers
-      community.docker.docker_container_info:
-        name: "{{ endora_audio_container_name }}"
-      register: endora_audio_hub_info
-      when: endora_audio_remove_old_containers
-
-    - name: Check the hub is running before removing the old containers
-      ansible.builtin.assert:
-        that:
-          - endora_audio_hub_info.exists
-          - endora_audio_hub_info.container.State.Running
-        fail_msg: "The Endora Audio hub is not running here, so Endora's old sound containers are left in place"
-      when: endora_audio_remove_old_containers
-
-    - name: Remove Endora's old sound containers
-      community.docker.docker_container:
-        name: "{{ item }}"
-        state: absent
-        keep_volumes: true
-      loop: "{{ endora_audio_old_containers }}"
-      when: endora_audio_remove_old_containers
   when: endora_audio_enabled is true
 
 # The volumes are never removed: they hold the owner's setup and logins.
