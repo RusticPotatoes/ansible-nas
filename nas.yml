@@ -267,6 +267,11 @@
         - open-webui
         - ai
 
+    - role: odysseus
+      tags:
+        - odysseus
+        - ai
+
     - role: kokoro-fastapi
       tags:
         - kokoro-fastapi
