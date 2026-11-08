@@ -1,0 +1,18 @@
+---
+# A machine that builds for the others: Docker (geerlingguy.docker, run by builders.yml) for
+# image builds through a Docker context, and Rust with the native build tools for cargo runs
+# by the agents T3 Code starts there.
+build_host_apt_packages:
+  - build-essential
+  - pkg-config
+  - libssl-dev
+  - cmake
+  - clang
+  - git
+
+# rustup for the machine's user (no root), with this toolchain as the default.
+build_host_rust_toolchain: stable
+build_host_rustup_url: https://sh.rustup.rs
+
+# Docker's build cache is pruned past this size, so builds don't fill the disk.
+build_host_build_cache_keep: "60GB"

@@ -1,0 +1,24 @@
+---
+# Machines that build for the others (the `builders` group): Docker for image builds that the
+# laptop drives through a Docker context, and Rust for cargo. Docker's install needs sudo, so
+# run with -K: `make builders`. See website/docs/applications/development-tools/build-host.md.
+- name: Build machines
+  hosts: builders
+  become: false
+  roles:
+    - role: geerlingguy.docker
+      become: true
+      vars:
+        docker_users: ["{{ ansible_user_id }}"]
+        docker_install_compose_plugin: true
+        docker_daemon_options:
+          builder:
+            gc:
+              enabled: true
+              defaultKeepStorage: "{{ build_host_build_cache_keep }}"
+      tags:
+        - docker
+        - skip_ansible_lint
+    - role: build_host
+      tags:
+        - build_host
