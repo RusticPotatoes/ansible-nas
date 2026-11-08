@@ -1,0 +1,50 @@
+---
+# One-off: remove Endora's own sound containers, stopped since Endora Audio replaced them.
+# Touches nothing else: no role runs, the volumes are kept, and it stops unless the Endora Audio
+# hub is running and none of the old containers is. From a laptop (vault password from the
+# Keychain, sudo password asked):
+#   .venv/bin/ansible-playbook -i inventories/remote.ini retire-endora-sound.yml \
+#     -e @vault.yml --vault-password-file misc/vault-pass-keychain.sh -K
+- name: Remove Endora's old sound containers
+  hosts: nas
+  become: true
+  vars:
+    old_containers:
+      - endora-sound
+      - endora-senders
+      - endora-airplay2
+      - endora-spotify
+  tasks:
+    - name: Look at the Endora Audio hub
+      community.docker.docker_container_info:
+        name: endora-audio
+      register: hub
+
+    - name: Check the hub is running
+      ansible.builtin.assert:
+        that:
+          - hub.exists
+          - hub.container.State.Running
+        fail_msg: "The Endora Audio hub is not running, so the old containers are left in place"
+
+    - name: Look at the old containers
+      community.docker.docker_container_info:
+        name: "{{ item }}"
+      loop: "{{ old_containers }}"
+      register: old
+
+    - name: Check none of the old containers is running
+      ansible.builtin.assert:
+        that: not (item.exists and item.container.State.Running)
+        fail_msg: "{{ item.item }} is running; nothing is removed"
+        quiet: true
+      loop: "{{ old.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Remove the old containers (volumes kept)
+      community.docker.docker_container:
+        name: "{{ item }}"
+        state: absent
+        keep_volumes: true
+      loop: "{{ old_containers }}"
