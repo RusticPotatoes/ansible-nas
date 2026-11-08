@@ -14,7 +14,8 @@ jackett_port: "9117"
 # docker
 jackett_container_name: "jackett"
 jackett_image_name: "linuxserver/jackett"
-jackett_image_version: "latest"
+# Pinned: the VPN stack is out of Watchtower and updated by the playbook (docs: gluetun).
+jackett_image_version: "v0.24.2981-ls22"
 
 # specs
 jackett_memory: "1g"

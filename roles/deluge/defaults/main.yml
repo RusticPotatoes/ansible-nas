@@ -24,3 +24,6 @@ deluge_timezone: "{{ ansible_nas_timezone }}"
 deluge_memory: 1g
 
 deluge_container_name: deluge
+# Pinned: the VPN stack is out of Watchtower and updated by the playbook (docs: gluetun).
+deluge_image_name: "linuxserver/deluge"
+deluge_image_version: "2.2.0-ls385"

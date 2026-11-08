@@ -18,7 +18,8 @@ sonarr_hostname: "sonarr"
 # docker
 sonarr_container_name: "sonarr"
 sonarr_image_name: "linuxserver/sonarr"
-sonarr_image_version: "latest"
+# Pinned: the VPN stack is out of Watchtower and updated by the playbook (docs: gluetun).
+sonarr_image_version: "4.0.20.3014-ls2"
 
 # specs
 sonarr_memory: 1g

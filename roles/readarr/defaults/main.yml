@@ -18,7 +18,8 @@ readarr_hostname: "readarr"
 # docker
 readarr_container_name: "readarr"
 readarr_image_name: "ghcr.io/linuxserver/readarr"
-readarr_image_version: "develop"
+# Pinned: the VPN stack is out of Watchtower and updated by the playbook (docs: gluetun).
+readarr_image_version: "develop-0.4.18.2805-ls157"
 
 # specs
 readarr_memory: 1g

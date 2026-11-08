@@ -18,7 +18,8 @@ radarr_hostname: "radarr"
 # docker
 radarr_container_name: "radarr"
 radarr_image_name: "linuxserver/radarr"
-radarr_image_version: "latest"
+# Pinned: the VPN stack is out of Watchtower and updated by the playbook (docs: gluetun).
+radarr_image_version: "6.4.4.10685-ls324"
 
 # specs
 radarr_memory: 1g

@@ -19,6 +19,12 @@ Each job keeps its app's switch: set it in your inventory as before. A job that 
 timer stopped and disabled. Running an app's tag (`make run TAGS=gluetun`) brings its job in line
 too, as does `TAGS=nas_maintenance` for all of them.
 
+The gluetun stack is out of Watchtower's nightly updates (its containers carry
+`com.centurylinklabs.watchtower.enable: "false"`); its pinned images are updated by the playbook
+with `make run TAGS=gluetun`, which recreates gluetun and then every container on its network. To
+bump a tag, set the app's `<app>_image_version` and run that tag: see
+[Gluetun's updates](../applications/download-tools/gluetun.md#updates).
+
 To see them on the NAS: `systemctl list-timers 'ansible-nas-*' 'ebook2audiobook-*' 'gluetun-*' 'nas-*' 'healthchecks-*'`.
 
 ## Adding one

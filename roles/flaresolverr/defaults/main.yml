@@ -13,3 +13,6 @@ flaresolverr_memory: 200m
 
 # docker
 flaresolverr_container_name: flaresolverr
+# Pinned: the VPN stack is out of Watchtower and updated by the playbook (docs: gluetun).
+flaresolverr_image_name: "flaresolverr/flaresolverr"
+flaresolverr_image_version: "v3.5.2"

@@ -11,7 +11,8 @@ gluetun_routed_containers: []
 # Container Settings
 gluetun_container_name: "gluetun"
 gluetun_image_name: "qmcgaw/gluetun"
-gluetun_image_version: "latest"
+# Pinned: the VPN stack is out of Watchtower and updated by the playbook (docs: gluetun).
+gluetun_image_version: "v3.41.3"
 gluetun_memory: "512m"
 gluetun_periodic_restart_enabled: false
 gluetun_periodic_restart_interval: "2h"
