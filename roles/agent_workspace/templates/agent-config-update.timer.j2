@@ -1,0 +1,11 @@
+# Managed by Ansible (agent_workspace). noqa: nas-scheduled-job: a user timer on the T3 remotes, not the NAS; the owner asked for it
+[Unit]
+Description=Update the agent configuration every hour
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=1h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

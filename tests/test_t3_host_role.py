@@ -119,7 +119,7 @@ class TheRole(unittest.TestCase):
 
     def test_the_playbook_targets_its_own_group(self):
         self.assertEqual(self.playbook[0]["hosts"], "t3")
-        self.assertEqual(self.playbook[0]["roles"][-1]["role"], "t3_host")
+        self.assertIn("t3_host", [r["role"] for r in self.playbook[0]["roles"]])
 
 
 if __name__ == "__main__":

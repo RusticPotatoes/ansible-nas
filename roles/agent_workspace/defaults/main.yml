@@ -1,0 +1,55 @@
+---
+# A working agent workspace on a T3 Code remote: git, gh, a per-machine deploy key for each repo,
+# the repos cloned, agent-config installed and kept current by an hourly timer, and (once) the
+# steward's private state. Everything comes from this play, never a hand edit or T3's clone tool.
+# Run by t3.yml on the `t3` group after t3_host; the apt part needs sudo (-K, make t3 passes it).
+agent_workspace_enabled: false
+
+# The git identity commits on the machine carry. Personal values: set them in the git-ignored
+# inventories/t3.ini, never in a tracked file.
+agent_workspace_git_name: ""
+agent_workspace_git_email: ""
+
+# The repositories to clone into ~/repos/<name>, each one with its own deploy key. Per host, so
+# a machine can have fewer. Each entry:
+#   name: folder under ~/repos             repo: <owner>/<repository> on GitHub
+#   read_only: false lets the machine push (the key is registered writable)
+# Example (fictional):
+#   - { name: notes, repo: example-owner/notes, read_only: true }
+agent_workspace_repos: []
+
+agent_workspace_directory: "{{ ansible_env.HOME }}/repos"
+
+# The deploy keys are registered from the machine that runs the play, with its `gh` (logged in
+# with admin on each repo), as the key titled t3-<inventory name>.
+agent_workspace_key_title: "t3-{{ inventory_hostname }}"
+
+# GitHub's SSH host keys, pinned from https://api.github.com/meta (ssh_keys), so the first
+# connection trusts nothing it has not been given. Fingerprints, for checking them:
+#   ED25519 SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU
+#   ECDSA   SHA256:p2QAMXNIC1TJYWeIOttrVc98/R1BUFWu3/LiyKgUfQM
+agent_workspace_github_host_keys:
+  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
+  - "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg="
+
+# agent-config's installer and updater, as its README says (run from the clone with this name).
+agent_workspace_config_repo: agent-config
+
+# One-time copy of the steward's private state from the machine that runs the play (the Mac),
+# for one host only (set it under that host in the inventory). The first copy writes a marker;
+# after that the host's copy is authoritative and is never touched again. Delete the marker to
+# seed again.
+agent_workspace_seed_local_state: false
+agent_workspace_seed_source: "{{ lookup('env', 'HOME') }}/repos/Endora-research/.local/"
+agent_workspace_seed_destination: "{{ agent_workspace_directory }}/Endora-research/.local"
+agent_workspace_seed_marker: "{{ agent_workspace_directory }}/Endora-research/.local/.seeded-by-ansible"
+# Never copied: the Mac's rebuild archive (16+ GB, with root-owned folders), and any provider
+# sign-in, T3 state or memory.
+agent_workspace_seed_exclude:
+  - /mac-rebuild
+  - .claude
+  - .codex
+  - .t3
+  - .ssh
+  - "*.keychain*"
+  - auth.json

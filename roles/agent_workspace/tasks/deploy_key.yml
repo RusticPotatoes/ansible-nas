@@ -1,0 +1,53 @@
+---
+# One repository's deploy key: made on this machine, registered from the one that runs the play.
+- name: "Make the key for {{ item.repo }}"
+  ansible.builtin.command:
+    cmd: >-
+      ssh-keygen -q -t ed25519 -N "" -C {{ agent_workspace_key_title }}
+      -f {{ agent_workspace_key_file }}
+    creates: "{{ agent_workspace_key_file }}"
+
+- name: "Read its public half"
+  ansible.builtin.slurp:
+    src: "{{ agent_workspace_key_file }}.pub"
+  register: agent_workspace_public_key
+
+- name: "List the keys {{ item.repo }} already has"
+  ansible.builtin.command:
+    cmd: gh api repos/{{ item.repo }}/keys --paginate
+  delegate_to: localhost
+  become: false
+  register: agent_workspace_registered
+  changed_when: false
+  check_mode: false
+
+- name: "Refuse a stale key under this machine's title"
+  vars:
+    agent_workspace_mine: "{{ agent_workspace_registered.stdout | from_json | selectattr('title', 'equalto', agent_workspace_key_title) | list }}"
+    agent_workspace_new: "{{ (agent_workspace_public_key.content | b64decode).split()[:2] | join(' ') }}"
+  ansible.builtin.assert:
+    that: agent_workspace_mine | length == 0 or agent_workspace_mine[0].key == agent_workspace_new
+    fail_msg: >-
+      {{ item.repo }} has a key titled {{ agent_workspace_key_title }} that is not this machine's
+      current one. Delete it on GitHub (Settings, Deploy keys), then run the play again.
+
+- name: "Register it on {{ item.repo }} ({{ 'read-only' if item.read_only | default(true) else 'with write access' }})"
+  ansible.builtin.command:
+    argv:
+      - gh
+      - api
+      - -X
+      - POST
+      - "repos/{{ item.repo }}/keys"
+      - -f
+      - "title={{ agent_workspace_key_title }}"
+      - -f
+      - "key={{ (agent_workspace_public_key.content | b64decode).split()[:2] | join(' ') }}"
+      - -F
+      - "read_only={{ item.read_only | default(true) | bool | lower }}"
+  delegate_to: localhost
+  become: false
+  changed_when: true
+  when: >-
+    agent_workspace_registered.stdout | from_json
+    | selectattr('title', 'equalto', agent_workspace_key_title) | list | length == 0
