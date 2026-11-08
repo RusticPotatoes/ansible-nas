@@ -1,0 +1,77 @@
+---
+- name: Fetch Tailscale's signing key
+  ansible.builtin.get_url:
+    url: "https://pkgs.tailscale.com/stable/ubuntu/{{ ansible_distribution_release }}.noarmor.gpg"
+    dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
+    mode: "0644"
+
+- name: Add Tailscale's apt source
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg]
+      https://pkgs.tailscale.com/stable/ubuntu {{ ansible_distribution_release }} main
+    filename: tailscale
+    state: present
+
+- name: Install Tailscale
+  # A dry run on a new machine has no apt source yet to install from.
+  ignore_errors: "{{ ansible_check_mode }}"
+  ansible.builtin.apt:
+    name: tailscale
+    state: present
+    update_cache: true
+
+- name: Keep its daemon running
+  ignore_errors: "{{ ansible_check_mode }}"
+  ansible.builtin.systemd_service:
+    name: tailscaled
+    state: started
+    enabled: true
+
+- name: Read whether this machine is on the tailnet
+  ansible.builtin.command:
+    cmd: tailscale status --json
+  register: tailscale_status
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Join the tailnet with the auth key
+  ansible.builtin.command:
+    cmd: "tailscale up --auth-key={{ tailscale_auth_key }}"
+  when:
+    - tailscale_auth_key | length > 0
+    - tailscale_status.rc != 0 or (tailscale_status.stdout | from_json).BackendState != 'Running'
+  no_log: true
+  changed_when: true
+
+- name: Read Tailscale's settings
+  ansible.builtin.command:
+    cmd: tailscale debug prefs
+  register: tailscale_prefs
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Let the user change Tailscale's settings, so T3 Code can run `tailscale serve`
+  ansible.builtin.command:
+    cmd: "tailscale set --operator={{ tailscale_operator }}"
+  when: >-
+    tailscale_prefs.rc != 0 or
+    (tailscale_prefs.stdout | from_json).OperatorUser | default('') != tailscale_operator
+  changed_when: true
+
+- name: Read whether this machine is on the tailnet now
+  ansible.builtin.command:
+    cmd: tailscale status --json
+  register: tailscale_status
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Report it
+  ansible.builtin.debug:
+    msg: >-
+      {{ 'On the tailnet as ' ~ (tailscale_status.stdout | from_json).Self.DNSName
+         if tailscale_status.rc == 0 and (tailscale_status.stdout | from_json).BackendState == 'Running'
+         else 'Not on the tailnet yet: run `sudo tailscale up` on this machine and open the link.' }}

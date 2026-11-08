@@ -196,6 +196,15 @@
         mode: "0600"
       notify: Restart T3 Code
 
+    - name: Publish the service on the tailnet over HTTPS, or not
+      ansible.builtin.lineinfile:
+        path: "{{ t3_home_directory }}/service.env"
+        regexp: "^T3CODE_TAILSCALE_SERVE="
+        line: "T3CODE_TAILSCALE_SERVE={{ t3_tailscale_serve | bool | lower }}"
+        create: true
+        mode: "0600"
+      notify: Restart T3 Code
+
     - name: Keep it running
       ansible.builtin.systemd_service:
         name: t3code

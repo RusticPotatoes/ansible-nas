@@ -94,16 +94,24 @@ class TheRole(unittest.TestCase):
     def test_lan_access_is_off_unless_asked_and_set_through_the_service_env(self):
         self.assertIs(self.defaults["t3_lan"], False)
         env = [t for t in self.tasks if "ansible.builtin.lineinfile" in t
-               and "service.env" in str(t["ansible.builtin.lineinfile"]["path"])]
+               and "T3CODE_LAN" in str(t["ansible.builtin.lineinfile"]["regexp"])]
         self.assertEqual(len(env), 1)
         line = env[0]["ansible.builtin.lineinfile"]
         self.assertEqual(line["regexp"], "^T3CODE_LAN=")
         self.assertIn("t3_lan", line["line"])
         self.assertEqual(env[0]["notify"], "Restart T3 Code")
 
+    def test_tailscale_serve_is_off_unless_asked_and_set_through_the_service_env(self):
+        self.assertIs(self.defaults["t3_tailscale_serve"], False)
+        env = [t for t in self.tasks if "ansible.builtin.lineinfile" in t
+               and "T3CODE_TAILSCALE_SERVE" in str(t["ansible.builtin.lineinfile"]["regexp"])]
+        self.assertEqual(len(env), 1)
+        self.assertIn("t3_tailscale_serve", env[0]["ansible.builtin.lineinfile"]["line"])
+        self.assertEqual(env[0]["notify"], "Restart T3 Code")
+
     def test_the_playbook_targets_its_own_group(self):
         self.assertEqual(self.playbook[0]["hosts"], "t3")
-        self.assertEqual(self.playbook[0]["roles"][0]["role"], "t3_host")
+        self.assertEqual(self.playbook[0]["roles"][-1]["role"], "t3_host")
 
 
 if __name__ == "__main__":
