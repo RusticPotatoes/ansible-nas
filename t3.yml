@@ -33,3 +33,7 @@
       when: agent_workspace_enabled | bool
       tags:
         - agent_workspace
+    - role: disk_guard
+      when: disk_guard_enabled | default(true) | bool
+      tags:
+        - disk_guard

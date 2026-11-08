@@ -1,0 +1,10 @@
+# Managed by Ansible (disk_guard).
+[Unit]
+Description=Cap build output, prune old logs and alert before a disk fills
+
+[Service]
+Type=oneshot
+EnvironmentFile=%h/.config/disk-guard/env
+ExecStart=%h/.local/bin/disk-guard
+Nice=10
+IOSchedulingClass=idle
