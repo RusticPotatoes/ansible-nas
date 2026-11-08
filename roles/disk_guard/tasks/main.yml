@@ -30,6 +30,8 @@
         mode: "0755"
 
     - name: Write its settings
+      # Holds the ntfy topic: keep it out of --diff output.
+      diff: false
       ansible.builtin.template:
         src: disk-guard.env.j2
         dest: "{{ ansible_env.HOME }}/.config/disk-guard/env"
