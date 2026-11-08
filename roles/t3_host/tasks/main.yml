@@ -187,6 +187,15 @@
           Environment=PATH={{ t3_bin_directory }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
       notify: Restart T3 Code
 
+    - name: Open the service to the local network, or keep it on this machine only
+      ansible.builtin.lineinfile:
+        path: "{{ t3_home_directory }}/service.env"
+        regexp: "^T3CODE_LAN="
+        line: "T3CODE_LAN={{ t3_lan | bool | lower }}"
+        create: true
+        mode: "0600"
+      notify: Restart T3 Code
+
     - name: Keep it running
       ansible.builtin.systemd_service:
         name: t3code
