@@ -32,7 +32,10 @@ Then, from the laptop: `make t3` (a dry run, then apply on a yes; asks sudo's pa
 linger). Without sudo: `make t3 EXTRA="--skip-tags t3_host_sudo"`.
 
 Drop an entry from `t3_clis` to leave an agent off; set `t3_service_enabled: false` to keep
-T3 Code started only by the desktop app over SSH.
+T3 Code started only by the desktop app over SSH. Set `t3_lan: true` (for example under
+`[t3:vars]`) to let other devices on the network reach the service at
+`http://<machine>:3773`, so another T3 Code can link the machine and run threads there; a device
+still needs a pairing token.
 
 ## Specific Configuration
 
@@ -44,5 +47,5 @@ Once per machine, sign each agent in (the role cannot, it needs your browser):
 
 Only one T3 Code server may own `~/.t3`: the role stops a server the desktop app started over
 SSH so the service can take over. Optional, by hand: `t3 service protect` (asks for sudo)
-shields the server from agents that exhaust memory. Open access to other devices with
-`t3 up --lan` or `t3 up --connect`; avoid `t3 up --yes`, which turns T3 Connect on.
+shields the server from agents that exhaust memory. Prefer `t3_lan` to `t3 up --lan`, so the
+playbook keeps the setting; avoid `t3 up --yes`, which turns T3 Connect on.

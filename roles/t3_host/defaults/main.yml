@@ -34,4 +34,9 @@ t3_node_sha256:
 # while the desktop app's SSH connection has started it. Linger (needs sudo, so -K) starts it at
 # boot with no one logged in.
 t3_service_enabled: true
+
+# Let other devices on the local network (and a tailnet) reach the service on port 3773, so
+# another T3 Code can link this machine and run threads here that outlive the laptop. Off, the
+# server answers only on 127.0.0.1. Either way a device still needs a pairing token.
+t3_lan: false
 t3_version: "0.1.7"
