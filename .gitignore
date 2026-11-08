@@ -47,3 +47,6 @@ vault_password*.txt
 
 # The local ansible for running from another machine (make venv)
 .venv/
+
+# T3 Code remotes (make run-t3); the owner's hosts
+inventories/t3.ini

@@ -1,0 +1,195 @@
+---
+- name: Create the binaries folder
+  ansible.builtin.file:
+    path: "{{ t3_bin_directory }}"
+    state: directory
+    mode: "0755"
+
+- name: Put the binaries folder on PATH for every shell, SSH commands included
+  # At the top of ~/.bashrc: Ubuntu's returns early for non-interactive shells, which is how
+  # T3 Code's desktop app starts its server over SSH (and the agents it runs inherit that PATH).
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    insertbefore: BOF
+    marker: "# {mark} t3_host: binaries folder on PATH"
+    block: |
+      case ":$PATH:" in *":{{ t3_bin_directory }}:"*) ;; *) export PATH="{{ t3_bin_directory }}:$PATH" ;; esac
+
+- name: Install Node.js for the user
+  # A dry run on a new machine has not downloaded anything to unpack yet.
+  ignore_errors: "{{ ansible_check_mode }}"
+  vars:
+    t3_node_arch: "{{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'x64' }}"
+    t3_node_name: "node-v{{ t3_node_version }}-linux-{{ t3_node_arch }}"
+    t3_node_directory: "{{ ansible_env.HOME }}/.local/share/node"
+  block:
+    - name: Create Node's folder
+      ansible.builtin.file:
+        path: "{{ t3_node_directory }}"
+        state: directory
+        mode: "0755"
+
+    - name: Fetch Node.js
+      ansible.builtin.get_url:
+        url: "https://nodejs.org/dist/v{{ t3_node_version }}/{{ t3_node_name }}.tar.xz"
+        dest: "{{ t3_home_directory }}/caches/{{ t3_node_name }}.tar.xz"
+        checksum: "sha256:{{ t3_node_sha256[t3_node_arch] }}"
+        mode: "0600"
+
+    - name: Unpack Node.js
+      ansible.builtin.unarchive:
+        src: "{{ t3_home_directory }}/caches/{{ t3_node_name }}.tar.xz"
+        dest: "{{ t3_node_directory }}"
+        remote_src: true
+        creates: "{{ t3_node_directory }}/{{ t3_node_name }}/bin/node"
+
+    - name: Link node, npm and npx into the binaries folder
+      ansible.builtin.file:
+        src: "{{ t3_node_directory }}/{{ t3_node_name }}/bin/{{ item }}"
+        dest: "{{ t3_bin_directory }}/{{ item }}"
+        state: link
+        force: true
+      loop: [node, npm, npx]
+
+- name: Fetch each agent's installer
+  ansible.builtin.get_url:
+    url: "{{ item.installer }}"
+    dest: "{{ t3_home_directory }}/caches/{{ item.name }}-installer.sh"
+    mode: "0700"
+  loop: "{{ t3_clis }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Install each agent that is not there yet
+  ansible.builtin.command:
+    cmd: "bash {{ t3_home_directory }}/caches/{{ item.name }}-installer.sh"
+  args:
+    creates: "{{ t3_bin_directory }}/{{ item.name }}"
+    stdin: ""
+  environment:
+    PATH: "{{ t3_bin_directory }}:{{ ansible_env.PATH }}"
+    # Codex's installer otherwise waits at "Start Codex now?" for an answer no one gives.
+    CODEX_NON_INTERACTIVE: "1"
+  loop: "{{ t3_clis }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Show each agent's version
+  ansible.builtin.command:
+    cmd: "{{ t3_bin_directory }}/{{ item.name }} --version"
+  register: t3_versions
+  changed_when: false
+  check_mode: false
+  failed_when: false
+  loop: "{{ t3_clis }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Report the versions
+  ansible.builtin.debug:
+    msg: "{{ t3_versions.results | map(attribute='item.name') | zip(t3_versions.results | map(attribute='stdout')) | list }}"
+
+- name: Read T3 Code's settings
+  ansible.builtin.slurp:
+    src: "{{ t3_home_directory }}/userdata/settings.json"
+  register: t3_settings_file
+  failed_when: false
+
+- name: Turn the agents' providers on in T3 Code, keeping every other setting
+  ansible.builtin.copy:
+    dest: "{{ t3_home_directory }}/userdata/settings.json"
+    mode: "0600"
+    content: >-
+      {{ ((t3_settings_file.content | default('e30=') | b64decode | from_json)
+          | combine({'providerInstances': dict(t3_clis | map(attribute='provider')
+              | zip(t3_clis | map(attribute='provider')
+                | map('regex_replace', '^(.*)$', '{"driver": "\1", "enabled": true}')
+                | map('from_json')))}, recursive=True)
+          | combine({'providerInstances': {
+              'claudeAgent': {'config': {'binaryPath': t3_bin_directory ~ '/claude'}},
+              'codex': {'config': {'binaryPath': t3_bin_directory ~ '/codex'}}}}, recursive=True))
+         | to_nice_json }}
+
+- name: Install Antigravity's ACP runtime where T3 Code looks for it
+  ignore_errors: "{{ ansible_check_mode }}"
+  when: "'antigravity' in (t3_clis | map(attribute='provider'))"
+  vars:
+    t3_acp_directory: "{{ t3_home_directory }}/tools/antigravity-acp/linux-x64"
+  block:
+    - name: Fetch the ACP runtime
+      ansible.builtin.get_url:
+        url: "{{ t3_antigravity_acp_url }}"
+        dest: "{{ t3_home_directory }}/caches/antigravity-acp.zip"
+        checksum: "sha256:{{ t3_antigravity_acp_sha256 }}"
+        mode: "0600"
+
+    - name: Unpack it with Python, as unzip is not on every host
+      ansible.builtin.command:
+        cmd: >-
+          python3 -m zipfile -e {{ t3_home_directory }}/caches/antigravity-acp.zip
+          {{ t3_acp_directory }}/versions/{{ t3_antigravity_acp_sha256 }}
+        creates: "{{ t3_acp_directory }}/versions/{{ t3_antigravity_acp_sha256 }}/agy_acp_server.par"
+
+    - name: Make the server and its harness executable
+      ansible.builtin.file:
+        path: "{{ t3_acp_directory }}/versions/{{ t3_antigravity_acp_sha256 }}/{{ item }}"
+        mode: "0755"
+      loop: [agy_acp_server.par, localharness_external]
+      register: t3_acp_files
+
+    - name: Write T3 Code's install marker (it checks the sizes)
+      ansible.builtin.copy:
+        dest: "{{ t3_acp_directory }}/versions/{{ t3_antigravity_acp_sha256 }}/.install-complete.json"
+        mode: "0600"
+        content: "{{ {'releaseId': t3_antigravity_acp_sha256, 'version': t3_antigravity_acp_version,
+          'executable': {'name': 'agy_acp_server.par', 'bytes': t3_acp_files.results[0].size},
+          'harness': {'name': 'localharness_external', 'bytes': t3_acp_files.results[1].size}} | to_json }}"
+
+    - name: Mark that release active
+      ansible.builtin.copy:
+        dest: "{{ t3_acp_directory }}/active.json"
+        content: '{"releaseId":"{{ t3_antigravity_acp_sha256 }}"}'
+        mode: "0644"
+
+- name: Run T3 Code as an always-on service
+  when: t3_service_enabled
+  vars:
+    t3_binary: "{{ t3_home_directory }}/runtime/versions/{{ t3_version }}/t3"
+    t3_unit_directory: "{{ ansible_env.HOME }}/.config/systemd/user"
+  block:
+    - name: Let the user's services start at boot, with no one logged in
+      ansible.builtin.command:
+        cmd: "loginctl enable-linger {{ ansible_user_id }}"
+        creates: "/var/lib/systemd/linger/{{ ansible_user_id }}"
+      become: true
+      tags: [t3_host_sudo]
+
+    - name: Install the service (T3 Code writes its own unit)
+      ansible.builtin.command:
+        cmd: "{{ t3_binary }} service install"
+        creates: "{{ t3_unit_directory }}/t3code.service"
+      notify:
+        - Stop a server the desktop app started over SSH
+        - Restart T3 Code
+
+    - name: Create the service's drop-in folder
+      ansible.builtin.file:
+        path: "{{ t3_unit_directory }}/t3code.service.d"
+        state: directory
+        mode: "0755"
+
+    - name: Give the service the binaries folder on its PATH, so it finds node and the agents
+      ansible.builtin.copy:
+        dest: "{{ t3_unit_directory }}/t3code.service.d/path.conf"
+        mode: "0644"
+        content: |
+          [Service]
+          Environment=PATH={{ t3_bin_directory }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+      notify: Restart T3 Code
+
+    - name: Keep it running
+      ansible.builtin.systemd_service:
+        name: t3code
+        scope: user
+        state: started
+        enabled: true

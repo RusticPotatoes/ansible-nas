@@ -1,0 +1,11 @@
+---
+# Makes each machine in the `t3` group a T3 Code remote with Claude, Codex and Antigravity.
+# Runs as the machine's own user: nothing here needs root. See website/docs/applications/
+# other/t3-host.md.
+- name: T3 Code remotes
+  hosts: t3
+  become: false
+  roles:
+    - role: t3_host
+      tags:
+        - t3_host

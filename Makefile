@@ -3,7 +3,7 @@ PLAYBOOK ?= nas.yml
 VAULT_FILE ?= vault.yml
 VAULT_PASSWORD_FILE ?= vault_password.txt
 
-.PHONY: deploy syntax tags run run-remote venv
+.PHONY: deploy syntax tags run run-remote venv t3
 
 # Where the ansible commands come from: the system's (empty, on the NAS) or the venv's.
 BIN ?=
@@ -30,6 +30,19 @@ run:
 run-remote: venv
 	@test -f $(VAULT_FILE) || { echo "copy the encrypted vault.yml here first: scp nas.home.arpa:ansible-nas/vault.yml ."; exit 1; }
 	$(MAKE) run INVENTORY=inventories/remote.ini VAULT_PASSWORD_FILE=misc/vault-pass-keychain.sh BIN=.venv/bin/
+
+# T3 Code remotes: Node.js, the Claude, Codex and Antigravity CLIs and T3 Code's service on every
+# machine in the [t3] group of inventories/t3.ini (git-ignored; see
+# website/docs/applications/development-tools/t3-host.md). A dry run, then apply only on a yes.
+# Runs as each machine's user; sudo's password (-K) is asked only for linger.
+T3_INVENTORY ?= inventories/t3.ini
+T3_PLAY = .venv/bin/ansible-playbook -i $(T3_INVENTORY) t3.yml
+t3: venv
+	@test -f $(T3_INVENTORY) || { echo "list your machines in $(T3_INVENTORY) first (see the t3-host docs page)"; exit 1; }
+	$(T3_PLAY) --check --diff $(EXTRA)
+	@printf 'Apply these changes? [y/N] '; read answer; \
+		[ "$$answer" = y ] || [ "$$answer" = Y ] || { echo "Nothing applied."; exit 1; }
+	$(T3_PLAY) $(EXTRA)
 
 # ansible-core as the NAS runs it (requirements-ansible.txt), in .venv, made once, on the NAS's
 # Python (3.12: ansible-core 2.16 does not run on newer ones).

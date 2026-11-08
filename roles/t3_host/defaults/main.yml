@@ -1,0 +1,37 @@
+---
+# The agents' command-line tools T3 Code runs, each installed by its maker's own installer into
+# the user's ~/.local/bin (no root, no Node). `provider` is T3 Code's name for it in
+# ~/.t3/userdata/settings.json. Drop an entry to leave that agent off a machine.
+t3_clis:
+  - name: claude
+    provider: claudeAgent
+    installer: https://claude.ai/install.sh
+  - name: codex
+    provider: codex
+    installer: https://chatgpt.com/codex/install.sh
+  - name: agy
+    provider: antigravity
+    installer: https://antigravity.google/cli/install.sh
+
+# Where the installers put the binaries, and T3 Code's data folder on the remote.
+t3_bin_directory: "{{ ansible_env.HOME }}/.local/bin"
+t3_home_directory: "{{ ansible_env.HOME }}/.t3"
+
+# Antigravity also needs T3 Code's ACP runtime, which T3's Install button would fetch from the
+# ACP registry. The same release, pinned by its checksum (registry entry `antigravity-acp`).
+t3_antigravity_acp_version: "1.4.5"
+t3_antigravity_acp_sha256: "923923a0d7dc8073f66cc6f78647a3107e3a7ee2b7e1a24df8b3927b5188013b"
+t3_antigravity_acp_url: "https://dl.google.com/agy-extensions/releases/linux/agy-acp-server-{{ t3_antigravity_acp_version }}-linux-x86_64.zip"
+
+# Node.js LTS from nodejs.org, unpacked for the user (no root) and linked into t3_bin_directory
+# with npm and npx. Checksums from the release's SHASUMS256.txt, per CPU.
+t3_node_version: "24.22.2"
+t3_node_sha256:
+  x64: "48cc0e21e048790e54c0cf5749c2725005313d652651c40b7a21feb9697aaf75"
+  arm64: "eb187837a2230d4047161ac0be008584e16b46f726e9c9490ee35dc6b17d9ba8"
+
+# Run T3 Code as an always-on systemd user service (`t3 service install`), instead of only
+# while the desktop app's SSH connection has started it. Linger (needs sudo, so -K) starts it at
+# boot with no one logged in.
+t3_service_enabled: true
+t3_version: "0.1.7"

@@ -1,0 +1,16 @@
+---
+# Only one T3 server may own ~/.t3: one the desktop app started over SSH blocks the service.
+- name: Stop a server the desktop app started over SSH
+  ansible.builtin.shell: |
+    set -eu
+    for f in {{ t3_home_directory }}/ssh-launch/*/pid; do
+      [ -f "$f" ] && kill "$(cat "$f")" 2>/dev/null || true
+    done
+  changed_when: true
+
+- name: Restart T3 Code
+  ansible.builtin.systemd_service:
+    name: t3code
+    scope: user
+    state: restarted
+    daemon_reload: true
