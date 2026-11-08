@@ -1,0 +1,38 @@
+---
+# Keeps each T3 remote's disks from filling, so it runs indefinitely without someone cleaning
+# up: an hourly user timer caps cargo build output, prunes old logs and alerts before a disk
+# fills. See website/docs/applications/development-tools/disk-guard.md.
+disk_guard_enabled: true
+
+# Where agents check code out. Only cargo `target` folders (with cargo's CACHEDIR.TAG) under
+# these are ever deleted, and never one written to in the last disk_guard_active_minutes.
+disk_guard_roots:
+  - "~/repos"
+  - "~/.t3/worktrees"
+disk_guard_active_minutes: 30
+
+# Build machines (the `builders` group) keep up to 60 GB of build output, unused for 3 days at
+# most. Every other machine is not for building: 2 GB, and a day.
+disk_guard_target_cap_mb: "{{ 61440 if 'builders' in group_names else 2048 }}"
+disk_guard_target_max_age_days: "{{ 3 if 'builders' in group_names else 1 }}"
+
+# T3's provider logs older than this are deleted.
+disk_guard_log_dirs:
+  - "~/.t3/userdata/logs"
+disk_guard_log_max_age_days: 30
+
+# Alert when a disk reaches this use: in the journal always, and on ntfy when a topic is set.
+# The topic is read from the environment of whoever runs the playbook (export
+# DISK_GUARD_NTFY_TOPIC first), so it is never written into a tracked file.
+disk_guard_mounts:
+  - /
+disk_guard_alert_percent: 80
+disk_guard_alert_every_hours: 6
+disk_guard_ntfy_server: https://ntfy.sh
+disk_guard_ntfy_topic: "{{ lookup('env', 'DISK_GUARD_NTFY_TOPIC') }}"
+
+# Grow the root logical volume to this size (e.g. "200g") when set; never shrinks it. Ubuntu's
+# installer often leaves much of the disk unallocated in the volume group.
+disk_guard_root_lv_size: ""
+disk_guard_root_vg: ubuntu-vg
+disk_guard_root_lv: ubuntu-lv

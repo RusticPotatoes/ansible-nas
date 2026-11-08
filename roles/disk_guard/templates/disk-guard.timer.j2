@@ -1,0 +1,11 @@
+# Managed by Ansible (disk_guard). noqa: nas-scheduled-job: a user timer on the T3 remotes (the NAS is one), like agent_workspace's; the owner asked for it (8 Nov 2026)
+[Unit]
+Description=Run the disk guard every hour
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=1h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

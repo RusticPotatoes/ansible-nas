@@ -1,0 +1,61 @@
+---
+- name: Grow the root volume into the volume group's free space
+  community.general.lvol:
+    vg: "{{ disk_guard_root_vg }}"
+    lv: "{{ disk_guard_root_lv }}"
+    size: "{{ disk_guard_root_lv_size }}"
+    resizefs: true
+    shrink: false
+  become: true
+  when: disk_guard_root_lv_size | length > 0
+
+- name: Install the disk guard
+  vars:
+    disk_guard_unit_directory: "{{ ansible_env.HOME }}/.config/systemd/user"
+  block:
+    - name: Create its folders
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ ansible_env.HOME }}/.local/bin"
+        - "{{ ansible_env.HOME }}/.config/disk-guard"
+        - "{{ disk_guard_unit_directory }}"
+
+    - name: Install the script
+      ansible.builtin.copy:
+        src: disk-guard
+        dest: "{{ ansible_env.HOME }}/.local/bin/disk-guard"
+        mode: "0755"
+
+    - name: Write its settings
+      ansible.builtin.template:
+        src: disk-guard.env.j2
+        dest: "{{ ansible_env.HOME }}/.config/disk-guard/env"
+        mode: "0600"
+
+    - name: Write its service and timer
+      ansible.builtin.template:
+        src: "{{ item }}.j2"
+        dest: "{{ disk_guard_unit_directory }}/{{ item }}"
+        mode: "0644"
+      loop: [disk-guard.service, disk-guard.timer]
+      register: disk_guard_units
+
+    - name: Keep the timer running
+      # A dry run has not written the unit yet, so systemd cannot find it.
+      ignore_errors: "{{ ansible_check_mode }}"
+      ansible.builtin.systemd_service:
+        name: disk-guard.timer
+        scope: user
+        state: started
+        enabled: true
+        daemon_reload: "{{ disk_guard_units is changed }}"
+
+    - name: Run it once now
+      ansible.builtin.systemd_service:
+        name: disk-guard.service
+        scope: user
+        state: started
+      when: not ansible_check_mode
