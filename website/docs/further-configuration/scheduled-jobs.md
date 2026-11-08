@@ -14,6 +14,7 @@ one that does, so nothing runs on a schedule without a reason written beside it.
 | `gluetun-stack-restart` | `gluetun_periodic_restart_enabled` (and gluetun on) | every `gluetun_periodic_restart_interval` (2h) | A workaround for VPN stalls; whether it is still needed is being measured. |
 | `nas-db-dump` | `nas_db_dumps_enabled` | `nas_db_dump_time` (01:30 nightly) | A consistent logical copy of each database for backups. |
 | `healthchecks-ping` | `healthchecks_enabled` | every `healthchecks_ping_minutes` (15) | An outside service raises the alarm when the NAS stops pinging it. |
+| `agent-config-update.timer` (user unit on each T3 remote, not the NAS) | `agent_workspace_enabled` | hourly | Keeps the agent configuration clones on the T3 remotes current, as the Mac's launchd job does; see [Agent workspace](../applications/development-tools/agent-workspace.md). |
 
 Each job keeps its app's switch: set it in your inventory as before. A job that is off has its
 timer stopped and disabled. Running an app's tag (`make run TAGS=gluetun`) brings its job in line

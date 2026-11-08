@@ -1,0 +1,7 @@
+# Managed by Ansible (agent_workspace). The same updater the Mac runs from launchd.
+[Unit]
+Description=Update the agent configuration (fast-forward only)
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'exec "$HOME/repos/{{ agent_workspace_config_repo }}/scripts/update.sh"'

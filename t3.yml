@@ -29,3 +29,7 @@
     - role: t3_host
       tags:
         - t3_host
+    - role: agent_workspace
+      when: agent_workspace_enabled | bool
+      tags:
+        - agent_workspace

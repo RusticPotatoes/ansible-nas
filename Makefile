@@ -33,26 +33,32 @@ run-remote: venv
 
 # T3 Code remotes: Node.js, the Claude, Codex and Antigravity CLIs and T3 Code's service on every
 # machine in the [t3] group of inventories/t3.ini (git-ignored; see
-# website/docs/applications/development-tools/t3-host.md). A dry run, then apply only on a yes.
+# website/docs/applications/development-tools/t3-host.md). Applies straight away; DRY=1 for a
+# dry run first, then apply only on a yes.
 # Runs as each machine's user; sudo's password (-K) is asked only for linger.
 T3_INVENTORY ?= inventories/t3.ini
 T3_PLAY = .venv/bin/ansible-playbook -i $(T3_INVENTORY) t3.yml
 t3: venv
 	@test -f $(T3_INVENTORY) || { echo "list your machines in $(T3_INVENTORY) first (see the t3-host docs page)"; exit 1; }
+ifdef DRY
 	$(T3_PLAY) --check --diff $(EXTRA)
 	@printf 'Apply these changes? [y/N] '; read answer; \
 		[ "$$answer" = y ] || [ "$$answer" = Y ] || { echo "Nothing applied."; exit 1; }
-	$(T3_PLAY) $(EXTRA)
+endif
+	$(T3_PLAY) --diff $(EXTRA)
 
 # Build machines: Docker and Rust on every machine in the [builders] group of
-# $(T3_INVENTORY). Docker's install needs sudo, so -K is passed (the default EXTRA).
+# $(T3_INVENTORY). Docker's install needs sudo, so -K is passed (the default EXTRA). Applies
+# straight away; DRY=1 for a dry run first.
 builders: venv
 	@test -f $(T3_INVENTORY) || { echo "list your machines in $(T3_INVENTORY) first (see the build-host docs page)"; exit 1; }
 	.venv/bin/ansible-galaxy role install -r requirements.yml
+ifdef DRY
 	.venv/bin/ansible-playbook -i $(T3_INVENTORY) builders.yml --check --diff $(EXTRA) \
 		|| echo "(a dry run stops early on a new machine: Docker's apt source isn't there yet)"
 	@printf 'Apply these changes? [y/N] '; read answer; \
 		[ "$$answer" = y ] || [ "$$answer" = Y ] || { echo "Nothing applied."; exit 1; }
+endif
 	.venv/bin/ansible-playbook -i $(T3_INVENTORY) builders.yml $(EXTRA)
 
 # ansible-core as the NAS runs it (requirements-ansible.txt), in .venv, made once, on the NAS's

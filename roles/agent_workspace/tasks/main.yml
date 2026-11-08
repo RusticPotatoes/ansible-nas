@@ -1,0 +1,175 @@
+---
+- name: Install git, rsync and gh
+  become: true
+  block:
+    - name: Fetch GitHub's signing key for gh
+      ansible.builtin.get_url:
+        url: https://cli.github.com/packages/githubcli-archive-keyring.gpg
+        dest: /usr/share/keyrings/githubcli-archive-keyring.gpg
+        mode: "0644"
+
+    - name: Add GitHub's apt source for gh
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [arch={{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'amd64' }}
+          signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg]
+          https://cli.github.com/packages stable main
+        filename: github-cli
+        state: present
+
+    - name: Install the packages
+      # A dry run on a new machine has no apt source yet to install from.
+      ignore_errors: "{{ ansible_check_mode }}"
+      ansible.builtin.apt:
+        name: [git, rsync, gh]
+        state: present
+        update_cache: true
+
+- name: Set the git identity
+  community.general.git_config:
+    name: "{{ item.key }}"
+    scope: global
+    value: "{{ item.value }}"
+  loop:
+    - { key: user.name, value: "{{ agent_workspace_git_name }}" }
+    - { key: user.email, value: "{{ agent_workspace_git_email }}" }
+  when: item.value | length > 0
+
+- name: Create ~/.ssh and ~/repos
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: "{{ item.mode }}"
+  loop:
+    - { path: "{{ ansible_env.HOME }}/.ssh", mode: "0700" }
+    - { path: "{{ agent_workspace_directory }}", mode: "0755" }
+
+- name: Trust GitHub's pinned host keys
+  ansible.builtin.known_hosts:
+    name: github.com
+    key: "github.com {{ item }}"
+    path: "{{ ansible_env.HOME }}/.ssh/known_hosts"
+  loop: "{{ agent_workspace_github_host_keys }}"
+
+- name: Make and register each repository's deploy key
+  ansible.builtin.include_tasks: deploy_key.yml
+  vars:
+    agent_workspace_key_file: "{{ ansible_env.HOME }}/.ssh/id_ed25519_{{ item.name | lower }}"
+  loop: "{{ agent_workspace_repos }}"
+  # A dry run has made no key yet to read.
+  when: not ansible_check_mode
+
+- name: Give each repository an SSH alias that uses its key
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.ssh/config"
+    create: true
+    mode: "0600"
+    marker: "# {mark} agent_workspace: {{ item.name }}"
+    block: "{{ lookup('ansible.builtin.template', 'ssh_config.j2') }}"
+  loop: "{{ agent_workspace_repos }}"
+
+- name: Clone each repository, then only fast-forward it  # noqa latest[git]
+  # It follows each repository's default branch: that is the point.
+  # A dry run on a new machine has no key to clone with yet.
+  ignore_errors: "{{ ansible_check_mode }}"
+  ansible.builtin.git:
+    repo: "git@{{ item.alias | default('github-' ~ item.name | lower) }}:{{ item.repo }}.git"
+    dest: "{{ agent_workspace_directory }}/{{ item.name }}"
+    update: true
+    force: false
+    accept_hostkey: false
+  loop: "{{ agent_workspace_repos }}"
+
+- name: Disable pushing to the read-only repositories
+  ignore_errors: "{{ ansible_check_mode }}"
+  community.general.git_config:
+    name: remote.origin.pushurl
+    repo: "{{ agent_workspace_directory }}/{{ item.name }}"
+    scope: local
+    value: "disabled://reader"
+  loop: "{{ agent_workspace_repos }}"
+  when: item.read_only | default(true) | bool
+
+- name: Look for the seed marker
+  ansible.builtin.stat:
+    path: "{{ agent_workspace_seed_marker }}"
+  register: agent_workspace_seed_marker_stat
+
+- name: Seed the steward's private state, once
+  tags: [agent_workspace_seed]
+  when:
+    - agent_workspace_seed_local_state | bool
+    - not agent_workspace_seed_marker_stat.stat.exists
+  block:
+    - name: Create its folder
+      ansible.builtin.file:
+        path: "{{ agent_workspace_seed_destination }}"
+        state: directory
+        mode: "0755"
+
+    - name: Copy it from the machine that runs the play
+      ansible.posix.synchronize:
+        src: "{{ agent_workspace_seed_source }}"
+        dest: "{{ agent_workspace_seed_destination }}/"
+        archive: true
+        delete: false
+        rsync_opts: "{{ agent_workspace_seed_exclude | map('regex_replace', '^(.*)$', '--exclude=\\1') | list }}"
+
+    - name: Mark it seeded, so this copy is the authoritative one from now on
+      ansible.builtin.copy:
+        dest: "{{ agent_workspace_seed_marker }}"
+        content: "Seeded from the machine that ran the play. This copy is authoritative: delete this file to seed again.\n"
+        mode: "0644"
+
+- name: Install agent-config's links, as its README says
+  vars:
+    agent_workspace_manage: "{{ agent_workspace_directory }}/{{ agent_workspace_config_repo }}/scripts/manage.py"
+  block:
+    - name: Install them
+      # Idempotent by design: it replaces its own links with the same ones.
+      ansible.builtin.command:
+        cmd: "python3 {{ agent_workspace_manage }} install --apply"
+      changed_when: false
+
+    - name: Check them
+      ansible.builtin.command:
+        cmd: "{{ ansible_env.HOME }}/.local/bin/agent-config-check"
+      changed_when: false
+
+    - name: Read the configuration version
+      ansible.builtin.command:
+        cmd: "{{ ansible_env.HOME }}/.local/bin/config-version"
+      register: agent_workspace_config_version
+      changed_when: false
+
+    - name: Report it
+      ansible.builtin.debug:
+        msg: "{{ agent_workspace_config_version.stdout_lines }}"
+
+- name: Update agent-config every hour
+  vars:
+    agent_workspace_unit_directory: "{{ ansible_env.HOME }}/.config/systemd/user"
+  block:
+    - name: Create the user unit folder
+      ansible.builtin.file:
+        path: "{{ agent_workspace_unit_directory }}"
+        state: directory
+        mode: "0755"
+
+    - name: Write the updater's service and timer
+      ansible.builtin.template:
+        src: "{{ item }}.j2"
+        dest: "{{ agent_workspace_unit_directory }}/{{ item }}"
+        mode: "0644"
+      loop: [agent-config-update.service, agent-config-update.timer]
+      register: agent_workspace_units
+
+    - name: Keep the timer running
+      # A dry run has not written the unit yet, so systemd cannot find it.
+      ignore_errors: "{{ ansible_check_mode }}"
+      ansible.builtin.systemd_service:
+        name: agent-config-update.timer
+        scope: user
+        state: started
+        enabled: true
+        daemon_reload: "{{ agent_workspace_units is changed }}"
