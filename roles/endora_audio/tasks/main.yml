@@ -163,7 +163,7 @@
         networks:
           - name: "{{ endora_audio_airplay_network }}"
             ipv4_address: "{{ endora_audio_airplay_ip }}"
-        mac_address: "{{ endora_audio_airplay_mac }}"
+            mac_address: "{{ endora_audio_airplay_mac }}"
         volumes:
           - "{{ endora_audio_pipes_volume }}:/pipes"
         tmpfs:

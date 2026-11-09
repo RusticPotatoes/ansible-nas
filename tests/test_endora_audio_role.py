@@ -123,8 +123,14 @@ class TheRole(unittest.TestCase):
     def test_the_door_joins_an_existing_macvlan_with_its_fixed_address_and_mac(self):
         door = self.door
         self.assertEqual(door["network_mode"], "{{ endora_audio_airplay_network }}")
-        self.assertEqual(door["networks"], [{"name": "{{ endora_audio_airplay_network }}", "ipv4_address": "{{ endora_audio_airplay_ip }}"}])
-        self.assertEqual(door["mac_address"], "{{ endora_audio_airplay_mac }}")
+        # The MAC rides on the network entry: Docker 1.44+ ignores the container-wide option, so
+        # the door got a random MAC on every recreate and check mode showed a diff on every run.
+        self.assertEqual(door["networks"], [{
+            "name": "{{ endora_audio_airplay_network }}",
+            "ipv4_address": "{{ endora_audio_airplay_ip }}",
+            "mac_address": "{{ endora_audio_airplay_mac }}",
+        }])
+        self.assertNotIn("mac_address", door, "the container-wide option is deprecated and not applied")
         self.assertEqual(door["volumes"], ["{{ endora_audio_pipes_volume }}:/pipes"], "only the pipes")
         self.assertEqual(self.defaults["endora_audio_airplay_network"], "pihole_macvlan")
         self.assertFalse([t for t in self.tasks if "community.docker.docker_network" in t], "the network is never made here")
