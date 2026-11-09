@@ -147,6 +147,8 @@
         msg: "{{ agent_workspace_config_version.stdout_lines }}"
 
 - name: Update agent-config every hour
+  # Only this block: `--tags agent_workspace_timer` needs no root.
+  tags: [agent_workspace_timer]
   vars:
     agent_workspace_unit_directory: "{{ ansible_env.HOME }}/.config/systemd/user"
   block:

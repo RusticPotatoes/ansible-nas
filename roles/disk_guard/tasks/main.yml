@@ -38,6 +38,7 @@
         mode: "0600"
 
     - name: Write its service and timer
+      tags: [disk_guard_timer]
       ansible.builtin.template:
         src: "{{ item }}.j2"
         dest: "{{ disk_guard_unit_directory }}/{{ item }}"
@@ -47,6 +48,7 @@
       notify: Restart the disk-guard.timer
 
     - name: Read the timer's state
+      tags: [disk_guard_timer]
       # A timer whose service could not be queued at trigger time goes `failed` with no next run,
       # and a daemon-reload never repairs it; only a start or restart does.
       ignore_errors: "{{ ansible_check_mode }}"
@@ -56,6 +58,7 @@
       register: disk_guard_timer_status
 
     - name: Restart the timer when it has failed or stopped
+      tags: [disk_guard_timer]
       # A dry run has not written the unit yet, so systemd cannot find it.
       ignore_errors: "{{ ansible_check_mode }}"
       ansible.builtin.systemd_service:
@@ -66,6 +69,7 @@
       when: ((disk_guard_timer_status.status | default({})).ActiveState | default('')) != 'active'
 
     - name: Keep the timer running
+      tags: [disk_guard_timer]
       # A dry run has not written the unit yet, so systemd cannot find it.
       ignore_errors: "{{ ansible_check_mode }}"
       ansible.builtin.systemd_service:
