@@ -49,3 +49,12 @@ Only one T3 Code server may own `~/.t3`: the role stops a server the desktop app
 SSH so the service can take over. Optional, by hand: `t3 service protect` (asks for sudo)
 shields the server from agents that exhaust memory. Prefer `t3_lan` to `t3 up --lan`, so the
 playbook keeps the setting; avoid `t3 up --yes`, which turns T3 Connect on.
+
+## Local models through OpenCode
+
+`t3_opencode_enabled` (on by default) installs OpenCode at the pinned `t3_opencode_version`, links it
+into the binaries folder and turns T3 Code's OpenCode provider on. `t3_opencode_ollama` lists the
+Ollama servers it offers (OpenAI-compatible `/v1` addresses); the first model of the first server is
+the default. The default points at `nas.home.arpa`. To add a laptop's Ollama as an extra choice,
+append it to the list in your inventory: it is only there while the laptop is awake. OpenCode's
+installer can lag behind the latest release, so the version is pinned here rather than "latest".

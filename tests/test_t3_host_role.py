@@ -54,9 +54,23 @@ class TheRole(unittest.TestCase):
 
     def test_an_installed_agent_is_not_reinstalled(self):
         runs = [t for t in self.tasks if "ansible.builtin.command" in t
-                and "installer" in str(t["ansible.builtin.command"])]
+                and "installer" in str(t["ansible.builtin.command"])
+                and "opencode" not in str(t["ansible.builtin.command"])]
         self.assertEqual(len(runs), 1)
         self.assertIn("creates", runs[0]["args"])
+
+    def test_opencode_installs_only_when_the_pinned_version_is_missing(self):
+        runs = [t for t in self.tasks if "ansible.builtin.command" in t
+                and "opencode-installer" in str(t["ansible.builtin.command"])]
+        self.assertEqual(len(runs), 1)
+        self.assertIn("t3_opencode_version", str(runs[0]["ansible.builtin.command"]))
+        self.assertIn("t3_opencode_current", runs[0]["when"])
+        self.assertRegex(self.defaults["t3_opencode_version"], r"^\d+\.\d+\.\d+$")
+
+    def test_opencode_is_turned_on_in_t3_settings(self):
+        writes = [t for t in self.tasks if "ansible.builtin.copy" in t
+                  and "settings.json" in str(t["ansible.builtin.copy"].get("dest"))]
+        self.assertIn("'opencode'", writes[0]["ansible.builtin.copy"]["content"])
 
     def test_the_play_runs_as_the_user(self):
         play = self.playbook[0]

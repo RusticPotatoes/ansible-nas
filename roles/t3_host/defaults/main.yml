@@ -49,3 +49,20 @@ t3_tailscale_serve: false
 # starts here run on this machine. Also needs a secure address: see t3_tailscale_serve.
 t3_linked_environments: false
 t3_version: "0.1.7"
+
+# OpenCode: T3 Code's provider for local models served by Ollama. Pinned, because its installer's
+# "latest" can lag behind the real latest release. Off: OpenCode is left alone.
+t3_opencode_enabled: true
+t3_opencode_version: "2.2.6"
+# The Ollama servers OpenCode offers (OpenAI-compatible /v1). The first model of the first server
+# is the default. Add a laptop's Ollama here (in the inventory) only as an extra: it sleeps.
+t3_opencode_ollama:
+  - name: ollama-nas
+    label: Ollama (NAS)
+    url: "http://nas.home.arpa:11434/v1"
+    models:
+      - id: "gpt-oss:20b"
+        label: gpt-oss 20B
+      - id: "qwen3.5:9b"
+        label: Qwen3.5 9B
+t3_opencode_context: 32768

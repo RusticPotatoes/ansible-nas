@@ -1,0 +1,18 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "{{ t3_opencode_ollama[0].name }}/{{ t3_opencode_ollama[0].models[0].id }}",
+  "provider": {
+{% for server in t3_opencode_ollama %}
+    "{{ server.name }}": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "{{ server.label }}",
+      "options": { "baseURL": "{{ server.url }}" },
+      "models": {
+{% for m in server.models %}
+        "{{ m.id }}": { "name": "{{ m.label }}", "tool_call": true, "limit": { "context": {{ t3_opencode_context }}, "output": 8192 } }{{ "," if not loop.last }}
+{% endfor %}
+      }
+    }{{ "," if not loop.last }}
+{% endfor %}
+  }
+}
