@@ -104,7 +104,7 @@ only; music in Listening mode is not delayed.
 ## Specific configuration
 
 * `endora_audio_port` (default `8791`): the hub's page and API.
-* `endora_audio_version` (default `1.0.1`): the release of all three images (see the
+* `endora_audio_version` (default `1.0.2`): the release of all three images (see the
   repository's releases for each one's digests).
 * `endora_audio_senders_enabled`, `endora_audio_spotify_enabled` (default `true`): each part on
   or off.
