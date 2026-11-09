@@ -54,6 +54,8 @@ t3_version: "0.1.7"
 # "latest" can lag behind the real latest release. Off: OpenCode is left alone.
 t3_opencode_enabled: true
 t3_opencode_version: "2.2.6"
+# OpenCode 2 has its own installer; the original one refuses 2.x versions.
+t3_opencode_installer: https://opencode.ai/v2/install
 # The Ollama servers OpenCode offers (OpenAI-compatible /v1). The first model of the first server
 # is the default. Add a laptop's Ollama here (in the inventory) only as an extra: it sleeps.
 t3_opencode_ollama:

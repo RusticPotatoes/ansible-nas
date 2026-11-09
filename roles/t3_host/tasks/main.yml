@@ -102,9 +102,10 @@
 
     - name: Fetch OpenCode's installer
       ansible.builtin.get_url:
-        url: https://opencode.ai/install
+        url: "{{ t3_opencode_installer }}"
         dest: "{{ t3_home_directory }}/caches/opencode-installer.sh"
         mode: "0700"
+        force: true
 
     - name: Install the pinned OpenCode
       ansible.builtin.command:
