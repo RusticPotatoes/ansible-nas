@@ -124,6 +124,20 @@ class ADryRun(unittest.TestCase):
         self.assertEqual(len(start), 1)
         self.assertEqual(start[0].get("ignore_errors"), "{{ ansible_check_mode }}")
 
+    def test_a_failed_or_changed_timer_is_restarted_not_only_reloaded(self):
+        # A timer whose service could not be queued goes `failed` with no next run; only a start or
+        # restart repairs it (checked on systemd 259), and a changed unit needs a restart as well.
+        tasks = tasks_of(load(ROLE / "tasks" / "main.yml"))
+        repair = [t for t in tasks if t.get("name") == "Restart the timer when it has failed or stopped"]
+        self.assertEqual(len(repair), 1)
+        self.assertEqual(repair[0]["ansible.builtin.systemd_service"]["state"], "restarted")
+        self.assertIn("ActiveState", repair[0]["when"])
+        write = [t for t in tasks if t.get("name") == "Write the updater's service and timer"][0]
+        handlers = load(ROLE / "handlers" / "main.yml")
+        self.assertEqual(write["notify"], handlers[0]["name"])
+        self.assertEqual(handlers[0]["ansible.builtin.systemd_service"]["state"], "restarted")
+        self.assertEqual(handlers[0]["ansible.builtin.systemd_service"]["name"], "agent-config-update.timer")
+
 
 if __name__ == "__main__":
     unittest.main()

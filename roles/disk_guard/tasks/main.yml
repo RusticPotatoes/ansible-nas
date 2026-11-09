@@ -44,6 +44,26 @@
         mode: "0644"
       loop: [disk-guard.service, disk-guard.timer]
       register: disk_guard_units
+      notify: Restart the disk-guard.timer
+
+    - name: Read the timer's state
+      # A timer whose service could not be queued at trigger time goes `failed` with no next run,
+      # and a daemon-reload never repairs it; only a start or restart does.
+      ignore_errors: "{{ ansible_check_mode }}"
+      ansible.builtin.systemd_service:
+        name: disk-guard.timer
+        scope: user
+      register: disk_guard_timer_status
+
+    - name: Restart the timer when it has failed or stopped
+      # A dry run has not written the unit yet, so systemd cannot find it.
+      ignore_errors: "{{ ansible_check_mode }}"
+      ansible.builtin.systemd_service:
+        name: disk-guard.timer
+        scope: user
+        state: restarted
+        daemon_reload: "{{ disk_guard_units is changed }}"
+      when: ((disk_guard_timer_status.status | default({})).ActiveState | default('')) != 'active'
 
     - name: Keep the timer running
       # A dry run has not written the unit yet, so systemd cannot find it.

@@ -163,6 +163,26 @@
         mode: "0644"
       loop: [agent-config-update.service, agent-config-update.timer]
       register: agent_workspace_units
+      notify: Restart the agent-config-update.timer
+
+    - name: Read the timer's state
+      # A timer whose service could not be queued at trigger time goes `failed` with no next run,
+      # and a daemon-reload never repairs it; only a start or restart does.
+      ignore_errors: "{{ ansible_check_mode }}"
+      ansible.builtin.systemd_service:
+        name: agent-config-update.timer
+        scope: user
+      register: agent_workspace_timer_status
+
+    - name: Restart the timer when it has failed or stopped
+      # A dry run has not written the unit yet, so systemd cannot find it.
+      ignore_errors: "{{ ansible_check_mode }}"
+      ansible.builtin.systemd_service:
+        name: agent-config-update.timer
+        scope: user
+        state: restarted
+        daemon_reload: "{{ agent_workspace_units is changed }}"
+      when: ((agent_workspace_timer_status.status | default({})).ActiveState | default('')) != 'active'
 
     - name: Keep the timer running
       # A dry run has not written the unit yet, so systemd cannot find it.

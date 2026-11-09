@@ -171,6 +171,18 @@ class TheRole(unittest.TestCase):
     def test_the_ntfy_topic_comes_from_the_environment_not_a_file(self):
         self.assertIn("lookup('env'", self.defaults["disk_guard_ntfy_topic"])
 
+    def test_a_failed_or_changed_timer_is_restarted_not_only_reloaded(self):
+        tasks = [t for b in self.tasks if "block" in b for t in b["block"]]
+        repair = [t for t in tasks if t.get("name") == "Restart the timer when it has failed or stopped"]
+        self.assertEqual(len(repair), 1)
+        self.assertEqual(repair[0]["ansible.builtin.systemd_service"]["state"], "restarted")
+        self.assertIn("ActiveState", repair[0]["when"])
+        write = [t for t in tasks if t.get("name") == "Write its service and timer"][0]
+        handlers = load(ROLE / "handlers" / "main.yml")
+        self.assertEqual(write["notify"], handlers[0]["name"])
+        self.assertEqual(handlers[0]["ansible.builtin.systemd_service"]["state"], "restarted")
+        self.assertEqual(handlers[0]["ansible.builtin.systemd_service"]["name"], "disk-guard.timer")
+
 
 if __name__ == "__main__":
     unittest.main()

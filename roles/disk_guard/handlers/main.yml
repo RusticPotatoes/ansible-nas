@@ -1,0 +1,11 @@
+---
+# A changed unit file is not picked up by a timer that is already waiting: restart it.
+# (One immediate run of the service as a side effect is harmless.)
+- name: Restart the disk-guard.timer
+  # A dry run has not written the unit yet, so systemd cannot find it.
+  ignore_errors: "{{ ansible_check_mode }}"
+  ansible.builtin.systemd_service:
+    name: disk-guard.timer
+    scope: user
+    state: restarted
+    daemon_reload: true
