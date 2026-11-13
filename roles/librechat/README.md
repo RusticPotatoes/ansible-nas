@@ -12,7 +12,7 @@ Runs LibreChat, a multi-model chat web app, in a container, with its MCP server 
   - `librechat_creds_iv` (`vault_librechat_creds_iv`): `CREDS_IV`, 32 hex characters.
   - `librechat_jwt_secret` (`vault_librechat_jwt_secret`): `JWT_SECRET`.
   - `librechat_jwt_refresh_secret` (`vault_librechat_jwt_refresh_secret`): `JWT_REFRESH_SECRET` and `REFRESH_TOKEN_SECRET`.
-  - `librechat_admin_email` (`vault_librechat_admin_email`, default `admin@local.com`) and `librechat_admin_password` (`vault_librechat_admin_password`, default empty).
+  - `librechat_admin_email` (`vault_librechat_admin_email`; its default is set in `defaults/main.yml`) and `librechat_admin_password` (`vault_librechat_admin_password`, default empty).
 - Access: `librechat_allow_registration` (default `false`) sets `ALLOW_REGISTRATION`; `librechat_allow_social_login` (default `false`) sets `ALLOW_SOCIAL_LOGIN`. Both are off unless set to true.
 
 Application page: none yet under `website/docs/applications/`.
